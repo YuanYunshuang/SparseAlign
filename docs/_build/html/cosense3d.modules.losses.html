@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>cosense3d.modules.losses package &mdash; Cosense3D 1.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=af2ce170"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="cosense3d.modules.necks package" href="cosense3d.modules.necks.html" />
+    <link rel="prev" title="cosense3d.modules.heads package" href="cosense3d.modules.heads.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Cosense3D
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="md/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="md/prepare_data.html">Prepare Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="md/structure.html">The Structure of the framework</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">CoSense3D</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="cosense3d.agents.html">cosense3d.agents package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cosense3d.dataset.html">cosense3d.dataset package</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="cosense3d.modules.html">cosense3d.modules package</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="cosense3d.modules.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="cosense3d.modules.backbone2d.html">cosense3d.modules.backbone2d package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="cosense3d.modules.backbone3d.html">cosense3d.modules.backbone3d package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="cosense3d.modules.fusion.html">cosense3d.modules.fusion package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="cosense3d.modules.heads.html">cosense3d.modules.heads package</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">cosense3d.modules.losses package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="cosense3d.modules.necks.html">cosense3d.modules.necks package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="cosense3d.modules.plugin.html">cosense3d.modules.plugin package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="cosense3d.modules.projection.html">cosense3d.modules.projection package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="cosense3d.modules.utils.html">cosense3d.modules.utils package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="cosense3d.modules.html#module-cosense3d.modules">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="cosense3d.utils.html">cosense3d.utils package</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Cosense3D</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">CoSense3D</a></li>
+          <li class="breadcrumb-item"><a href="cosense3d.modules.html">cosense3d.modules package</a></li>
+      <li class="breadcrumb-item active">cosense3d.modules.losses package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/cosense3d.modules.losses.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="cosense3d-modules-losses-package">
+<h1>cosense3d.modules.losses package<a class="headerlink" href="#cosense3d-modules-losses-package" title="Permalink to this heading"></a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this heading"></a></h2>
+</section>
+<section id="module-cosense3d.modules.losses.base_loss">
+<span id="cosense3d-modules-losses-base-loss-module"></span><h2>cosense3d.modules.losses.base_loss module<a class="headerlink" href="#module-cosense3d.modules.losses.base_loss" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="cosense3d.modules.losses.base_loss.BaseLoss">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cosense3d.modules.losses.base_loss.</span></span><span class="sig-name descname"><span class="pre">BaseLoss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reduction</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'mean'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">activation</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'none'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss_weight</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/losses/base_loss.html#BaseLoss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.losses.base_loss.BaseLoss" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.modules.losses.base_loss.BaseLoss.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">preds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targets</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">avg_factor</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reduction_override</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="reference internal" href="_modules/cosense3d/modules/losses/base_loss.html#BaseLoss.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.losses.base_loss.BaseLoss.forward" title="Permalink to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>preds</strong> – prediction tensor.</p></li>
+<li><p><strong>targets</strong> – target tensor.</p></li>
+<li><p><strong>weight</strong> – The weight of loss for each
+prediction. Defaults to None.</p></li>
+<li><p><strong>avg_factor</strong> – Average factor that is used to average
+the loss. Defaults to None.</p></li>
+<li><p><strong>reduction_override</strong> – The reduction method used to
+override the original reduction method of the loss.
+Defaults to None.</p></li>
+<li><p><strong>args</strong> – additional arguments.</p></li>
+<li><p><strong>kwargs</strong> – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>weighted loss.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.modules.losses.base_loss.BaseLoss.loss">
+<span class="sig-name descname"><span class="pre">loss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/losses/base_loss.html#BaseLoss.loss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.losses.base_loss.BaseLoss.loss" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="cosense3d.modules.losses.base_loss.BaseLoss.name">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#cosense3d.modules.losses.base_loss.BaseLoss.name" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cosense3d.modules.losses.base_loss.BaseLoss.training">
+<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#cosense3d.modules.losses.base_loss.BaseLoss.training" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-cosense3d.modules.losses.common">
+<span id="cosense3d-modules-losses-common-module"></span><h2>cosense3d.modules.losses.common module<a class="headerlink" href="#module-cosense3d.modules.losses.common" title="Permalink to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.modules.losses.common.cross_entroy_with_logits">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.modules.losses.common.</span></span><span class="sig-name descname"><span class="pre">cross_entroy_with_logits</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">preds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tgts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_cls</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reduction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'none'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/losses/common.html#cross_entroy_with_logits"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.losses.common.cross_entroy_with_logits" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.modules.losses.common.focal_loss">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.modules.losses.common.</span></span><span class="sig-name descname"><span class="pre">focal_loss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">preds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tgts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reduction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'none'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.25</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_sigmoid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/losses/common.html#focal_loss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.losses.common.focal_loss" title="Permalink to this definition"></a></dt>
+<dd><section id="parameters">
+<h3>Parameters<a class="headerlink" href="#parameters" title="Permalink to this heading"></a></h3>
+<p>preds: FloatTensor(…, n_cls)
+tgts: FloatTensor(…, n_cls) or LongTensor(…,) or LongTensor(…,1), largest label is background
+weights: same as preds or tgts
+——-</p>
+</section>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.modules.losses.common.indices_to_dense_vector">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.modules.losses.common.</span></span><span class="sig-name descname"><span class="pre">indices_to_dense_vector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">indices</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">indices_value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="reference internal" href="_modules/cosense3d/modules/losses/common.html#indices_to_dense_vector"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.losses.common.indices_to_dense_vector" title="Permalink to this definition"></a></dt>
+<dd><p>Creates dense vector with indices set to specific value and rest to zeros.</p>
+<p>This function exists because it is unclear if it is safe to use
+tf.sparse_to_dense(indices, [size], 1, validate_indices=False)
+with indices which are not ordered.
+This function accepts a dynamic size (e.g. <cite>tf.shape(tensor)[0]</cite>)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>indices</strong> – 1d Tensor with integer indices which are to be set to indices_values.</p></li>
+<li><p><strong>size</strong> – size of output Tensor.</p></li>
+<li><p><strong>indices_value</strong> – values of elements specified by indices in the output vector.</p></li>
+<li><p><strong>default_value</strong> – values of other elements in the output vector.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>dense 1D Tensor of shape [size] with indices set to indices_values and the
+rest set to default_value.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.modules.losses.common.sigmoid_binary_cross_entropy">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.modules.losses.common.</span></span><span class="sig-name descname"><span class="pre">sigmoid_binary_cross_entropy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">preds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tgts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reduction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'none'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/losses/common.html#sigmoid_binary_cross_entropy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.losses.common.sigmoid_binary_cross_entropy" title="Permalink to this definition"></a></dt>
+<dd><section id="id1">
+<h3>Parameters<a class="headerlink" href="#id1" title="Permalink to this heading"></a></h3>
+<p>preds: Tensor(d1, …, dn)
+tgts: Tensor(d1, …, dn)
+weights. Tensor(d1, …, dn)
+reduction: str(‘none’ | ‘mean’ | ‘sum’)
+——-</p>
+</section>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.modules.losses.common.weighted_l1_loss">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.modules.losses.common.</span></span><span class="sig-name descname"><span class="pre">weighted_l1_loss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">preds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targets</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/losses/common.html#weighted_l1_loss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.losses.common.weighted_l1_loss" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.modules.losses.common.weighted_sigmoid_binary_cross_entropy">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.modules.losses.common.</span></span><span class="sig-name descname"><span class="pre">weighted_sigmoid_binary_cross_entropy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">preds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tgts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">class_indices</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/losses/common.html#weighted_sigmoid_binary_cross_entropy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.losses.common.weighted_sigmoid_binary_cross_entropy" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.modules.losses.common.weighted_smooth_l1_loss">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.modules.losses.common.</span></span><span class="sig-name descname"><span class="pre">weighted_smooth_l1_loss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">preds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targets</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/losses/common.html#weighted_smooth_l1_loss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.losses.common.weighted_smooth_l1_loss" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="module-cosense3d.modules.losses.edl">
+<span id="cosense3d-modules-losses-edl-module"></span><h2>cosense3d.modules.losses.edl module<a class="headerlink" href="#module-cosense3d.modules.losses.edl" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="cosense3d.modules.losses.edl.EDLLoss">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cosense3d.modules.losses.edl.</span></span><span class="sig-name descname"><span class="pre">EDLLoss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_cls</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">annealing_step</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/losses/edl.html#EDLLoss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.losses.edl.EDLLoss" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#cosense3d.modules.losses.base_loss.BaseLoss" title="cosense3d.modules.losses.base_loss.BaseLoss"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseLoss</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.modules.losses.edl.EDLLoss.loss">
+<span class="sig-name descname"><span class="pre">loss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">preds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tgt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_cls_override</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/losses/edl.html#EDLLoss.loss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.losses.edl.EDLLoss.loss" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cosense3d.modules.losses.edl.EDLLoss.training">
+<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#cosense3d.modules.losses.edl.EDLLoss.training" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.modules.losses.edl.edl_mse_loss">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.modules.losses.edl.</span></span><span class="sig-name descname"><span class="pre">edl_mse_loss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">preds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tgt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_cls</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">annealing_step</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'edl'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/losses/edl.html#edl_mse_loss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.losses.edl.edl_mse_loss" title="Permalink to this definition"></a></dt>
+<dd><p>Calculate evidential loss
+:param model_label: (str) a name to distinguish edl loss of different modules
+:param preds: (N, n_cls) the logits of each class
+:param tgt: (N,) labels with values from 0…(n_cls - 1) or (N, n_cls)
+:param n_cls: (int) number of classes, including background
+:param temp: current temperature for annealing of KL Divergence term of the loss
+:param annealing_step: maximum annealing step
+:return:</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.modules.losses.edl.evidence_to_conf_unc">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.modules.losses.edl.</span></span><span class="sig-name descname"><span class="pre">evidence_to_conf_unc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">evidence</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edl</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/losses/edl.html#evidence_to_conf_unc"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.losses.edl.evidence_to_conf_unc" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.modules.losses.edl.exp_evidence">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.modules.losses.edl.</span></span><span class="sig-name descname"><span class="pre">exp_evidence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/losses/edl.html#exp_evidence"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.losses.edl.exp_evidence" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.modules.losses.edl.kl_divergence">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.modules.losses.edl.</span></span><span class="sig-name descname"><span class="pre">kl_divergence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">alpha</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_classes</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/losses/edl.html#kl_divergence"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.losses.edl.kl_divergence" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.modules.losses.edl.loglikelihood_loss">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.modules.losses.edl.</span></span><span class="sig-name descname"><span class="pre">loglikelihood_loss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/losses/edl.html#loglikelihood_loss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.losses.edl.loglikelihood_loss" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.modules.losses.edl.mse_loss">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.modules.losses.edl.</span></span><span class="sig-name descname"><span class="pre">mse_loss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epoch_num</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_classes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">annealing_step</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/losses/edl.html#mse_loss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.losses.edl.mse_loss" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.modules.losses.edl.pred_to_conf_unc">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.modules.losses.edl.</span></span><span class="sig-name descname"><span class="pre">pred_to_conf_unc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">preds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">activation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'relu'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edl</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/losses/edl.html#pred_to_conf_unc"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.losses.edl.pred_to_conf_unc" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.modules.losses.edl.relu_evidence">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.modules.losses.edl.</span></span><span class="sig-name descname"><span class="pre">relu_evidence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/losses/edl.html#relu_evidence"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.losses.edl.relu_evidence" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.modules.losses.edl.softplus_evidence">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.modules.losses.edl.</span></span><span class="sig-name descname"><span class="pre">softplus_evidence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/losses/edl.html#softplus_evidence"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.losses.edl.softplus_evidence" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="module-cosense3d.modules.losses.focal_loss">
+<span id="cosense3d-modules-losses-focal-loss-module"></span><h2>cosense3d.modules.losses.focal_loss module<a class="headerlink" href="#module-cosense3d.modules.losses.focal_loss" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="cosense3d.modules.losses.focal_loss.FocalLoss">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cosense3d.modules.losses.focal_loss.</span></span><span class="sig-name descname"><span class="pre">FocalLoss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">use_sigmoid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.25</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">activated</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bg_idx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/losses/focal_loss.html#FocalLoss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.losses.focal_loss.FocalLoss" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#cosense3d.modules.losses.base_loss.BaseLoss" title="cosense3d.modules.losses.base_loss.BaseLoss"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseLoss</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.modules.losses.focal_loss.FocalLoss.loss">
+<span class="sig-name descname"><span class="pre">loss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pred</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/losses/focal_loss.html#FocalLoss.loss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.losses.focal_loss.FocalLoss.loss" title="Permalink to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pred</strong> – prediction.</p></li>
+<li><p><strong>target</strong> – ground truth targets.</p></li>
+<li><p><strong>args</strong> – </p></li>
+<li><p><strong>kwargs</strong> – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cosense3d.modules.losses.focal_loss.FocalLoss.training">
+<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#cosense3d.modules.losses.focal_loss.FocalLoss.training" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="cosense3d.modules.losses.focal_loss.GaussianFocalLoss">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cosense3d.modules.losses.focal_loss.</span></span><span class="sig-name descname"><span class="pre">GaussianFocalLoss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">4.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reduction</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'mean'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss_weight</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/losses/focal_loss.html#GaussianFocalLoss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.losses.focal_loss.GaussianFocalLoss" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#cosense3d.modules.losses.base_loss.BaseLoss" title="cosense3d.modules.losses.base_loss.BaseLoss"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseLoss</span></code></a></p>
+<p>GaussianFocalLoss is a variant of focal loss.</p>
+<p>More details can be found in the <a class="reference external" href="https://arxiv.org/abs/1808.01244">paper</a>
+Code is modified from <a class="reference external" href="https://github.com/princeton-vl/CornerNet/blob/master/models/py_utils/kp_utils.py#L152">kp_utils.py</a>  # noqa: E501
+Please notice that the target in GaussianFocalLoss is a gaussian heatmap,
+not 0/1 binary target.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.modules.losses.focal_loss.GaussianFocalLoss.loss">
+<span class="sig-name descname"><span class="pre">loss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pred</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/losses/focal_loss.html#GaussianFocalLoss.loss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.losses.focal_loss.GaussianFocalLoss.loss" title="Permalink to this definition"></a></dt>
+<dd><p><a class="reference external" href="https://arxiv.org/abs/1708.02002">Focal Loss</a> for targets in gaussian
+distribution.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pred</strong> – The prediction.</p></li>
+<li><p><strong>target</strong> – The learning target of the prediction
+in gaussian distribution.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>loss result.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cosense3d.modules.losses.focal_loss.GaussianFocalLoss.training">
+<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#cosense3d.modules.losses.focal_loss.GaussianFocalLoss.training" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="cosense3d.modules.losses.focal_loss.QualityFocalLoss">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cosense3d.modules.losses.focal_loss.</span></span><span class="sig-name descname"><span class="pre">QualityFocalLoss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">use_sigmoid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">activated</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/losses/focal_loss.html#QualityFocalLoss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.losses.focal_loss.QualityFocalLoss" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#cosense3d.modules.losses.base_loss.BaseLoss" title="cosense3d.modules.losses.base_loss.BaseLoss"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseLoss</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.modules.losses.focal_loss.QualityFocalLoss.loss">
+<span class="sig-name descname"><span class="pre">loss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pred</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/losses/focal_loss.html#QualityFocalLoss.loss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.losses.focal_loss.QualityFocalLoss.loss" title="Permalink to this definition"></a></dt>
+<dd><p>Forward function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pred</strong> – Predicted joint representation of
+classification and quality (IoU) estimation with shape (N, C),
+C is the number of classes.</p></li>
+<li><p><strong>target</strong> – Target category label with shape
+(N,) and target quality label with shape (N,).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>loss result.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cosense3d.modules.losses.focal_loss.QualityFocalLoss.training">
+<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#cosense3d.modules.losses.focal_loss.QualityFocalLoss.training" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.modules.losses.focal_loss.py_focal_loss_with_prob">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.modules.losses.focal_loss.</span></span><span class="sig-name descname"><span class="pre">py_focal_loss_with_prob</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pred</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.25</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/losses/focal_loss.html#py_focal_loss_with_prob"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.losses.focal_loss.py_focal_loss_with_prob" title="Permalink to this definition"></a></dt>
+<dd><p>PyTorch version of <a class="reference external" href="https://arxiv.org/abs/1708.02002">Focal Loss</a>.
+Different from <cite>py_sigmoid_focal_loss</cite>, this function accepts probability
+as input.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pred</strong> – The prediction probability with shape (N, C),
+C is the number of classes.</p></li>
+<li><p><strong>target</strong> – The learning label of the prediction.</p></li>
+<li><p><strong>gamma</strong> – The gamma for calculating the modulating
+factor. Defaults to 2.0.</p></li>
+<li><p><strong>alpha</strong> – A balanced form for Focal Loss.
+Defaults to 0.25.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>loss result.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.modules.losses.focal_loss.py_sigmoid_focal_loss">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.modules.losses.focal_loss.</span></span><span class="sig-name descname"><span class="pre">py_sigmoid_focal_loss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pred</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.25</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/losses/focal_loss.html#py_sigmoid_focal_loss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.losses.focal_loss.py_sigmoid_focal_loss" title="Permalink to this definition"></a></dt>
+<dd><p>PyTorch version of <a class="reference external" href="https://arxiv.org/abs/1708.02002">Focal Loss</a>.
+Different from <cite>py_sigmoid_focal_loss</cite>, this function accepts probability
+as input.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pred</strong> – The prediction probability with shape (N, C),
+C is the number of classes.</p></li>
+<li><p><strong>target</strong> – The learning label of the prediction.</p></li>
+<li><p><strong>gamma</strong> – The gamma for calculating the modulating
+factor. Defaults to 2.0.</p></li>
+<li><p><strong>alpha</strong> – A balanced form for Focal Loss.
+Defaults to 0.25.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>loss result.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.modules.losses.focal_loss.quality_focal_loss">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.modules.losses.focal_loss.</span></span><span class="sig-name descname"><span class="pre">quality_focal_loss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pred:</span> <span class="pre">~torch.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target:</span> <span class="pre">(&lt;class</span> <span class="pre">'torch.Tensor'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta:</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">2.0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="reference internal" href="_modules/cosense3d/modules/losses/focal_loss.html#quality_focal_loss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.losses.focal_loss.quality_focal_loss" title="Permalink to this definition"></a></dt>
+<dd><p>Quality Focal Loss (QFL) is from <a class="reference external" href="https://arxiv.org/abs/2006.04388">Generalized Focal Loss: Learning
+Qualified and Distributed Bounding Boxes for Dense Object Detection</a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pred</strong> – Predicted joint representation of classification
+and quality (IoU) estimation with shape (N, C), C is the number of
+classes.</p></li>
+<li><p><strong>target</strong> – Target category label with shape (N,)
+and target quality label with shape (N,).</p></li>
+<li><p><strong>beta</strong> – The beta parameter for calculating the modulating factor.
+Defaults to 2.0.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Loss tensor with shape (N,).</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.modules.losses.focal_loss.quality_focal_loss_with_prob">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.modules.losses.focal_loss.</span></span><span class="sig-name descname"><span class="pre">quality_focal_loss_with_prob</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pred:</span> <span class="pre">~torch.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target:</span> <span class="pre">(&lt;class</span> <span class="pre">'torch.Tensor'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta:</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">2.0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="reference internal" href="_modules/cosense3d/modules/losses/focal_loss.html#quality_focal_loss_with_prob"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.losses.focal_loss.quality_focal_loss_with_prob" title="Permalink to this definition"></a></dt>
+<dd><p>Quality Focal Loss (QFL) is from <a class="reference external" href="https://arxiv.org/abs/2006.04388">Generalized Focal Loss: Learning
+Qualified and Distributed Bounding Boxes for Dense Object Detection</a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pred</strong> – Predicted joint representation of classification
+and quality (IoU) estimation with shape (N, C), C is the number of
+classes.</p></li>
+<li><p><strong>target</strong> – Target category label with shape (N,)
+and target quality label with shape (N,).</p></li>
+<li><p><strong>beta</strong> – The beta parameter for calculating the modulating factor.
+Defaults to 2.0.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Loss tensor with shape (N,).</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-cosense3d.modules.losses.iou_loss">
+<span id="cosense3d-modules-losses-iou-loss-module"></span><h2>cosense3d.modules.losses.iou_loss module<a class="headerlink" href="#module-cosense3d.modules.losses.iou_loss" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="cosense3d.modules.losses.iou_loss.GIoULoss">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cosense3d.modules.losses.iou_loss.</span></span><span class="sig-name descname"><span class="pre">GIoULoss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">eps</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1e-07</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/losses/iou_loss.html#GIoULoss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.losses.iou_loss.GIoULoss" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#cosense3d.modules.losses.base_loss.BaseLoss" title="cosense3d.modules.losses.base_loss.BaseLoss"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseLoss</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.modules.losses.iou_loss.GIoULoss.loss">
+<span class="sig-name descname"><span class="pre">loss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pred</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/losses/iou_loss.html#GIoULoss.loss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.losses.iou_loss.GIoULoss.loss" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cosense3d.modules.losses.iou_loss.GIoULoss.training">
+<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#cosense3d.modules.losses.iou_loss.GIoULoss.training" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="cosense3d.modules.losses.iou_loss.IoULoss">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cosense3d.modules.losses.iou_loss.</span></span><span class="sig-name descname"><span class="pre">IoULoss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'log'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eps</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1e-06</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/losses/iou_loss.html#IoULoss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.losses.iou_loss.IoULoss" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#cosense3d.modules.losses.base_loss.BaseLoss" title="cosense3d.modules.losses.base_loss.BaseLoss"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseLoss</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.modules.losses.iou_loss.IoULoss.loss">
+<span class="sig-name descname"><span class="pre">loss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pred</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/losses/iou_loss.html#IoULoss.loss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.losses.iou_loss.IoULoss.loss" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cosense3d.modules.losses.iou_loss.IoULoss.training">
+<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#cosense3d.modules.losses.iou_loss.IoULoss.training" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-cosense3d.modules.losses.l1_loss">
+<span id="cosense3d-modules-losses-l1-loss-module"></span><h2>cosense3d.modules.losses.l1_loss module<a class="headerlink" href="#module-cosense3d.modules.losses.l1_loss" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="cosense3d.modules.losses.l1_loss.L1Loss">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cosense3d.modules.losses.l1_loss.</span></span><span class="sig-name descname"><span class="pre">L1Loss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reduction</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'mean'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">activation</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'none'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss_weight</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/losses/l1_loss.html#L1Loss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.losses.l1_loss.L1Loss" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#cosense3d.modules.losses.base_loss.BaseLoss" title="cosense3d.modules.losses.base_loss.BaseLoss"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseLoss</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.modules.losses.l1_loss.L1Loss.loss">
+<span class="sig-name descname"><span class="pre">loss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pred</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/losses/l1_loss.html#L1Loss.loss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.losses.l1_loss.L1Loss.loss" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cosense3d.modules.losses.l1_loss.L1Loss.training">
+<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#cosense3d.modules.losses.l1_loss.L1Loss.training" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="cosense3d.modules.losses.l1_loss.SmoothL1Loss">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cosense3d.modules.losses.l1_loss.</span></span><span class="sig-name descname"><span class="pre">SmoothL1Loss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">beta</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/losses/l1_loss.html#SmoothL1Loss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.losses.l1_loss.SmoothL1Loss" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#cosense3d.modules.losses.base_loss.BaseLoss" title="cosense3d.modules.losses.base_loss.BaseLoss"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseLoss</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.modules.losses.l1_loss.SmoothL1Loss.loss">
+<span class="sig-name descname"><span class="pre">loss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pred</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/losses/l1_loss.html#SmoothL1Loss.loss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.losses.l1_loss.SmoothL1Loss.loss" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cosense3d.modules.losses.l1_loss.SmoothL1Loss.training">
+<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#cosense3d.modules.losses.l1_loss.SmoothL1Loss.training" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-cosense3d.modules.losses.vanilla_seg_loss">
+<span id="cosense3d-modules-losses-vanilla-seg-loss-module"></span><h2>cosense3d.modules.losses.vanilla_seg_loss module<a class="headerlink" href="#module-cosense3d.modules.losses.vanilla_seg_loss" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="cosense3d.modules.losses.vanilla_seg_loss.VanillaSegLoss">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cosense3d.modules.losses.vanilla_seg_loss.</span></span><span class="sig-name descname"><span class="pre">VanillaSegLoss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">d_weights</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">s_weights</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">d_coe</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">s_coe</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">l_weights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/losses/vanilla_seg_loss.html#VanillaSegLoss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.losses.vanilla_seg_loss.VanillaSegLoss" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.modules.losses.vanilla_seg_loss.VanillaSegLoss.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">static_pred</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dynamic_pred</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">static_gt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dynamic_gt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/losses/vanilla_seg_loss.html#VanillaSegLoss.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.losses.vanilla_seg_loss.VanillaSegLoss.forward" title="Permalink to this definition"></a></dt>
+<dd><p>Perform loss function on the prediction.</p>
+<section id="id5">
+<h3>Parameters<a class="headerlink" href="#id5" title="Permalink to this heading"></a></h3>
+<dl class="simple">
+<dt>output_dict<span class="classifier">dict</span></dt><dd><p>The dictionary contains the prediction.</p>
+</dd>
+<dt>gt_dict<span class="classifier">dict</span></dt><dd><p>The dictionary contains the groundtruth.</p>
+</dd>
+</dl>
+</section>
+<section id="returns">
+<h3>Returns<a class="headerlink" href="#returns" title="Permalink to this heading"></a></h3>
+<p>Loss dictionary.</p>
+</section>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cosense3d.modules.losses.vanilla_seg_loss.VanillaSegLoss.training">
+<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#cosense3d.modules.losses.vanilla_seg_loss.VanillaSegLoss.training" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-cosense3d.modules.losses">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-cosense3d.modules.losses" title="Permalink to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.modules.losses.build_loss">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.modules.losses.</span></span><span class="sig-name descname"><span class="pre">build_loss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/losses.html#build_loss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.losses.build_loss" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="cosense3d.modules.heads.html" class="btn btn-neutral float-left" title="cosense3d.modules.heads package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="cosense3d.modules.necks.html" class="btn btn-neutral float-right" title="cosense3d.modules.necks package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Anonymous Author.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

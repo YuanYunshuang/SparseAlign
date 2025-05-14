@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>cosense3d.dataset.toolkit.cosense &mdash; OpenCosense3D 1.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js?v=af2ce170"></script>
+        <script src="../../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            OpenCosense3D
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../md/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../md/prepare_data.html">Prepare Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../md/structure.html">The Structure of the framework</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules.html">CoSense3d</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">OpenCosense3D</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+          <li class="breadcrumb-item"><a href="../../dataset.html">cosense3d.dataset</a></li>
+          <li class="breadcrumb-item"><a href="../toolkit.html">cosense3d.dataset.toolkit</a></li>
+      <li class="breadcrumb-item active">cosense3d.dataset.toolkit.cosense</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for cosense3d.dataset.toolkit.cosense</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">glob</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">pickle</span>
+<span class="kn">import</span> <span class="nn">random</span>
+
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">import</span> <span class="nn">tqdm</span>
+<span class="kn">import</span> <span class="nn">yaml</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">cosense3d.utils.misc</span> <span class="kn">import</span> <span class="n">load_json</span><span class="p">,</span> <span class="n">save_json</span>
+<span class="kn">from</span> <span class="nn">cosense3d.utils</span> <span class="kn">import</span> <span class="n">pclib</span>
+<span class="kn">from</span> <span class="nn">cosense3d.ops.utils</span> <span class="kn">import</span> <span class="n">points_in_boxes_cpu</span>
+<span class="kn">from</span> <span class="nn">cosense3d.dataset.toolkit</span> <span class="kn">import</span> <span class="n">register_pcds</span>
+
+
+<span class="n">type_sustech2cosense</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;Car&#39;</span><span class="p">:</span> <span class="s1">&#39;vehicle.car&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;Van&#39;</span><span class="p">:</span> <span class="s1">&#39;vehicle.van&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;Truck&#39;</span><span class="p">:</span> <span class="s1">&#39;vehicle.truck&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;Bus&#39;</span><span class="p">:</span> <span class="s1">&#39;vehicle.bus&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;Tram&#39;</span><span class="p">:</span> <span class="s1">&#39;vehicle.tram&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;Unknown&#39;</span><span class="p">:</span> <span class="s1">&#39;unknown&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;BicycleRider&#39;</span><span class="p">:</span> <span class="s1">&#39;vehicle.cyclist&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;Bicyclerider&#39;</span><span class="p">:</span> <span class="s1">&#39;vehicle.cyclist&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;MotorcyleRider&#39;</span><span class="p">:</span> <span class="s1">&#39;vehicle.motorcycle&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;Pedestrian&#39;</span><span class="p">:</span> <span class="s1">&#39;human.pedestrian&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;HumanSitting&#39;</span><span class="p">:</span> <span class="s1">&#39;human.sitting&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;Scooterrider&#39;</span><span class="p">:</span> <span class="s1">&#39;vehicle.scooter&#39;</span>
+<span class="p">}</span>
+<span class="n">type_cosense2sustech</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="n">v</span><span class="p">:</span> <span class="n">k</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">type_sustech2cosense</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+<span class="p">}</span>
+
+<span class="n">csColors</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;vehicle.car&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">215</span><span class="p">,</span> <span class="mi">255</span><span class="p">],</span> <span class="c1">#0</span>
+    <span class="s1">&#39;vehicle.van&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">246</span><span class="p">,</span> <span class="mi">250</span><span class="p">,</span> <span class="mi">112</span><span class="p">],</span> <span class="c1">#1</span>
+    <span class="s1">&#39;vehicle.truck&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">255</span><span class="p">,</span> <span class="mi">132</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="c1">#2</span>
+    <span class="s1">&#39;vehicle.bus&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">223</span><span class="p">,</span> <span class="mi">162</span><span class="p">],</span> <span class="c1">#3</span>
+    <span class="s1">&#39;vehicle.tram&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">121</span><span class="p">,</span> <span class="mi">255</span><span class="p">],</span> <span class="c1">#4</span>
+    <span class="s1">&#39;vehicle.motorcycle&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">255</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">96</span><span class="p">],</span> <span class="c1">#5</span>
+    <span class="s1">&#39;vehicle.cyclist&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">244</span><span class="p">,</span> <span class="mi">35</span><span class="p">,</span> <span class="mi">232</span><span class="p">],</span> <span class="c1">#6</span>
+    <span class="s1">&#39;vehicle.scooter&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">227</span><span class="p">,</span> <span class="mi">132</span><span class="p">,</span> <span class="mi">255</span><span class="p">],</span> <span class="c1">#7</span>
+    <span class="s1">&#39;vehicle.other&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">180</span><span class="p">,</span> <span class="mi">254</span><span class="p">,</span> <span class="mi">152</span><span class="p">],</span> <span class="c1">#8</span>
+    <span class="s1">&#39;human.pedestrian&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">220</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">60</span><span class="p">],</span> <span class="c1">#9</span>
+    <span class="s1">&#39;human.wheelchair&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">134</span><span class="p">,</span> <span class="mi">93</span><span class="p">,</span> <span class="mi">255</span><span class="p">],</span> <span class="c1">#10</span>
+    <span class="s1">&#39;human.sitting&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">56</span><span class="p">,</span> <span class="mi">229</span><span class="p">,</span> <span class="mi">77</span><span class="p">],</span> <span class="c1">#11</span>
+    <span class="s1">&#39;static.trafficcone&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">255</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="c1">#12</span>
+    <span class="s1">&#39;static.barrowlist&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">255</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="c1">#13</span>
+    <span class="s1">&#39;vehicle.tricyclist&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">255</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">50</span><span class="p">],</span> <span class="c1">#14</span>
+    <span class="s1">&#39;unknown&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">],</span>
+<span class="p">}</span>
+
+
+<div class="viewcode-block" id="CoSenseDataConverter"><a class="viewcode-back" href="../../../../cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.cosense.CoSenseDataConverter">[docs]</a><span class="k">class</span> <span class="nc">CoSenseDataConverter</span><span class="p">:</span>
+    <span class="n">OBJ_LIST</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s1">&#39;vehicle.car&#39;</span><span class="p">,</span>   <span class="c1">#0</span>
+        <span class="s1">&#39;vehicle.van&#39;</span><span class="p">,</span>   <span class="c1">#1</span>
+        <span class="s1">&#39;vehicle.truck&#39;</span><span class="p">,</span>   <span class="c1">#2</span>
+        <span class="s1">&#39;vehicle.bus&#39;</span><span class="p">,</span>   <span class="c1">#3</span>
+        <span class="s1">&#39;vehicle.tram&#39;</span><span class="p">,</span>   <span class="c1">#4</span>
+        <span class="s1">&#39;vehicle.motorcycle&#39;</span><span class="p">,</span>   <span class="c1">#5</span>
+        <span class="s1">&#39;vehicle.cyclist&#39;</span><span class="p">,</span>   <span class="c1">#6</span>
+        <span class="s1">&#39;vehicle.scooter&#39;</span><span class="p">,</span>   <span class="c1">#7</span>
+        <span class="s1">&#39;vehicle.other&#39;</span><span class="p">,</span>   <span class="c1">#8</span>
+        <span class="s1">&#39;human.pedestrian&#39;</span><span class="p">,</span>   <span class="c1">#9</span>
+        <span class="s1">&#39;human.wheelchair&#39;</span><span class="p">,</span>   <span class="c1">#10</span>
+        <span class="s1">&#39;human.sitting&#39;</span><span class="p">,</span>   <span class="c1">#11</span>
+        <span class="s1">&#39;static.trafficcone&#39;</span><span class="p">,</span>   <span class="c1">#12</span>
+        <span class="s1">&#39;static.barrowlist&#39;</span><span class="p">,</span>   <span class="c1">#13</span>
+        <span class="s1">&#39;vehicle.tricyclist&#39;</span><span class="p">,</span>   <span class="c1">#13</span>
+        <span class="s1">&#39;unknown&#39;</span><span class="p">,</span>   <span class="c1">#14</span>
+    <span class="p">]</span>
+    <span class="n">OBJ_ID2NAME</span> <span class="o">=</span> <span class="p">{</span><span class="n">i</span><span class="p">:</span> <span class="n">n</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">OBJ_LIST</span><span class="p">)}</span>
+    <span class="n">OBJ_NAME2ID</span> <span class="o">=</span> <span class="p">{</span><span class="n">n</span><span class="p">:</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">OBJ_LIST</span><span class="p">)}</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_path</span><span class="p">,</span> <span class="n">meta_path</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;all&#39;</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data_path</span> <span class="o">=</span> <span class="n">data_path</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">meta_path</span> <span class="o">=</span> <span class="n">meta_path</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">meta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">load_meta</span><span class="p">(</span><span class="n">meta_path</span><span class="p">,</span> <span class="n">mode</span><span class="p">)</span>
+
+<div class="viewcode-block" id="CoSenseDataConverter.update_from_sustech"><a class="viewcode-back" href="../../../../cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.cosense.CoSenseDataConverter.update_from_sustech">[docs]</a>    <span class="k">def</span> <span class="nf">update_from_sustech</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sustech_path</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">scenario</span><span class="p">,</span> <span class="n">sdict</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">frame</span><span class="p">,</span> <span class="n">fdict</span> <span class="ow">in</span> <span class="n">sdict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">new_label_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                    <span class="n">sustech_path</span><span class="p">,</span>
+                    <span class="n">scenario</span><span class="p">,</span> <span class="s1">&#39;label&#39;</span><span class="p">,</span>
+                    <span class="n">frame</span> <span class="o">+</span> <span class="s1">&#39;.json&#39;</span>
+                <span class="p">)</span>
+                <span class="n">objects</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">obj_from_sustech</span><span class="p">(</span><span class="n">new_label_file</span><span class="p">)</span>
+                <span class="c1"># TODO the transformation from local to global</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="n">scenario</span><span class="p">][</span><span class="n">frame</span><span class="p">][</span><span class="s1">&#39;meta&#39;</span><span class="p">][</span><span class="s1">&#39;bbx_center_global&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">objects</span>
+
+            <span class="n">save_json</span><span class="p">(</span><span class="n">sdict</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">meta_path</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">scenario</span><span class="si">}</span><span class="s2">.json&quot;</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="CoSenseDataConverter.to_sustech"><a class="viewcode-back" href="../../../../cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.cosense.CoSenseDataConverter.to_sustech">[docs]</a>    <span class="k">def</span> <span class="nf">to_sustech</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">out_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="c1"># make out dirs</span>
+        <span class="n">out_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_path</span><span class="p">,</span> <span class="s1">&#39;..&#39;</span><span class="p">,</span> <span class="s1">&#39;sustech_fmt&#39;</span><span class="p">)</span> \
+            <span class="k">if</span> <span class="n">out_dir</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">out_dir</span>
+        <span class="k">for</span> <span class="n">s</span><span class="p">,</span> <span class="n">sdict</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">scenario_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">out_dir</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">scenario_dir</span><span class="p">,</span> <span class="s1">&#39;lidar&#39;</span><span class="p">),</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">scenario_dir</span><span class="p">,</span> <span class="s1">&#39;label&#39;</span><span class="p">),</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">f</span><span class="p">,</span> <span class="n">fdict</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="o">.</span><span class="n">tqdm</span><span class="p">(</span><span class="n">sdict</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
+                <span class="n">bbx_global_center</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">fdict</span><span class="p">[</span><span class="s1">&#39;meta&#39;</span><span class="p">][</span><span class="s1">&#39;bbx_center_global&#39;</span><span class="p">])</span>
+                <span class="c1"># bbx_global_corner = boxes_to_corners_3d(bbx_global_center[:, 2:])</span>
+                <span class="n">lidars</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">adict</span> <span class="ow">in</span> <span class="n">fdict</span><span class="p">[</span><span class="s1">&#39;agents&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="k">for</span> <span class="n">l</span><span class="p">,</span> <span class="n">ldict</span> <span class="ow">in</span> <span class="n">adict</span><span class="p">[</span><span class="s1">&#39;lidar&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                        <span class="n">lidar_pose</span> <span class="o">=</span> <span class="n">ldict</span><span class="p">[</span><span class="s1">&#39;pose&#39;</span><span class="p">]</span>
+                        <span class="n">filename</span> <span class="o">=</span> <span class="n">ldict</span><span class="p">[</span><span class="s1">&#39;filename&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\\</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">&#39;/&#39;</span><span class="p">)</span>
+                        <span class="c1"># TODO rotate points and bbxs</span>
+                        <span class="n">pcd</span> <span class="o">=</span> <span class="n">pclib</span><span class="o">.</span><span class="n">load_pcd</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_path</span><span class="p">,</span> <span class="n">filename</span><span class="p">))</span>
+                        <span class="n">points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">pcd</span><span class="p">[</span><span class="s1">&#39;xyz&#39;</span><span class="p">],</span> <span class="n">pcd</span><span class="p">[</span><span class="s1">&#39;intensity&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)],</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+                        <span class="n">lidars</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">points</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">))</span>
+                <span class="n">lidars</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">lidars</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+                <span class="n">lidars</span><span class="o">.</span><span class="n">tofile</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">out_dir</span><span class="p">,</span> <span class="n">scenario_dir</span><span class="p">,</span> <span class="s1">&#39;lidar&#39;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">f</span><span class="si">}</span><span class="s2">.bin&quot;</span><span class="p">))</span>
+                <span class="c1"># write label file</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">obj_to_sustech</span><span class="p">(</span>
+                    <span class="n">bbx_global_center</span><span class="p">,</span>
+                    <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">out_dir</span><span class="p">,</span> <span class="n">scenario_dir</span><span class="p">,</span> <span class="s1">&#39;label&#39;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">f</span><span class="si">}</span><span class="s2">.json&quot;</span><span class="p">)</span>
+                <span class="p">)</span></div>
+
+<div class="viewcode-block" id="CoSenseDataConverter.to_opv2v"><a class="viewcode-back" href="../../../../cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.cosense.CoSenseDataConverter.to_opv2v">[docs]</a>    <span class="k">def</span> <span class="nf">to_opv2v</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">out_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="c1"># make out dirs</span>
+        <span class="n">out_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_path</span><span class="p">,</span> <span class="s1">&#39;..&#39;</span><span class="p">,</span> <span class="s1">&#39;opv2v_fmt&#39;</span><span class="p">)</span> \
+            <span class="k">if</span> <span class="n">out_dir</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">out_dir</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">out_dir</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">s</span><span class="p">,</span> <span class="n">sdict</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">scenario_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">out_dir</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">scenario_dir</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">f</span><span class="p">,</span> <span class="n">fdict</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="o">.</span><span class="n">tqdm</span><span class="p">(</span><span class="n">sdict</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
+                <span class="n">bbx_global_center</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">fdict</span><span class="p">[</span><span class="s1">&#39;meta&#39;</span><span class="p">][</span><span class="s1">&#39;bbx_center_global&#39;</span><span class="p">])</span>
+                <span class="c1"># bbx_global_corner = boxes_to_corners_3d(bbx_global_center[:, 2:])</span>
+                <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">adict</span> <span class="ow">in</span> <span class="n">fdict</span><span class="p">[</span><span class="s1">&#39;agents&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="n">agent_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">scenario_dir</span><span class="p">,</span> <span class="n">a</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">agent_dir</span><span class="p">):</span>
+                        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">agent_dir</span><span class="p">)</span>
+                    <span class="k">for</span> <span class="n">l</span><span class="p">,</span> <span class="n">ldict</span> <span class="ow">in</span> <span class="n">adict</span><span class="p">[</span><span class="s1">&#39;lidar&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                        <span class="n">lidar_pose</span> <span class="o">=</span> <span class="n">ldict</span><span class="p">[</span><span class="s1">&#39;pose&#39;</span><span class="p">]</span>
+                        <span class="n">filename</span> <span class="o">=</span> <span class="n">ldict</span><span class="p">[</span><span class="s1">&#39;filename&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\\</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">&#39;/&#39;</span><span class="p">)</span>
+                        <span class="c1"># TODO rotate points and bbxs</span>
+                        <span class="n">pclib</span><span class="o">.</span><span class="n">lidar_bin2bin</span><span class="p">(</span>
+                            <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_path</span><span class="p">,</span> <span class="n">filename</span><span class="p">),</span>
+                            <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">agent_dir</span><span class="p">,</span> <span class="n">f</span> <span class="o">+</span> <span class="s1">&#39;.bin&#39;</span><span class="p">)</span>
+                        <span class="p">)</span>
+                        <span class="c1"># write label file</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">obj_to_opv2v</span><span class="p">(</span><span class="n">bbx_global_center</span><span class="p">,</span> <span class="n">lidar_pose</span><span class="p">,</span>
+                                          <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">agent_dir</span><span class="p">,</span> <span class="n">f</span> <span class="o">+</span> <span class="s1">&#39;.yaml&#39;</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="CoSenseDataConverter.to_kitti"><a class="viewcode-back" href="../../../../cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.cosense.CoSenseDataConverter.to_kitti">[docs]</a>    <span class="k">def</span> <span class="nf">to_kitti</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">out_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">cosense3d.dataset.toolkit.kitti</span> <span class="kn">import</span> <span class="n">type_cosense2kitti</span>
+        <span class="n">split</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="c1"># &#39;train&#39;: [&#39;measurement4_0&#39;],</span>
+            <span class="c1"># &#39;val&#39;: [&#39;measurement4_1&#39;],</span>
+            <span class="s1">&#39;test&#39;</span><span class="p">:</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">keys</span><span class="p">()),</span>
+        <span class="p">}</span>
+        <span class="c1"># make out dirs</span>
+        <span class="n">out_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_path</span><span class="p">,</span> <span class="s1">&#39;..&#39;</span><span class="p">,</span> <span class="s1">&#39;kitti_test&#39;</span><span class="p">)</span> \
+            <span class="k">if</span> <span class="n">out_dir</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">out_dir</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">out_dir</span><span class="p">,</span> <span class="s1">&#39;ImageSets&#39;</span><span class="p">),</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">dir_name</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;velodyne&#39;</span><span class="p">,</span> <span class="s1">&#39;image_2&#39;</span><span class="p">,</span> <span class="s1">&#39;label_2&#39;</span><span class="p">,</span> <span class="s1">&#39;calib&#39;</span><span class="p">]:</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">out_dir</span><span class="p">,</span> <span class="s1">&#39;training&#39;</span><span class="p">,</span> <span class="n">dir_name</span><span class="p">),</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">out_dir</span><span class="p">,</span> <span class="s1">&#39;validating&#39;</span><span class="p">,</span> <span class="n">dir_name</span><span class="p">),</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">out_dir</span><span class="p">,</span> <span class="s1">&#39;testing&#39;</span><span class="p">,</span> <span class="n">dir_name</span><span class="p">),</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="c1"># create split files</span>
+        <span class="k">for</span> <span class="n">sp</span><span class="p">,</span> <span class="n">seqs</span> <span class="ow">in</span> <span class="n">split</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">out_dir</span><span class="p">,</span> <span class="s1">&#39;ImageSets&#39;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">sp</span><span class="si">}</span><span class="s2">.txt&quot;</span><span class="p">),</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh</span><span class="p">:</span>
+                <span class="n">frames</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">for</span> <span class="n">seq</span> <span class="ow">in</span> <span class="n">seqs</span><span class="p">:</span>
+                    <span class="n">cur_frames</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="n">seq</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+                    <span class="n">cur_frames</span> <span class="o">=</span> <span class="p">[</span><span class="n">seq</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">f</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">cur_frames</span><span class="p">]</span>
+                    <span class="n">frames</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">cur_frames</span><span class="p">)</span>
+                <span class="n">fh</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">frames</span><span class="p">)))</span>
+            <span class="k">for</span> <span class="n">s</span><span class="p">,</span> <span class="n">sdict</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">s</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">split</span><span class="p">[</span><span class="n">sp</span><span class="p">]</span> <span class="ow">or</span> <span class="nb">int</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">])</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="nb">print</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span>
+                <span class="n">scenario_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">out_dir</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span>
+                <span class="n">cur_split</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;train&#39;</span><span class="p">:</span> <span class="s1">&#39;training&#39;</span><span class="p">,</span> <span class="s1">&#39;val&#39;</span><span class="p">:</span> <span class="s1">&#39;validating&#39;</span><span class="p">,</span> <span class="s1">&#39;test&#39;</span><span class="p">:</span> <span class="s1">&#39;testing&#39;</span><span class="p">}[</span><span class="n">sp</span><span class="p">]</span>
+                <span class="c1"># os.makedirs(scenario_dir, exist_ok=True)</span>
+                <span class="c1"># sdict = {k: sdict[k] for k in sorted(list(sdict.keys()))[:10]}</span>
+                <span class="k">for</span> <span class="n">f</span><span class="p">,</span> <span class="n">fdict</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="o">.</span><span class="n">tqdm</span><span class="p">(</span><span class="n">sdict</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
+                    <span class="c1">##### save lidar ######</span>
+                    <span class="n">points</span> <span class="o">=</span> <span class="p">[]</span>
+                    <span class="k">for</span> <span class="n">ai</span><span class="p">,</span> <span class="n">adict</span> <span class="ow">in</span> <span class="n">fdict</span><span class="p">[</span><span class="s1">&#39;agents&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                        <span class="k">for</span> <span class="n">li</span><span class="p">,</span> <span class="n">ldict</span> <span class="ow">in</span> <span class="n">adict</span><span class="p">[</span><span class="s1">&#39;lidar&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                            <span class="n">lidar_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_path</span><span class="p">,</span> <span class="n">ldict</span><span class="p">[</span><span class="s1">&#39;filename&#39;</span><span class="p">])</span>
+                            <span class="n">points</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                                <span class="n">np</span><span class="o">.</span><span class="n">fromfile</span><span class="p">(</span><span class="n">lidar_file</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+                            <span class="p">)</span>
+                    <span class="n">points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+                    <span class="n">lidar_out_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                        <span class="n">out_dir</span><span class="p">,</span> <span class="n">cur_split</span><span class="p">,</span> <span class="s1">&#39;velodyne&#39;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">s</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">f</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span><span class="si">}</span><span class="s2">.bin&quot;</span>
+                    <span class="p">)</span>
+                    <span class="n">points</span><span class="o">.</span><span class="n">tofile</span><span class="p">(</span><span class="n">lidar_out_file</span><span class="p">)</span>
+                    <span class="c1">######## save label #######</span>
+                    <span class="n">label</span> <span class="o">=</span> <span class="n">fdict</span><span class="p">[</span><span class="s1">&#39;meta&#39;</span><span class="p">][</span><span class="s1">&#39;bbx_center_global&#39;</span><span class="p">]</span>
+                    <span class="n">label_out_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                        <span class="n">out_dir</span><span class="p">,</span> <span class="n">cur_split</span><span class="p">,</span> <span class="s1">&#39;label_2&#39;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">s</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">f</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span><span class="si">}</span><span class="s2">.txt&quot;</span>
+                    <span class="p">)</span>
+                    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">label_out_file</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh</span><span class="p">:</span>
+                        <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">label</span><span class="p">:</span>
+                            <span class="c1"># kitti label format</span>
+                            <span class="n">cosense_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">OBJ_ID2NAME</span><span class="p">[</span><span class="n">l</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
+                            <span class="nb">type</span> <span class="o">=</span> <span class="p">[</span><span class="n">type_cosense2kitti</span><span class="p">[</span><span class="n">cosense_type</span><span class="p">]]</span>
+
+                            <span class="n">trancated</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;0&#39;</span><span class="p">]</span>
+                            <span class="n">occluded</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;0&#39;</span><span class="p">]</span>
+                            <span class="n">alpha</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">arctan2</span><span class="p">(</span><span class="n">l</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span><span class="w"> </span><span class="n">l</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span>
+                            <span class="n">bbox</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;0&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="mi">4</span>
+                            <span class="n">dimensions</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">l</span><span class="p">[</span><span class="n">x</span><span class="p">]</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">7</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">5</span><span class="p">]]</span> <span class="c1"># hwl</span>
+                            <span class="n">l</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">-=</span> <span class="n">l</span><span class="p">[</span><span class="mi">7</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span>
+                            <span class="n">location</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">l</span><span class="p">[</span><span class="n">x</span><span class="p">]</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">]]</span> <span class="c1"># in cam coor</span>
+                            <span class="n">rotation_y</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="o">-</span><span class="n">l</span><span class="p">[</span><span class="mi">10</span><span class="p">]</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span>
+                            <span class="n">ls</span> <span class="o">=</span> <span class="nb">type</span> <span class="o">+</span> <span class="n">trancated</span> <span class="o">+</span> <span class="n">occluded</span> <span class="o">+</span> <span class="n">alpha</span> <span class="o">+</span> <span class="n">bbox</span> <span class="o">+</span> <span class="n">dimensions</span> <span class="o">+</span>\
+                                     <span class="n">location</span> <span class="o">+</span> <span class="n">rotation_y</span>
+                            <span class="n">line</span> <span class="o">=</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">ls</span><span class="p">)</span>
+                            <span class="n">fh</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+                            <span class="n">fh</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CoSenseDataConverter.obj_from_sustech"><a class="viewcode-back" href="../../../../cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.cosense.CoSenseDataConverter.obj_from_sustech">[docs]</a>    <span class="k">def</span> <span class="nf">obj_from_sustech</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">label_file</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">label_file</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">[]</span>
+        <span class="n">objs</span> <span class="o">=</span> <span class="n">load_json</span><span class="p">(</span><span class="n">label_file</span><span class="p">)</span>
+        <span class="n">bboxes</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">obj_dict</span> <span class="ow">in</span> <span class="n">objs</span><span class="p">:</span>
+            <span class="n">obj_id</span> <span class="o">=</span> <span class="n">obj_dict</span><span class="p">[</span><span class="s1">&#39;obj_id&#39;</span><span class="p">]</span>
+            <span class="n">obj_type</span> <span class="o">=</span> <span class="n">obj_dict</span><span class="p">[</span><span class="s1">&#39;obj_type&#39;</span><span class="p">]</span>
+            <span class="n">position</span> <span class="o">=</span> <span class="n">obj_dict</span><span class="p">[</span><span class="s1">&#39;psr&#39;</span><span class="p">][</span><span class="s1">&#39;position&#39;</span><span class="p">]</span>
+            <span class="n">rotation</span> <span class="o">=</span> <span class="n">obj_dict</span><span class="p">[</span><span class="s1">&#39;psr&#39;</span><span class="p">][</span><span class="s1">&#39;rotation&#39;</span><span class="p">]</span>
+            <span class="n">scale</span> <span class="o">=</span> <span class="n">obj_dict</span><span class="p">[</span><span class="s1">&#39;psr&#39;</span><span class="p">][</span><span class="s1">&#39;scale&#39;</span><span class="p">]</span>
+
+            <span class="n">cosense_type_name</span> <span class="o">=</span> <span class="n">type_sustech2cosense</span><span class="p">[</span><span class="n">obj_type</span><span class="p">]</span>
+            <span class="n">obj_type_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">OBJ_NAME2ID</span><span class="p">[</span><span class="n">cosense_type_name</span><span class="p">]</span>
+            <span class="n">bbx_center</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="nb">float</span><span class="p">(</span><span class="n">obj_id</span><span class="p">),</span>
+                <span class="nb">float</span><span class="p">(</span><span class="n">obj_type_id</span><span class="p">),</span>
+                <span class="n">position</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">],</span>
+                <span class="n">position</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">],</span>
+                <span class="n">position</span><span class="p">[</span><span class="s1">&#39;z&#39;</span><span class="p">],</span>
+                <span class="n">scale</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">],</span>
+                <span class="n">scale</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">],</span>
+                <span class="n">scale</span><span class="p">[</span><span class="s1">&#39;z&#39;</span><span class="p">],</span>
+                <span class="n">rotation</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">],</span>
+                <span class="n">rotation</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">],</span>
+                <span class="n">rotation</span><span class="p">[</span><span class="s1">&#39;z&#39;</span><span class="p">],</span>
+            <span class="p">]</span>
+            <span class="n">bboxes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">bbx_center</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">bboxes</span></div>
+
+<div class="viewcode-block" id="CoSenseDataConverter.obj_to_sustech"><a class="viewcode-back" href="../../../../cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.cosense.CoSenseDataConverter.obj_to_sustech">[docs]</a>    <span class="k">def</span> <span class="nf">obj_to_sustech</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cosense_objs</span><span class="p">,</span> <span class="n">sustech_file</span><span class="p">):</span>
+        <span class="n">sustech_objs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">cosense_objs</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">save_json</span><span class="p">(</span><span class="n">sustech_objs</span><span class="p">,</span> <span class="n">sustech_file</span><span class="p">)</span>
+            <span class="k">return</span>
+        <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="n">cosense_objs</span><span class="p">:</span>
+            <span class="n">obj_type</span> <span class="o">=</span> <span class="n">type_cosense2sustech</span><span class="p">[</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">OBJ_ID2NAME</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">obj</span><span class="p">[</span><span class="mi">1</span><span class="p">])]</span>
+            <span class="p">]</span>
+            <span class="n">sustech_objs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="p">{</span>
+                    <span class="s1">&#39;obj_id&#39;</span><span class="p">:</span> <span class="n">obj</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                    <span class="s1">&#39;obj_type&#39;</span><span class="p">:</span> <span class="n">obj_type</span><span class="p">,</span>
+                    <span class="s1">&#39;psr&#39;</span><span class="p">:</span> <span class="p">{</span>
+                        <span class="s1">&#39;position&#39;</span><span class="p">:</span> <span class="p">{</span>
+                            <span class="s1">&#39;x&#39;</span><span class="p">:</span> <span class="n">obj</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span>
+                            <span class="s1">&#39;y&#39;</span><span class="p">:</span> <span class="n">obj</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span>
+                            <span class="s1">&#39;z&#39;</span><span class="p">:</span> <span class="n">obj</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span>
+                        <span class="p">},</span>
+                        <span class="s1">&#39;scale&#39;</span><span class="p">:</span> <span class="p">{</span>
+                            <span class="s1">&#39;x&#39;</span><span class="p">:</span> <span class="n">obj</span><span class="p">[</span><span class="mi">5</span><span class="p">],</span>
+                            <span class="s1">&#39;y&#39;</span><span class="p">:</span> <span class="n">obj</span><span class="p">[</span><span class="mi">6</span><span class="p">],</span>
+                            <span class="s1">&#39;z&#39;</span><span class="p">:</span> <span class="n">obj</span><span class="p">[</span><span class="mi">7</span><span class="p">]</span>
+                        <span class="p">},</span>
+                        <span class="s1">&#39;rotation&#39;</span><span class="p">:</span> <span class="p">{</span>
+                            <span class="s1">&#39;x&#39;</span><span class="p">:</span> <span class="n">obj</span><span class="p">[</span><span class="mi">8</span><span class="p">],</span>
+                            <span class="s1">&#39;y&#39;</span><span class="p">:</span> <span class="n">obj</span><span class="p">[</span><span class="mi">9</span><span class="p">],</span>
+                            <span class="s1">&#39;z&#39;</span><span class="p">:</span> <span class="n">obj</span><span class="p">[</span><span class="mi">10</span><span class="p">]</span>
+                        <span class="p">}</span>
+                    <span class="p">}</span>
+                <span class="p">}</span>
+            <span class="p">)</span>
+        <span class="n">save_json</span><span class="p">(</span><span class="n">sustech_objs</span><span class="p">,</span> <span class="n">sustech_file</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CoSenseDataConverter.obj_to_opv2v"><a class="viewcode-back" href="../../../../cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.cosense.CoSenseDataConverter.obj_to_opv2v">[docs]</a>    <span class="k">def</span> <span class="nf">obj_to_opv2v</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bbxs</span><span class="p">,</span> <span class="n">pose</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span> <span class="n">timestamp</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">vehicles</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="c1"># only keep car, van, bus, truck</span>
+        <span class="n">bbxs</span> <span class="o">=</span> <span class="n">bbxs</span><span class="p">[</span><span class="n">bbxs</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">4</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">bbx</span> <span class="ow">in</span> <span class="n">bbxs</span><span class="p">:</span>
+            <span class="n">obj_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">bbx</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="n">obj_type</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">bbx</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="c1"># process the information to the opv2v format</span>
+            <span class="n">location</span> <span class="o">=</span> <span class="n">bbx</span><span class="p">[</span><span class="mi">2</span><span class="p">:</span><span class="mi">5</span><span class="p">]</span>
+            <span class="n">angle</span> <span class="o">=</span> <span class="n">bbx</span><span class="p">[[</span><span class="mi">8</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">9</span><span class="p">]]</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="mi">180</span>
+            <span class="n">angle</span><span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">]]</span> <span class="o">*=</span> <span class="o">-</span><span class="mi">1</span>
+            <span class="n">extent</span> <span class="o">=</span> <span class="n">bbx</span><span class="p">[</span><span class="mi">5</span><span class="p">:</span><span class="mi">8</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span>
+
+            <span class="n">vehicles</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">obj_id</span><span class="p">)]</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s1">&#39;angle&#39;</span><span class="p">:</span> <span class="n">angle</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span>
+                <span class="s1">&#39;center&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">]</span> <span class="o">*</span> <span class="mi">3</span><span class="p">,</span>
+                <span class="s1">&#39;extent&#39;</span><span class="p">:</span> <span class="n">extent</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span>
+                <span class="s1">&#39;location&#39;</span><span class="p">:</span> <span class="n">location</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span>
+                <span class="s1">&#39;speed&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+                <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="n">obj_type</span>
+            <span class="p">}</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pose</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+            <span class="n">pose</span> <span class="o">=</span> <span class="n">pose</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+        <span class="n">yaml_dict</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;lidar_pose&#39;</span><span class="p">:</span> <span class="n">pose</span><span class="p">,</span>
+            <span class="s1">&#39;true_ego_pos&#39;</span><span class="p">:</span> <span class="n">pose</span><span class="p">,</span>
+            <span class="s1">&#39;ego_speed&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="s1">&#39;vehicles&#39;</span><span class="p">:</span> <span class="n">vehicles</span>
+        <span class="p">}</span>
+        <span class="k">if</span> <span class="n">timestamp</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># timestamp for ouster is corrected by subtracting a systematic time offset (0.35s)</span>
+            <span class="n">yaml_dict</span><span class="p">[</span><span class="s1">&#39;timestamp&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">timestamp</span><span class="p">)</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">out_file</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh</span><span class="p">:</span>
+            <span class="n">yaml</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">yaml_dict</span><span class="p">,</span> <span class="n">fh</span><span class="p">,</span> <span class="n">default_flow_style</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CoSenseDataConverter.load_meta"><a class="viewcode-back" href="../../../../cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.cosense.CoSenseDataConverter.load_meta">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">load_meta</span><span class="p">(</span><span class="n">meta_path</span><span class="p">,</span> <span class="n">mode</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;all&#39;</span><span class="p">:</span>
+            <span class="n">scenario_meta_files</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">meta_path</span> <span class="o">+</span> <span class="s2">&quot;/*.json&quot;</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">scenario_meta_files</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">meta_path</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">mode</span><span class="si">}</span><span class="s1">.txt&#39;</span><span class="p">),</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">fh</span><span class="o">.</span><span class="n">readlines</span><span class="p">():</span>
+                    <span class="n">scenario_meta_files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">meta_path</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="si">}</span><span class="s1">.json&#39;</span><span class="p">))</span>
+
+        <span class="n">meta_dict</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">scenario_meta_files</span><span class="p">:</span>
+            <span class="n">scenario</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">f</span><span class="p">)[:</span><span class="o">-</span><span class="mi">5</span><span class="p">]</span>
+            <span class="n">meta_dict</span><span class="p">[</span><span class="n">scenario</span><span class="p">]</span> <span class="o">=</span> <span class="n">load_json</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">meta_dict</span></div>
+
+<div class="viewcode-block" id="CoSenseDataConverter.cal_vbbx_mean_dim"><a class="viewcode-back" href="../../../../cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.cosense.CoSenseDataConverter.cal_vbbx_mean_dim">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">cal_vbbx_mean_dim</span><span class="p">(</span><span class="n">meta</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculate mean dimensions of four-wheel vehicles&quot;&quot;&quot;</span>
+        <span class="n">dimensions</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">s</span><span class="p">,</span> <span class="n">sdict</span> <span class="ow">in</span> <span class="n">meta</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">f</span><span class="p">,</span> <span class="n">fdict</span> <span class="ow">in</span> <span class="n">sdict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">bbx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">fdict</span><span class="p">[</span><span class="s1">&#39;meta&#39;</span><span class="p">][</span><span class="s1">&#39;bbx_center_global&#39;</span><span class="p">])</span>
+                <span class="n">dimensions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">bbx</span><span class="p">[</span><span class="n">bbx</span><span class="p">[:,</span> <span class="mi">5</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">5</span><span class="p">:</span><span class="mi">8</span><span class="p">])</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">dimensions</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="CoSenseDataConverter.fdict_template"><a class="viewcode-back" href="../../../../cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.cosense.CoSenseDataConverter.fdict_template">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">fdict_template</span><span class="p">():</span>
+        <span class="k">return</span> <span class="p">{</span>
+                    <span class="s1">&#39;agents&#39;</span><span class="p">:</span> <span class="p">{</span>
+                        <span class="s1">&#39;0&#39;</span><span class="p">:</span> <span class="p">{</span>
+                            <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+                            <span class="s1">&#39;pose&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">]</span> <span class="o">*</span> <span class="mi">6</span><span class="p">,</span>
+                            <span class="s1">&#39;time&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>  <span class="c1"># timestamp for the current vehicle pose</span>
+                            <span class="s1">&#39;lidar&#39;</span><span class="p">:</span> <span class="p">{</span>
+                                <span class="s1">&#39;0&#39;</span><span class="p">:</span> <span class="p">{</span>
+                                    <span class="s1">&#39;pose&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">]</span> <span class="o">*</span> <span class="mi">6</span><span class="p">,</span>
+                                    <span class="s1">&#39;time&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>  <span class="c1"># timestamp for the current lidar triggering round</span>
+                                    <span class="s1">&#39;filename&#39;</span><span class="p">:</span> <span class="kc">None</span>
+                                <span class="p">}</span>
+                            <span class="p">},</span>
+                            <span class="s1">&#39;camera&#39;</span><span class="p">:</span> <span class="p">{},</span>  <span class="c1"># TODO API for cameras</span>
+                        <span class="p">}</span>
+                    <span class="p">},</span>
+                    <span class="c1"># no cooperation needed, take lidar as global for each frame</span>
+                    <span class="s1">&#39;meta&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;bbx_center_global&#39;</span><span class="p">:</span> <span class="p">[]}</span>
+                <span class="p">}</span></div>
+
+<div class="viewcode-block" id="CoSenseDataConverter.add_cam_to_fdict"><a class="viewcode-back" href="../../../../cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.cosense.CoSenseDataConverter.add_cam_to_fdict">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">add_cam_to_fdict</span><span class="p">(</span><span class="n">fdict</span><span class="p">,</span> <span class="n">agent_id</span><span class="p">,</span> <span class="n">cam_id</span><span class="p">,</span> <span class="n">filenames</span><span class="p">,</span> <span class="n">intrinsic</span><span class="p">,</span> <span class="n">extrinsic</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">agent_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">fdict</span><span class="p">[</span><span class="s1">&#39;agents&#39;</span><span class="p">]:</span>
+            <span class="n">adict</span> <span class="o">=</span> <span class="n">CoSenseDataConverter</span><span class="o">.</span><span class="n">fdict_template</span><span class="p">()[</span><span class="s1">&#39;agents&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">fdict</span><span class="p">[</span><span class="s1">&#39;agents&#39;</span><span class="p">][</span><span class="n">agent_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">adict</span>
+        <span class="n">kwargs</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
+            <span class="s1">&#39;filenames&#39;</span><span class="p">:</span> <span class="n">filenames</span><span class="p">,</span>
+            <span class="s1">&#39;intrinsic&#39;</span><span class="p">:</span> <span class="n">intrinsic</span><span class="p">,</span>
+            <span class="s1">&#39;extrinsic&#39;</span><span class="p">:</span> <span class="n">extrinsic</span>
+        <span class="p">})</span>
+        <span class="n">fdict</span><span class="p">[</span><span class="s1">&#39;agents&#39;</span><span class="p">][</span><span class="n">agent_id</span><span class="p">][</span><span class="s1">&#39;camera&#39;</span><span class="p">][</span><span class="n">cam_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">kwargs</span></div>
+
+<div class="viewcode-block" id="CoSenseDataConverter.update_frame_bbx"><a class="viewcode-back" href="../../../../cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.cosense.CoSenseDataConverter.update_frame_bbx">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">update_frame_bbx</span><span class="p">(</span><span class="n">fdict</span><span class="p">,</span> <span class="n">bbx</span><span class="p">):</span>
+        <span class="n">fdict</span><span class="p">[</span><span class="s1">&#39;meta&#39;</span><span class="p">][</span><span class="s1">&#39;bbx_center_global&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">bbx</span></div>
+
+<div class="viewcode-block" id="CoSenseDataConverter.update_agent"><a class="viewcode-back" href="../../../../cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.cosense.CoSenseDataConverter.update_agent">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">update_agent</span><span class="p">(</span><span class="n">fdict</span><span class="p">,</span>
+                     <span class="n">agent_id</span><span class="p">,</span>
+                     <span class="n">agent_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                     <span class="n">agent_pose</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                     <span class="n">agent_time</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                     <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">agent_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">fdict</span><span class="p">[</span><span class="s1">&#39;agents&#39;</span><span class="p">]:</span>
+            <span class="n">fdict</span><span class="p">[</span><span class="s1">&#39;agents&#39;</span><span class="p">][</span><span class="n">agent_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">CoSenseDataConverter</span><span class="o">.</span><span class="n">fdict_template</span><span class="p">()[</span><span class="s1">&#39;agents&#39;</span><span class="p">][</span><span class="s1">&#39;0&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">agent_type</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">fdict</span><span class="p">[</span><span class="s1">&#39;agents&#39;</span><span class="p">][</span><span class="n">agent_id</span><span class="p">][</span><span class="s1">&#39;type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">agent_type</span>
+        <span class="k">if</span> <span class="n">agent_pose</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">fdict</span><span class="p">[</span><span class="s1">&#39;agents&#39;</span><span class="p">][</span><span class="n">agent_id</span><span class="p">][</span><span class="s1">&#39;pose&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">agent_pose</span>
+        <span class="k">if</span> <span class="n">agent_time</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">fdict</span><span class="p">[</span><span class="s1">&#39;agents&#39;</span><span class="p">][</span><span class="n">agent_id</span><span class="p">][</span><span class="s1">&#39;time&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">agent_time</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">fdict</span><span class="p">[</span><span class="s1">&#39;agents&#39;</span><span class="p">][</span><span class="n">agent_id</span><span class="p">][</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span></div>
+
+<div class="viewcode-block" id="CoSenseDataConverter.update_agent_lidar"><a class="viewcode-back" href="../../../../cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.cosense.CoSenseDataConverter.update_agent_lidar">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">update_agent_lidar</span><span class="p">(</span><span class="n">fdict</span><span class="p">,</span>
+                           <span class="n">agent_id</span><span class="p">,</span>
+                           <span class="n">lidar_id</span><span class="p">,</span>
+                           <span class="n">lidar_pose</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                           <span class="n">lidar_time</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                           <span class="n">lidar_file</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">agent_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">fdict</span><span class="p">[</span><span class="s1">&#39;agents&#39;</span><span class="p">]:</span>
+            <span class="n">fdict</span><span class="p">[</span><span class="s1">&#39;agents&#39;</span><span class="p">][</span><span class="n">agent_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">CoSenseDataConverter</span><span class="o">.</span><span class="n">fdict_template</span><span class="p">()[</span><span class="s1">&#39;agents&#39;</span><span class="p">][</span><span class="s1">&#39;0&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">lidar_pose</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">fdict</span><span class="p">[</span><span class="s1">&#39;agents&#39;</span><span class="p">][</span><span class="n">agent_id</span><span class="p">][</span><span class="s1">&#39;lidar&#39;</span><span class="p">][</span><span class="n">lidar_id</span><span class="p">][</span><span class="s1">&#39;pose&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">lidar_pose</span>
+        <span class="k">if</span> <span class="n">lidar_time</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">fdict</span><span class="p">[</span><span class="s1">&#39;agents&#39;</span><span class="p">][</span><span class="n">agent_id</span><span class="p">][</span><span class="s1">&#39;lidar&#39;</span><span class="p">][</span><span class="n">lidar_id</span><span class="p">][</span><span class="s1">&#39;time&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">lidar_time</span>
+        <span class="k">if</span> <span class="n">lidar_file</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">fdict</span><span class="p">[</span><span class="s1">&#39;agents&#39;</span><span class="p">][</span><span class="n">agent_id</span><span class="p">][</span><span class="s1">&#39;lidar&#39;</span><span class="p">][</span><span class="n">lidar_id</span><span class="p">][</span><span class="s1">&#39;filename&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">lidar_file</span></div>
+
+<div class="viewcode-block" id="CoSenseDataConverter.update_agent_gt_boxes"><a class="viewcode-back" href="../../../../cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.cosense.CoSenseDataConverter.update_agent_gt_boxes">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">update_agent_gt_boxes</span><span class="p">(</span><span class="n">fdict</span><span class="p">,</span>
+                              <span class="n">agent_id</span><span class="p">,</span>
+                              <span class="n">gt_boxes</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">agent_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">fdict</span><span class="p">[</span><span class="s1">&#39;agents&#39;</span><span class="p">]:</span>
+            <span class="n">fdict</span><span class="p">[</span><span class="s1">&#39;agents&#39;</span><span class="p">][</span><span class="n">agent_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">CoSenseDataConverter</span><span class="o">.</span><span class="n">fdict_template</span><span class="p">()[</span><span class="s1">&#39;agents&#39;</span><span class="p">][</span><span class="s1">&#39;0&#39;</span><span class="p">]</span>
+        <span class="n">fdict</span><span class="p">[</span><span class="s1">&#39;agents&#39;</span><span class="p">][</span><span class="n">agent_id</span><span class="p">][</span><span class="s1">&#39;gt_boxes&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">gt_boxes</span></div>
+
+<div class="viewcode-block" id="CoSenseDataConverter.remove_lidar_info"><a class="viewcode-back" href="../../../../cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.cosense.CoSenseDataConverter.remove_lidar_info">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">remove_lidar_info</span><span class="p">(</span><span class="n">fdict</span><span class="p">,</span> <span class="n">agent_id</span><span class="p">):</span>
+        <span class="n">fdict</span><span class="p">[</span><span class="s1">&#39;agents&#39;</span><span class="p">][</span><span class="n">agent_id</span><span class="p">][</span><span class="s1">&#39;lidar&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span></div>
+
+<div class="viewcode-block" id="CoSenseDataConverter.supervison_full_to_sparse"><a class="viewcode-back" href="../../../../cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.cosense.CoSenseDataConverter.supervison_full_to_sparse">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">supervison_full_to_sparse</span><span class="p">(</span><span class="n">meta_dict</span><span class="p">,</span> <span class="n">out_path</span><span class="p">,</span> <span class="n">lidar_range</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">det_r</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                                  <span class="n">num_box_per_frame</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">num_box_total</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">label_ratio</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">select_box</span><span class="p">(</span><span class="n">bboxes</span><span class="p">,</span> <span class="n">cls_idx</span><span class="p">,</span> <span class="n">num</span><span class="p">):</span>
+            <span class="n">bboxes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">bboxes</span><span class="p">)</span>
+            <span class="n">bboxes_car</span> <span class="o">=</span> <span class="n">bboxes</span><span class="p">[</span><span class="n">bboxes</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">cls_idx</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">lidar_range</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">mask</span> <span class="o">=</span> <span class="p">(</span><span class="n">bboxes_car</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">lidar_range</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">bboxes_car</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">lidar_range</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span> <span class="o">&amp;</span> \
+                       <span class="p">(</span><span class="n">bboxes_car</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">lidar_range</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">bboxes_car</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">lidar_range</span><span class="p">[</span><span class="mi">4</span><span class="p">])</span> <span class="o">&amp;</span> \
+                       <span class="p">(</span><span class="n">bboxes_car</span><span class="p">[:,</span> <span class="mi">4</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">lidar_range</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">bboxes_car</span><span class="p">[:,</span> <span class="mi">4</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">lidar_range</span><span class="p">[</span><span class="mi">5</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">bboxes_car</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">:</span><span class="mi">4</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">det_r</span>
+            <span class="n">bboxes_car</span> <span class="o">=</span> <span class="n">bboxes_car</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">bboxes_car</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">None</span>
+            <span class="n">choice</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">bboxes_car</span><span class="p">)),</span> <span class="n">num</span><span class="p">)</span>
+            <span class="n">bboxes_car</span> <span class="o">=</span> <span class="n">bboxes_car</span><span class="p">[</span><span class="n">choice</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">num</span><span class="p">,</span> <span class="mi">11</span><span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+            <span class="k">return</span> <span class="n">bboxes_car</span>
+
+        <span class="k">if</span> <span class="n">num_box_per_frame</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">s</span><span class="p">,</span> <span class="n">sdict</span> <span class="ow">in</span> <span class="n">meta_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">sdict_out</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">sdict</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">f</span><span class="p">,</span> <span class="n">fdict</span> <span class="ow">in</span> <span class="n">sdict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="n">bboxes</span> <span class="o">=</span> <span class="n">fdict</span><span class="p">[</span><span class="s1">&#39;meta&#39;</span><span class="p">][</span><span class="s1">&#39;bbx_center_global&#39;</span><span class="p">]</span>
+                    <span class="n">choice</span> <span class="o">=</span> <span class="n">select_box</span><span class="p">(</span><span class="n">bboxes</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">choice</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="n">sdict_out</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">sdict_out</span><span class="p">[</span><span class="n">f</span><span class="p">][</span><span class="s1">&#39;meta&#39;</span><span class="p">][</span><span class="s1">&#39;bbx_center_global&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">choice</span>
+                <span class="n">save_json</span><span class="p">(</span><span class="n">sdict_out</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">out_path</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">s</span><span class="si">}</span><span class="s1">.json&#39;</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="n">num_box_total</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">samples</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="c1"># find frames with car labels</span>
+            <span class="k">for</span> <span class="n">s</span><span class="p">,</span> <span class="n">sdict</span> <span class="ow">in</span> <span class="n">meta_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">for</span> <span class="n">f</span><span class="p">,</span> <span class="n">fdict</span> <span class="ow">in</span> <span class="n">sdict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="n">bboxes</span> <span class="o">=</span> <span class="n">fdict</span><span class="p">[</span><span class="s1">&#39;meta&#39;</span><span class="p">][</span><span class="s1">&#39;bbx_center_global&#39;</span><span class="p">]</span>
+                    <span class="n">classes</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">b</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">bboxes</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="mi">0</span> <span class="ow">in</span> <span class="n">classes</span><span class="p">:</span>
+                        <span class="n">samples</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">s</span><span class="p">,</span> <span class="n">f</span><span class="p">))</span>
+            <span class="c1"># select given number of frames</span>
+            <span class="n">samples</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">choices</span><span class="p">(</span><span class="n">samples</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="n">num_box_total</span><span class="p">)</span>
+            <span class="n">sdict_out</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">for</span> <span class="n">sample</span> <span class="ow">in</span> <span class="n">samples</span><span class="p">:</span>
+                <span class="n">fdict</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">meta_dict</span><span class="p">[</span><span class="n">sample</span><span class="p">[</span><span class="mi">0</span><span class="p">]][</span><span class="n">sample</span><span class="p">[</span><span class="mi">1</span><span class="p">]])</span>
+                <span class="n">bboxes</span> <span class="o">=</span> <span class="n">fdict</span><span class="p">[</span><span class="s1">&#39;meta&#39;</span><span class="p">][</span><span class="s1">&#39;bbx_center_global&#39;</span><span class="p">]</span>
+                <span class="n">fdict</span><span class="p">[</span><span class="s1">&#39;meta&#39;</span><span class="p">][</span><span class="s1">&#39;bbx_center_global&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">select_box</span><span class="p">(</span><span class="n">bboxes</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="n">sdict_out</span><span class="p">[</span><span class="n">sample</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span> <span class="o">=</span> <span class="n">fdict</span>
+            <span class="n">save_json</span><span class="p">(</span><span class="n">sdict_out</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">out_path</span><span class="p">,</span> <span class="s1">&#39;train.json&#39;</span><span class="p">))</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">out_path</span><span class="p">,</span> <span class="s1">&#39;train.txt&#39;</span><span class="p">),</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh</span><span class="p">:</span>
+                <span class="n">fh</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;train&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CoSenseDataConverter.global_boxes_to_local"><a class="viewcode-back" href="../../../../cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.cosense.CoSenseDataConverter.global_boxes_to_local">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">global_boxes_to_local</span><span class="p">(</span><span class="n">meta_dict</span><span class="p">,</span> <span class="n">data_path</span><span class="p">,</span> <span class="n">meta_path</span><span class="p">):</span>
+        <span class="n">samples</span> <span class="o">=</span> <span class="p">{</span><span class="n">i</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;box&#39;</span><span class="p">:</span> <span class="p">[],</span> <span class="s1">&#39;points&#39;</span><span class="p">:</span> <span class="p">[]}</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">CoSenseDataConverter</span><span class="o">.</span><span class="n">OBJ_ID2NAME</span><span class="o">.</span><span class="n">keys</span><span class="p">()}</span>
+        <span class="k">for</span> <span class="n">s</span><span class="p">,</span> <span class="n">sdict</span> <span class="ow">in</span> <span class="n">meta_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">f</span><span class="p">,</span> <span class="n">fdict</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="o">.</span><span class="n">tqdm</span><span class="p">(</span><span class="n">meta_dict</span><span class="p">[</span><span class="n">s</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
+                <span class="n">global_boxes</span> <span class="o">=</span> <span class="n">fdict</span><span class="p">[</span><span class="s1">&#39;meta&#39;</span><span class="p">][</span><span class="s1">&#39;bbx_center_global&#39;</span><span class="p">]</span>
+                <span class="n">global_boxes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">global_boxes</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">adict</span> <span class="ow">in</span> <span class="n">fdict</span><span class="p">[</span><span class="s1">&#39;agents&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="k">for</span> <span class="n">l</span><span class="p">,</span> <span class="n">ldict</span> <span class="ow">in</span> <span class="n">adict</span><span class="p">[</span><span class="s1">&#39;lidar&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                        <span class="n">lidar</span> <span class="o">=</span> <span class="n">pclib</span><span class="o">.</span><span class="n">load_pcd</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data_path</span><span class="p">,</span> <span class="n">ldict</span><span class="p">[</span><span class="s1">&#39;filename&#39;</span><span class="p">]))</span>
+                        <span class="n">box_cls</span> <span class="o">=</span> <span class="n">global_boxes</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span>
+                        <span class="n">res</span> <span class="o">=</span> <span class="n">points_in_boxes_cpu</span><span class="p">(</span><span class="n">lidar</span><span class="p">[</span><span class="s1">&#39;xyz&#39;</span><span class="p">],</span> <span class="n">global_boxes</span><span class="p">[:,</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">10</span><span class="p">]])</span>
+                        <span class="n">box_n_pts</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+                        <span class="n">valid</span> <span class="o">=</span> <span class="n">box_n_pts</span> <span class="o">&gt;</span> <span class="mi">10</span>
+                        <span class="n">boxes</span> <span class="o">=</span> <span class="n">global_boxes</span><span class="p">[</span><span class="n">valid</span><span class="p">]</span>
+                        <span class="n">box_cls</span> <span class="o">=</span> <span class="n">box_cls</span><span class="p">[</span><span class="n">valid</span><span class="p">]</span>
+                        <span class="n">pts_idx_of_boxes</span> <span class="o">=</span> <span class="n">res</span><span class="p">[</span><span class="n">valid</span><span class="p">]</span>
+                        <span class="n">CoSenseDataConverter</span><span class="o">.</span><span class="n">update_agent_gt_boxes</span><span class="p">(</span><span class="n">fdict</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">boxes</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
+
+                        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">box</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">boxes</span><span class="p">):</span>
+                            <span class="bp">cls</span> <span class="o">=</span> <span class="n">box</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                            <span class="n">points</span> <span class="o">=</span> <span class="n">lidar</span><span class="p">[</span><span class="s1">&#39;xyz&#39;</span><span class="p">][</span><span class="n">pts_idx_of_boxes</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">bool</span><span class="p">)]</span>
+                            <span class="n">intensity</span> <span class="o">=</span> <span class="n">lidar</span><span class="p">[</span><span class="s1">&#39;intensity&#39;</span><span class="p">][</span><span class="n">pts_idx_of_boxes</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">bool</span><span class="p">)]</span>
+                            <span class="c1"># transform box and points to box coodiante</span>
+                            <span class="n">points</span> <span class="o">=</span> <span class="n">points</span> <span class="o">-</span> <span class="n">box</span><span class="p">[</span><span class="mi">2</span><span class="p">:</span><span class="mi">5</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+                            <span class="c1"># points will be modified during transformation, so make a copy here</span>
+                            <span class="n">new_points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">points</span><span class="p">)</span>
+                            <span class="n">st</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="o">-</span><span class="n">box</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+                            <span class="n">ct</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="o">-</span><span class="n">box</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+                            <span class="n">points</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_points</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">ct</span> <span class="o">-</span> <span class="n">new_points</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">st</span>
+                            <span class="n">points</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_points</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">st</span> <span class="o">+</span> <span class="n">new_points</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">ct</span>
+                            <span class="n">points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">points</span><span class="p">,</span> <span class="n">intensity</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+                            <span class="n">samples</span><span class="p">[</span><span class="bp">cls</span><span class="p">][</span><span class="s1">&#39;box&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">box</span><span class="p">[</span><span class="mi">5</span><span class="p">:</span><span class="mi">8</span><span class="p">])</span>
+                            <span class="n">samples</span><span class="p">[</span><span class="bp">cls</span><span class="p">][</span><span class="s1">&#39;points&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">points</span><span class="p">)</span>
+
+                            <span class="c1"># from cosense3d.utils.vislib import draw_points_boxes_plt, plt</span>
+                            <span class="c1"># box_vis = np.array([[0]*3 + box[5:8].tolist() + [0]])</span>
+                            <span class="c1"># ax = plt.figure(figsize=(10, 10)).add_subplot(1, 1, 1)</span>
+                            <span class="c1"># draw_points_boxes_plt(</span>
+                            <span class="c1">#     ax=ax,</span>
+                            <span class="c1">#     pc_range=5,</span>
+                            <span class="c1">#     points=points,</span>
+                            <span class="c1">#     boxes_gt=box_vis,</span>
+                            <span class="c1">#     filename=&#39;/home/yuan/Downloads/tmp.png&#39;</span>
+                            <span class="c1"># )</span>
+
+
+            <span class="n">save_json</span><span class="p">(</span><span class="n">sdict</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">meta_path</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">s</span><span class="si">}</span><span class="s1">.json&#39;</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">sample_id</span><span class="p">,</span> <span class="n">content</span> <span class="ow">in</span> <span class="n">samples</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">content</span><span class="p">[</span><span class="s1">&#39;box&#39;</span><span class="p">])</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">sample_name</span> <span class="o">=</span> <span class="n">CoSenseDataConverter</span><span class="o">.</span><span class="n">OBJ_ID2NAME</span><span class="p">[</span><span class="n">sample_id</span><span class="p">]</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">meta_path</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">sample_name</span><span class="si">}</span><span class="s1">.pickle&#39;</span><span class="p">),</span> <span class="s1">&#39;wb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+                <span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">content</span><span class="p">,</span> <span class="n">file</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CoSenseDataConverter.parse_global_bbox_velo"><a class="viewcode-back" href="../../../../cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.cosense.CoSenseDataConverter.parse_global_bbox_velo">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">parse_global_bbox_velo</span><span class="p">(</span><span class="n">meta_dict</span><span class="p">,</span> <span class="n">data_path</span><span class="p">,</span> <span class="n">meta_path</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">s</span><span class="p">,</span> <span class="n">sdict</span> <span class="ow">in</span> <span class="n">meta_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">f</span><span class="p">,</span> <span class="n">fdict</span> <span class="ow">in</span> <span class="n">sdict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">cur_global_boxes</span> <span class="o">=</span> <span class="n">fdict</span><span class="p">[</span><span class="s1">&#39;meta&#39;</span><span class="p">][</span><span class="s1">&#39;bbx_center_global&#39;</span><span class="p">]</span>
+                <span class="c1"># cur_global_boxes = {box[0]: box[1:] for box in cur_global_boxes}</span>
+                <span class="n">velos</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="n">next_frame</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">f</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">:</span><span class="s1">06d</span><span class="si">}</span><span class="s1">&#39;</span>
+                <span class="n">last_frame</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">f</span><span class="p">)</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="si">:</span><span class="s1">06d</span><span class="si">}</span><span class="s1">&#39;</span>
+                <span class="n">next_global_boxes</span> <span class="o">=</span> <span class="p">{}</span>
+                <span class="n">prev_global_boxes</span> <span class="o">=</span> <span class="p">{}</span>
+                <span class="k">if</span> <span class="n">next_frame</span> <span class="ow">in</span> <span class="n">sdict</span><span class="p">:</span>
+                    <span class="n">next_global_boxes</span> <span class="o">=</span> <span class="n">sdict</span><span class="p">[</span><span class="n">next_frame</span><span class="p">][</span><span class="s1">&#39;meta&#39;</span><span class="p">][</span><span class="s1">&#39;bbx_center_global&#39;</span><span class="p">]</span>
+                    <span class="n">next_global_boxes</span> <span class="o">=</span> <span class="p">{</span><span class="n">box</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span> <span class="n">box</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="k">for</span> <span class="n">box</span> <span class="ow">in</span> <span class="n">next_global_boxes</span><span class="p">}</span>
+                <span class="k">if</span> <span class="n">last_frame</span> <span class="ow">in</span> <span class="n">sdict</span><span class="p">:</span>
+                    <span class="n">prev_global_boxes</span> <span class="o">=</span> <span class="n">sdict</span><span class="p">[</span><span class="n">last_frame</span><span class="p">][</span><span class="s1">&#39;meta&#39;</span><span class="p">][</span><span class="s1">&#39;bbx_center_global&#39;</span><span class="p">]</span>
+                    <span class="n">prev_global_boxes</span> <span class="o">=</span> <span class="p">{</span><span class="n">box</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span> <span class="n">box</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="k">for</span> <span class="n">box</span> <span class="ow">in</span> <span class="n">prev_global_boxes</span><span class="p">}</span>
+
+                <span class="k">for</span> <span class="n">box_</span> <span class="ow">in</span> <span class="n">cur_global_boxes</span><span class="p">:</span>
+                    <span class="n">box_id</span> <span class="o">=</span> <span class="n">box_</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                    <span class="n">box</span> <span class="o">=</span> <span class="n">box_</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+                    <span class="k">if</span> <span class="n">box_id</span> <span class="ow">in</span> <span class="n">next_global_boxes</span><span class="p">:</span>
+                        <span class="n">velo</span> <span class="o">=</span> <span class="p">[(</span><span class="n">next_global_boxes</span><span class="p">[</span><span class="n">box_id</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">box</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">*</span> <span class="mi">10</span><span class="p">,</span>  <span class="c1"># m/s</span>
+                                <span class="p">(</span><span class="n">next_global_boxes</span><span class="p">[</span><span class="n">box_id</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">box</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span> <span class="o">*</span> <span class="mi">10</span><span class="p">,]</span>
+                    <span class="k">elif</span> <span class="n">box_id</span> <span class="ow">in</span> <span class="n">prev_global_boxes</span><span class="p">:</span>
+                        <span class="n">velo</span> <span class="o">=</span> <span class="p">[(</span><span class="n">box</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">prev_global_boxes</span><span class="p">[</span><span class="n">box_id</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span> <span class="o">*</span> <span class="mi">10</span><span class="p">,</span>
+                                <span class="p">(</span><span class="n">box</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">prev_global_boxes</span><span class="p">[</span><span class="n">box_id</span><span class="p">][</span><span class="mi">2</span><span class="p">])</span> <span class="o">*</span> <span class="mi">10</span><span class="p">]</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">velo</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">]</span>
+
+                    <span class="n">velos</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">velo</span><span class="p">)</span>
+                <span class="n">fdict</span><span class="p">[</span><span class="s1">&#39;meta&#39;</span><span class="p">][</span><span class="s1">&#39;bbx_velo_global&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">velos</span>
+
+            <span class="n">save_json</span><span class="p">(</span><span class="n">sdict</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">meta_path</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">s</span><span class="si">}</span><span class="s1">.json&#39;</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="CoSenseDataConverter.draw_sample_distributions"><a class="viewcode-back" href="../../../../cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.cosense.CoSenseDataConverter.draw_sample_distributions">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">draw_sample_distributions</span><span class="p">(</span><span class="n">meta_path</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Draw distribution of the number of observation points for each sample category.</span>
+
+<span class="sd">        :param meta_path: path contains pickle files of object samples</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+        <span class="n">files</span> <span class="o">=</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">meta_path</span><span class="p">,</span> <span class="s1">&#39;*.pickle&#39;</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">files</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+                <span class="n">samples</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+            <span class="n">n_points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="nb">min</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">points</span><span class="p">),</span> <span class="mi">500</span><span class="p">)</span> <span class="k">for</span> <span class="n">points</span> <span class="ow">in</span> <span class="n">samples</span><span class="p">[</span><span class="s1">&#39;points&#39;</span><span class="p">]])</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="n">n_points</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">density</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.6</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">f</span><span class="p">)[:</span><span class="o">-</span><span class="mi">7</span><span class="p">])</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">f</span><span class="p">)[:</span><span class="o">-</span><span class="mi">7</span><span class="p">])</span>
+            <span class="c1"># plt.legend()</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">meta_path</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">f</span><span class="p">)[:</span><span class="o">-</span><span class="mi">7</span><span class="p">]</span><span class="si">}</span><span class="s1">.png&#39;</span><span class="p">))</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div></div>
+
+
+
+<span class="k">if</span> <span class="vm">__name__</span><span class="o">==</span><span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">cosense3d</span> <span class="o">=</span> <span class="n">CoSenseDataConverter</span><span class="p">(</span>
+        <span class="s2">&quot;/koko/LUMPI/lumpi_selected/data&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;/koko/LUMPI/lumpi_selected/meta&quot;</span><span class="p">,</span>
+        <span class="s1">&#39;all&#39;</span>
+    <span class="p">)</span>
+    <span class="c1"># cosense3d.to_kitti(&quot;/koko/LUMPI/kitti_test&quot;)</span>
+    <span class="c1"># cosense3d.to_sustech(&quot;/koko/LUMPI/lumpi_selected_sustech&quot;)</span>
+    <span class="c1"># cosense3d.to_opv2v(&quot;/media/hdd/yuan/koko/data/LUMPI/opv2v_fmt&quot;)</span>
+    <span class="c1"># cosense3d.update_from_sustech(&quot;/koko/LUMPI/sustech_fmt&quot;)</span>
+    <span class="c1"># cosense.supervison_full_to_sparse(cosense.meta,</span>
+    <span class="c1">#                                   &#39;/koko/cosense3d/kitti-sparse-num534&#39;,</span>
+    <span class="c1">#                                   lidar_range=[-100, -40, -3.5, 100, 40, 3],</span>
+    <span class="c1">#                                   num_box_total=534)</span>
+    <span class="c1"># cosense.global_boxes_to_local(cosense.meta, cosense.data_path, cosense.meta_path)</span>
+    <span class="c1"># cosense.update_from_sustech(&#39;/koko/LUMPI/sustech_fmt&#39;)</span>
+    <span class="c1"># cosense.parse_global_bbox_velo(cosense.meta, cosense.data_path, cosense.meta_path)</span>
+    <span class="c1"># cosense.draw_sample_distributions(cosense.meta_path)</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Anonymous Author.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

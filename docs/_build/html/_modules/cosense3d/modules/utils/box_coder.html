@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>cosense3d.modules.utils.box_coder &mdash; OpenCosense3D 1.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js?v=af2ce170"></script>
+        <script src="../../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            OpenCosense3D
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../md/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../md/prepare_data.html">Prepare Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../md/structure.html">The Structure of the framework</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules.html">CoSense3d</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">OpenCosense3D</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+          <li class="breadcrumb-item"><a href="../../modules.html">cosense3d.modules</a></li>
+          <li class="breadcrumb-item"><a href="../utils.html">cosense3d.modules.utils</a></li>
+      <li class="breadcrumb-item active">cosense3d.modules.utils.box_coder</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for cosense3d.modules.utils.box_coder</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">torch</span>
+
+<span class="kn">from</span> <span class="nn">cosense3d.ops.utils</span> <span class="kn">import</span> <span class="n">points_in_boxes_gpu</span>
+
+
+<div class="viewcode-block" id="build_box_coder"><a class="viewcode-back" href="../../../../cosense3d.modules.utils.html#cosense3d.modules.utils.box_coder.build_box_coder">[docs]</a><span class="k">def</span> <span class="nf">build_box_coder</span><span class="p">(</span><span class="nb">type</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">return</span> <span class="nb">globals</span><span class="p">()[</span><span class="nb">type</span><span class="p">](</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ResidualBoxCoder"><a class="viewcode-back" href="../../../../cosense3d.modules.utils.html#cosense3d.modules.utils.box_coder.ResidualBoxCoder">[docs]</a><span class="k">class</span> <span class="nc">ResidualBoxCoder</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span><span class="o">=</span><span class="s1">&#39;simple_dist&#39;</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :param mode: str, simple_dist | sin_cos_dist | compass_rose</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">=</span> <span class="n">mode</span>
+        <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;simple_dist&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">code_size</span> <span class="o">=</span> <span class="mi">7</span>
+        <span class="k">elif</span> <span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;sin_cos_dist&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">code_size</span> <span class="o">=</span> <span class="mi">8</span>
+        <span class="k">elif</span> <span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;compass_rose&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">code_size</span> <span class="o">=</span> <span class="mi">10</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cls_code_size</span> <span class="o">=</span> <span class="mi">2</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+<div class="viewcode-block" id="ResidualBoxCoder.encode_direction"><a class="viewcode-back" href="../../../../cosense3d.modules.utils.html#cosense3d.modules.utils.box_coder.ResidualBoxCoder.encode_direction">[docs]</a>    <span class="k">def</span> <span class="nf">encode_direction</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ra</span><span class="p">,</span> <span class="n">rg</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;simple_dist&#39;</span><span class="p">:</span>
+            <span class="n">reg</span> <span class="o">=</span> <span class="p">(</span><span class="n">rg</span> <span class="o">-</span> <span class="n">ra</span><span class="p">)</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">reg</span><span class="p">,</span> <span class="kc">None</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;sin_cos_dist&#39;</span><span class="p">:</span>
+            <span class="n">rgx</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">rg</span><span class="p">)</span>
+            <span class="n">rgy</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">rg</span><span class="p">)</span>
+            <span class="n">rax</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">ra</span><span class="p">)</span>
+            <span class="n">ray</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">ra</span><span class="p">)</span>
+            <span class="n">rtx</span> <span class="o">=</span> <span class="n">rgx</span> <span class="o">-</span> <span class="n">rax</span>
+            <span class="n">rty</span> <span class="o">=</span> <span class="n">rgy</span> <span class="o">-</span> <span class="n">ray</span>
+            <span class="n">ret</span> <span class="o">=</span> <span class="p">[</span><span class="n">rtx</span><span class="p">,</span> <span class="n">rty</span><span class="p">]</span>
+            <span class="n">reg</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">ret</span><span class="p">,</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># N 2</span>
+            <span class="k">return</span> <span class="n">reg</span><span class="p">,</span> <span class="kc">None</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;compass_rose&#39;</span><span class="p">:</span>
+            <span class="c1"># encode box directions</span>
+            <span class="n">rgx</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">rg</span><span class="p">)</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>  <span class="c1"># N 1</span>
+            <span class="n">rgy</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">rg</span><span class="p">)</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>  <span class="c1"># N 1</span>
+            <span class="n">ra_ext</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">ra</span><span class="p">,</span> <span class="n">ra</span> <span class="o">+</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="p">],</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># N 2, invert</span>
+            <span class="n">rax</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">ra_ext</span><span class="p">)</span>  <span class="c1"># N 2</span>
+            <span class="n">ray</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">ra_ext</span><span class="p">)</span>  <span class="c1"># N 2</span>
+            <span class="c1"># cos(a - b) = cos(a)cos(b) + sin(a)sin(b)</span>
+            <span class="c1"># we use arccos instead of a-b to control the difference in 0-pi</span>
+            <span class="n">diff_angle</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">arccos</span><span class="p">(</span><span class="n">rax</span> <span class="o">*</span> <span class="n">rgx</span> <span class="o">+</span> <span class="n">ray</span> <span class="o">*</span> <span class="n">rgy</span><span class="p">)</span>  <span class="c1"># N 2</span>
+            <span class="n">dir_score</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">diff_angle</span> <span class="o">/</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span>  <span class="c1"># N 2</span>
+            <span class="n">rtx</span> <span class="o">=</span> <span class="n">rgx</span> <span class="o">-</span> <span class="n">rax</span>  <span class="c1"># N 2</span>
+            <span class="n">rty</span> <span class="o">=</span> <span class="n">rgy</span> <span class="o">-</span> <span class="n">ray</span>  <span class="c1"># N 2</span>
+
+            <span class="n">dir_score</span> <span class="o">=</span> <span class="n">dir_score</span>  <span class="c1"># N 2</span>
+            <span class="n">ret</span> <span class="o">=</span> <span class="p">[</span><span class="n">rtx</span><span class="p">,</span> <span class="n">rty</span><span class="p">]</span>
+            <span class="n">reg</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">ret</span><span class="p">,</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># N 4</span>
+            <span class="k">return</span> <span class="n">reg</span><span class="p">,</span> <span class="n">dir_score</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
+
+<div class="viewcode-block" id="ResidualBoxCoder.decode_direction"><a class="viewcode-back" href="../../../../cosense3d.modules.utils.html#cosense3d.modules.utils.box_coder.ResidualBoxCoder.decode_direction">[docs]</a>    <span class="k">def</span> <span class="nf">decode_direction</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ra</span><span class="p">,</span> <span class="n">vt</span><span class="p">,</span> <span class="n">dir_scores</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;simple_dist&#39;</span><span class="p">:</span>
+            <span class="n">rg</span> <span class="o">=</span> <span class="n">vt</span> <span class="o">+</span> <span class="n">ra</span>
+            <span class="k">return</span> <span class="n">rg</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;sin_cos_dist&#39;</span><span class="p">:</span>
+            <span class="n">rax</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">ra</span><span class="p">)</span>
+            <span class="n">ray</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">ra</span><span class="p">)</span>
+            <span class="n">va</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">rax</span><span class="p">,</span> <span class="n">ray</span><span class="p">],</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">vg</span> <span class="o">=</span> <span class="n">vt</span> <span class="o">+</span> <span class="n">va</span>
+            <span class="n">rg</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">atan2</span><span class="p">(</span><span class="n">vg</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">vg</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+            <span class="k">return</span> <span class="n">rg</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;compass_rose&#39;</span><span class="p">:</span>
+            <span class="n">ra_ext</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">ra</span><span class="p">,</span> <span class="n">ra</span> <span class="o">+</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="p">],</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># N 2, invert</span>
+            <span class="n">rax</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">ra_ext</span><span class="p">)</span>  <span class="c1"># N 2</span>
+            <span class="n">ray</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">ra_ext</span><span class="p">)</span>  <span class="c1"># N 2</span>
+            <span class="n">va</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">rax</span><span class="p">,</span> <span class="n">ray</span><span class="p">],</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">vg</span> <span class="o">=</span> <span class="n">vt</span> <span class="o">+</span> <span class="n">va</span>
+            <span class="n">rg</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">atan2</span><span class="p">(</span><span class="n">vg</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">2</span><span class="p">:],</span> <span class="n">vg</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="p">:</span><span class="mi">2</span><span class="p">])</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+
+            <span class="n">dirs</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">dir_scores</span><span class="p">,</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">rg</span> <span class="o">=</span> <span class="n">rg</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">rg</span><span class="p">)),</span> <span class="n">dirs</span><span class="p">]</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">vt</span><span class="p">),</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">rg</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
+
+<div class="viewcode-block" id="ResidualBoxCoder.encode"><a class="viewcode-back" href="../../../../cosense3d.modules.utils.html#cosense3d.modules.utils.box_coder.ResidualBoxCoder.encode">[docs]</a>    <span class="k">def</span> <span class="nf">encode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">anchors</span><span class="p">,</span> <span class="n">boxes</span><span class="p">):</span>
+        <span class="n">xa</span><span class="p">,</span> <span class="n">ya</span><span class="p">,</span> <span class="n">za</span><span class="p">,</span> <span class="n">la</span><span class="p">,</span> <span class="n">wa</span><span class="p">,</span> <span class="n">ha</span><span class="p">,</span> <span class="n">ra</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">anchors</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">xg</span><span class="p">,</span> <span class="n">yg</span><span class="p">,</span> <span class="n">zg</span><span class="p">,</span> <span class="n">lg</span><span class="p">,</span> <span class="n">wg</span><span class="p">,</span> <span class="n">hg</span><span class="p">,</span> <span class="n">rg</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">boxes</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">diagonal</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">la</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">wa</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">xt</span> <span class="o">=</span> <span class="p">(</span><span class="n">xg</span> <span class="o">-</span> <span class="n">xa</span><span class="p">)</span> <span class="o">/</span> <span class="n">diagonal</span>
+        <span class="n">yt</span> <span class="o">=</span> <span class="p">(</span><span class="n">yg</span> <span class="o">-</span> <span class="n">ya</span><span class="p">)</span> <span class="o">/</span> <span class="n">diagonal</span>
+        <span class="n">zt</span> <span class="o">=</span> <span class="p">(</span><span class="n">zg</span> <span class="o">-</span> <span class="n">za</span><span class="p">)</span> <span class="o">/</span> <span class="n">ha</span>
+
+        <span class="n">lt</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">lg</span> <span class="o">/</span> <span class="n">la</span><span class="p">)</span>
+        <span class="n">wt</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">wg</span> <span class="o">/</span> <span class="n">wa</span><span class="p">)</span>
+        <span class="n">ht</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">hg</span> <span class="o">/</span> <span class="n">ha</span><span class="p">)</span>
+
+        <span class="n">reg_dir</span><span class="p">,</span> <span class="n">dir_score</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">encode_direction</span><span class="p">(</span><span class="n">ra</span><span class="p">,</span> <span class="n">rg</span><span class="p">)</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="p">[</span><span class="n">xt</span><span class="p">,</span> <span class="n">yt</span><span class="p">,</span> <span class="n">zt</span><span class="p">,</span> <span class="n">lt</span><span class="p">,</span> <span class="n">wt</span><span class="p">,</span> <span class="n">ht</span><span class="p">,</span> <span class="n">reg_dir</span><span class="p">]</span>
+        <span class="n">reg</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">ret</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># N 6+4</span>
+
+        <span class="k">return</span> <span class="n">reg</span><span class="p">,</span> <span class="n">dir_score</span></div>
+
+<div class="viewcode-block" id="ResidualBoxCoder.decode"><a class="viewcode-back" href="../../../../cosense3d.modules.utils.html#cosense3d.modules.utils.box_coder.ResidualBoxCoder.decode">[docs]</a>    <span class="k">def</span> <span class="nf">decode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">anchors</span><span class="p">,</span> <span class="n">boxes_enc</span><span class="p">,</span> <span class="n">dir_scores</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">xa</span><span class="p">,</span> <span class="n">ya</span><span class="p">,</span> <span class="n">za</span><span class="p">,</span> <span class="n">la</span><span class="p">,</span> <span class="n">wa</span><span class="p">,</span> <span class="n">ha</span><span class="p">,</span> <span class="n">ra</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">anchors</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">xt</span><span class="p">,</span> <span class="n">yt</span><span class="p">,</span> <span class="n">zt</span><span class="p">,</span> <span class="n">lt</span><span class="p">,</span> <span class="n">wt</span><span class="p">,</span> <span class="n">ht</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">boxes_enc</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="p">:</span><span class="mi">6</span><span class="p">],</span> <span class="mi">1</span><span class="p">,</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">vt</span> <span class="o">=</span> <span class="n">boxes_enc</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">6</span><span class="p">:]</span>
+
+        <span class="n">diagonal</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">la</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">wa</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">xg</span> <span class="o">=</span> <span class="n">xt</span> <span class="o">*</span> <span class="n">diagonal</span> <span class="o">+</span> <span class="n">xa</span>
+        <span class="n">yg</span> <span class="o">=</span> <span class="n">yt</span> <span class="o">*</span> <span class="n">diagonal</span> <span class="o">+</span> <span class="n">ya</span>
+        <span class="n">zg</span> <span class="o">=</span> <span class="n">zt</span> <span class="o">*</span> <span class="n">ha</span> <span class="o">+</span> <span class="n">za</span>
+
+        <span class="n">lg</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">lt</span><span class="p">)</span> <span class="o">*</span> <span class="n">la</span>
+        <span class="n">wg</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">wt</span><span class="p">)</span> <span class="o">*</span> <span class="n">wa</span>
+        <span class="n">hg</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">ht</span><span class="p">)</span> <span class="o">*</span> <span class="n">ha</span>
+
+        <span class="n">rg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">decode_direction</span><span class="p">(</span><span class="n">ra</span><span class="p">,</span> <span class="n">vt</span><span class="p">,</span> <span class="n">dir_scores</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">xg</span><span class="p">,</span> <span class="n">yg</span><span class="p">,</span> <span class="n">zg</span><span class="p">,</span> <span class="n">lg</span><span class="p">,</span> <span class="n">wg</span><span class="p">,</span> <span class="n">hg</span><span class="p">,</span> <span class="n">rg</span><span class="p">],</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="CenterBoxCoder"><a class="viewcode-back" href="../../../../cosense3d.modules.utils.html#cosense3d.modules.utils.box_coder.CenterBoxCoder">[docs]</a><span class="k">class</span> <span class="nc">CenterBoxCoder</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">with_velo</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">with_pred</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">reg_radius</span><span class="o">=</span><span class="mf">1.6</span><span class="p">,</span> <span class="n">z_offset</span><span class="o">=</span><span class="mf">1.0</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">with_velo</span> <span class="o">=</span> <span class="n">with_velo</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">with_pred</span> <span class="o">=</span> <span class="n">with_pred</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reg_radius</span> <span class="o">=</span> <span class="n">reg_radius</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">z_offset</span> <span class="o">=</span> <span class="n">z_offset</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pred_max_offset</span> <span class="o">=</span> <span class="mf">2.0</span> <span class="o">+</span> <span class="n">reg_radius</span>
+
+<div class="viewcode-block" id="CenterBoxCoder.encode"><a class="viewcode-back" href="../../../../cosense3d.modules.utils.html#cosense3d.modules.utils.box_coder.CenterBoxCoder.encode">[docs]</a>    <span class="k">def</span> <span class="nf">encode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">centers</span><span class="p">,</span> <span class="n">gt_boxes</span><span class="p">,</span> <span class="n">meter_per_pixel</span><span class="p">,</span> <span class="n">gt_preds</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        :param centers: (N, 3)</span>
+<span class="sd">        :param gt_boxes: (N, 8) [batch_idx, x, y, z, l, w, h, r]</span>
+<span class="sd">        :param meter_per_pixel: tuple with 2 elements</span>
+<span class="sd">        :param gt_preds:</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">meter_per_pixel</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="k">assert</span> <span class="n">meter_per_pixel</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">meter_per_pixel</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="s1">&#39;only support unified pixel size for x and y&#39;</span>
+            <span class="c1"># TODO: adapt meter per pixel</span>
+            <span class="n">meter_per_pixel</span> <span class="o">=</span> <span class="n">meter_per_pixel</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">gt_boxes</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">valid</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">centers</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">bool</span><span class="p">()</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">valid</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">with_velo</span><span class="p">:</span>
+                <span class="n">res</span> <span class="o">=</span> <span class="n">res</span> <span class="o">+</span> <span class="p">(</span><span class="kc">None</span><span class="p">,)</span>
+            <span class="k">return</span> <span class="n">res</span>
+
+        <span class="c1"># match centers and gt_boxes</span>
+        <span class="n">dist_ctr_to_box</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">centers</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+                                     <span class="o">-</span> <span class="n">gt_boxes</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">cc</span><span class="p">,</span> <span class="n">bb</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">centers</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">gt_boxes</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">indexing</span><span class="o">=</span><span class="s1">&#39;ij&#39;</span><span class="p">)</span>
+        <span class="n">dist_ctr_to_box</span><span class="p">[</span><span class="n">cc</span> <span class="o">!=</span> <span class="n">bb</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1000</span>
+        <span class="n">min_dists</span><span class="p">,</span> <span class="n">box_idx_of_pts</span> <span class="o">=</span> <span class="n">dist_ctr_to_box</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">diagnal</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">gt_boxes</span><span class="p">[:,</span> <span class="mi">4</span><span class="p">:</span><span class="mi">6</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">valid</span> <span class="o">=</span> <span class="n">min_dists</span> <span class="o">&lt;</span> <span class="nb">max</span><span class="p">(</span><span class="n">diagnal</span><span class="p">,</span> <span class="n">meter_per_pixel</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="c1"># valid = min_dists &lt; self.reg_radius</span>
+        <span class="n">valid_center</span><span class="p">,</span> <span class="n">valid_box</span> <span class="o">=</span> <span class="n">centers</span><span class="p">[</span><span class="n">valid</span><span class="p">],</span> <span class="n">gt_boxes</span><span class="p">[</span><span class="n">box_idx_of_pts</span><span class="p">[</span><span class="n">valid</span><span class="p">]]</span>
+        <span class="n">valid_pred</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">with_pred</span> <span class="ow">and</span> <span class="n">gt_preds</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">valid_pred</span> <span class="o">=</span> <span class="n">gt_preds</span><span class="p">[</span><span class="n">box_idx_of_pts</span><span class="p">[</span><span class="n">valid</span><span class="p">]]</span>
+
+        <span class="n">xc</span><span class="p">,</span> <span class="n">yc</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">valid_center</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">],</span> <span class="mi">1</span><span class="p">,</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">xg</span><span class="p">,</span> <span class="n">yg</span><span class="p">,</span> <span class="n">zg</span><span class="p">,</span> <span class="n">lg</span><span class="p">,</span> <span class="n">wg</span><span class="p">,</span> <span class="n">hg</span><span class="p">,</span> <span class="n">rg</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">valid_box</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:</span><span class="mi">8</span><span class="p">],</span> <span class="mi">1</span><span class="p">,</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">xt</span> <span class="o">=</span> <span class="n">xg</span> <span class="o">-</span> <span class="n">xc</span>
+        <span class="n">yt</span> <span class="o">=</span> <span class="n">yg</span> <span class="o">-</span> <span class="n">yc</span>
+        <span class="n">zt</span> <span class="o">=</span> <span class="n">zg</span> <span class="c1"># + self.z_offset</span>
+
+        <span class="n">lt</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">lg</span><span class="p">)</span>
+        <span class="n">wt</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">wg</span><span class="p">)</span>
+        <span class="n">ht</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">hg</span><span class="p">)</span>
+
+        <span class="c1"># encode box directions</span>
+        <span class="n">rgx</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">rg</span><span class="p">)</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>  <span class="c1"># N 1</span>
+        <span class="n">rgy</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">rg</span><span class="p">)</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>  <span class="c1"># N 1</span>
+        <span class="n">ra</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">xc</span><span class="o">.</span><span class="n">device</span><span class="p">)</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span>
+        <span class="n">ra_ext</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="n">valid_box</span><span class="p">[:,</span> <span class="p">:</span><span class="mi">4</span><span class="p">])</span> <span class="o">*</span> <span class="n">ra</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>  <span class="c1"># N 4</span>
+        <span class="n">rax</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">ra_ext</span><span class="p">)</span>  <span class="c1"># N 4</span>
+        <span class="n">ray</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">ra_ext</span><span class="p">)</span>  <span class="c1"># N 4</span>
+        <span class="c1"># cos(a - b) = cos(a)cos(b) + sin(a)sin(b)</span>
+        <span class="c1"># we use arccos instead of a-b to control the difference in 0-pi</span>
+        <span class="n">diff_angle</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">arccos</span><span class="p">(</span><span class="n">rax</span> <span class="o">*</span> <span class="n">rgx</span> <span class="o">+</span> <span class="n">ray</span> <span class="o">*</span> <span class="n">rgy</span><span class="p">)</span>  <span class="c1"># N 4</span>
+        <span class="n">dir_score</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">diff_angle</span> <span class="o">/</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span>  <span class="c1"># N 4</span>
+        <span class="n">rtx</span> <span class="o">=</span> <span class="n">rgx</span> <span class="o">-</span> <span class="n">rax</span>  <span class="c1"># N 4</span>
+        <span class="n">rty</span> <span class="o">=</span> <span class="n">rgy</span> <span class="o">-</span> <span class="n">ray</span>  <span class="c1"># N 4</span>
+
+        <span class="n">reg_box</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">xt</span><span class="p">,</span> <span class="n">yt</span><span class="p">,</span> <span class="n">zt</span><span class="p">,</span> <span class="n">lt</span><span class="p">,</span> <span class="n">wt</span><span class="p">,</span> <span class="n">ht</span><span class="p">],</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># N 6</span>
+        <span class="n">reg_dir</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">rtx</span><span class="p">,</span> <span class="n">rty</span><span class="p">],</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># N 8</span>
+        <span class="c1"># reg_box[..., :3] /= self.reg_radius</span>
+
+        <span class="n">res</span> <span class="o">=</span> <span class="p">(</span><span class="n">reg_box</span><span class="p">,</span> <span class="n">reg_dir</span><span class="p">,</span> <span class="n">dir_score</span><span class="p">,</span> <span class="n">valid</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">with_velo</span><span class="p">:</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="n">res</span> <span class="o">+</span> <span class="p">(</span><span class="n">valid_box</span><span class="p">[:,</span> <span class="mi">8</span><span class="p">:</span><span class="mi">10</span><span class="p">],)</span>
+        <span class="k">elif</span> <span class="n">valid_box</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">8</span><span class="p">:</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="n">res</span> <span class="o">+</span> <span class="p">(</span><span class="n">valid_box</span><span class="p">[:,</span> <span class="mi">8</span><span class="p">:</span><span class="mi">10</span><span class="p">],)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">with_pred</span> <span class="ow">and</span> <span class="n">valid_pred</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">prev_angles</span> <span class="o">=</span> <span class="n">valid_box</span><span class="p">[:,</span> <span class="mi">7</span><span class="p">:</span><span class="mi">8</span><span class="p">]</span>
+            <span class="n">preds_tgt</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">mask</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">boxes</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">valid_pred</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)):</span>
+                <span class="c1"># some gt_boxes do not have gt successors, zero padded virtual successors are used to align the number</span>
+                <span class="c1"># of boxes between gt_boxes and gt_preds, when calculate preds loss, these boxes should be ignored.</span>
+                <span class="n">mask</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">boxes</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdim</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">float</span><span class="p">())</span>
+                <span class="n">diff_xy</span> <span class="o">=</span> <span class="p">(</span><span class="n">boxes</span><span class="p">[:,</span> <span class="p">:</span><span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">valid_center</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">])</span> <span class="c1"># / self.pred_max_offset</span>
+                <span class="n">diff_z</span> <span class="o">=</span> <span class="n">boxes</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span> <span class="c1"># + self.z_offset</span>
+                <span class="n">diff_cos</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">boxes</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">:])</span> <span class="o">-</span> <span class="n">torch</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">prev_angles</span><span class="p">)</span>
+                <span class="n">diff_sin</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">boxes</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">:])</span> <span class="o">-</span> <span class="n">torch</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">prev_angles</span><span class="p">)</span>
+                <span class="n">preds_tgt</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">diff_xy</span><span class="p">,</span> <span class="n">diff_z</span><span class="p">,</span> <span class="n">diff_cos</span><span class="p">,</span> <span class="n">diff_sin</span><span class="p">],</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">2</span><span class="p">))</span>
+            <span class="n">preds_tgt</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">preds_tgt</span><span class="p">,</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">mask</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdim</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="n">res</span> <span class="o">+</span> <span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">mask</span><span class="p">,</span> <span class="n">preds_tgt</span><span class="p">],</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">),)</span>
+        <span class="k">return</span> <span class="n">res</span></div>
+
+<div class="viewcode-block" id="CenterBoxCoder.decode"><a class="viewcode-back" href="../../../../cosense3d.modules.utils.html#cosense3d.modules.utils.box_coder.CenterBoxCoder.decode">[docs]</a>    <span class="k">def</span> <span class="nf">decode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">centers</span><span class="p">,</span> <span class="n">reg</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        :param centers: Tensor (N, 3) or (B, N, 2+).</span>
+<span class="sd">        :param reg: dict,</span>
+<span class="sd">            box - (N, 6) or (B, N, 6)</span>
+<span class="sd">            dir - (N, 8) or (B, N, 8)</span>
+<span class="sd">            scr - (N, 4) or (B, N, 4)</span>
+<span class="sd">            vel - (N, 2) or (B, N, 2), optional</span>
+<span class="sd">            pred - (N, 5) or (B, N, 5), optional</span>
+<span class="sd">        :return: decoded bboxes.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">centers</span><span class="o">.</span><span class="n">ndim</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">xc</span><span class="p">,</span> <span class="n">yc</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">centers</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">],</span> <span class="mi">1</span><span class="p">,</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">xc</span><span class="p">,</span> <span class="n">yc</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">centers</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">],</span> <span class="mi">1</span><span class="p">,</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="c1"># reg[&#39;box&#39;][..., :3] *= self.reg_radius</span>
+        <span class="n">xt</span><span class="p">,</span> <span class="n">yt</span><span class="p">,</span> <span class="n">zt</span><span class="p">,</span> <span class="n">lt</span><span class="p">,</span> <span class="n">wt</span><span class="p">,</span> <span class="n">ht</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">reg</span><span class="p">[</span><span class="s1">&#39;box&#39;</span><span class="p">],</span> <span class="mi">1</span><span class="p">,</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">xo</span> <span class="o">=</span> <span class="n">xt</span> <span class="o">+</span> <span class="n">xc</span>
+        <span class="n">yo</span> <span class="o">=</span> <span class="n">yt</span> <span class="o">+</span> <span class="n">yc</span>
+        <span class="n">zo</span> <span class="o">=</span> <span class="n">zt</span> <span class="c1">#- self.z_offset</span>
+
+        <span class="n">lo</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">lt</span><span class="p">)</span>
+        <span class="n">wo</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">wt</span><span class="p">)</span>
+        <span class="n">ho</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">ht</span><span class="p">)</span>
+
+        <span class="c1"># decode box directions</span>
+        <span class="n">scr_max</span><span class="p">,</span> <span class="n">max_idx</span> <span class="o">=</span> <span class="n">reg</span><span class="p">[</span><span class="s1">&#39;scr&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">shape</span> <span class="o">=</span> <span class="n">max_idx</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">max_idx</span> <span class="o">=</span> <span class="n">max_idx</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">ii</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">max_idx</span><span class="p">))</span>
+        <span class="n">ra</span> <span class="o">=</span> <span class="n">max_idx</span><span class="o">.</span><span class="n">float</span><span class="p">()</span> <span class="o">*</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span>
+        <span class="n">ct</span> <span class="o">=</span> <span class="n">reg</span><span class="p">[</span><span class="s1">&#39;dir&#39;</span><span class="p">][</span><span class="o">...</span><span class="p">,</span> <span class="p">:</span><span class="mi">4</span><span class="p">]</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">)[</span><span class="n">ii</span><span class="p">,</span> <span class="n">max_idx</span><span class="p">]</span> <span class="o">+</span> <span class="n">torch</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">ra</span><span class="p">)</span>
+        <span class="n">st</span> <span class="o">=</span> <span class="n">reg</span><span class="p">[</span><span class="s1">&#39;dir&#39;</span><span class="p">][</span><span class="o">...</span><span class="p">,</span> <span class="mi">4</span><span class="p">:]</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">)[</span><span class="n">ii</span><span class="p">,</span> <span class="n">max_idx</span><span class="p">]</span> <span class="o">+</span> <span class="n">torch</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">ra</span><span class="p">)</span>
+        <span class="n">ro</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">atan2</span><span class="p">(</span><span class="n">st</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">*</span><span class="n">shape</span><span class="p">),</span> <span class="n">ct</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">*</span><span class="n">shape</span><span class="p">))</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">centers</span><span class="o">.</span><span class="n">ndim</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="c1"># dense tensor</span>
+            <span class="n">ret</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">xo</span><span class="p">,</span> <span class="n">yo</span><span class="p">,</span> <span class="n">zo</span><span class="p">,</span> <span class="n">lo</span><span class="p">,</span> <span class="n">wo</span><span class="p">,</span> <span class="n">ho</span><span class="p">,</span> <span class="n">ro</span><span class="p">],</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># sparse tensor with batch indices</span>
+            <span class="n">ret</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">centers</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="p">:</span><span class="mi">1</span><span class="p">],</span> <span class="n">xo</span><span class="p">,</span> <span class="n">yo</span><span class="p">,</span> <span class="n">zo</span><span class="p">,</span> <span class="n">lo</span><span class="p">,</span> <span class="n">wo</span><span class="p">,</span> <span class="n">ho</span><span class="p">,</span> <span class="n">ro</span><span class="p">],</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">with_velo</span><span class="p">:</span>
+            <span class="n">ret</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">ret</span><span class="p">,</span> <span class="n">reg</span><span class="p">[</span><span class="s1">&#39;vel&#39;</span><span class="p">]],</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">with_pred</span><span class="p">:</span>
+            <span class="n">pred</span> <span class="o">=</span> <span class="n">reg</span><span class="p">[</span><span class="s1">&#39;pred&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span>
+            <span class="n">b</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">c</span> <span class="o">=</span> <span class="n">pred</span><span class="o">.</span><span class="n">shape</span>
+            <span class="n">pred_len</span> <span class="o">=</span> <span class="n">c</span> <span class="o">//</span> <span class="mi">5</span>
+            <span class="n">mul</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">pred_len</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">pred</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">pred</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+            <span class="n">pred</span> <span class="o">=</span> <span class="n">pred</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span> <span class="o">*</span> <span class="n">mul</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">xy</span> <span class="o">=</span> <span class="n">pred</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="p">:</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="n">centers</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="p">:</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">)</span>
+            <span class="n">z</span> <span class="o">=</span> <span class="n">pred</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">2</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span>
+            <span class="n">r</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">atan2</span><span class="p">(</span><span class="n">pred</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">4</span><span class="p">]</span> <span class="o">+</span> <span class="n">st</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">*</span><span class="n">shape</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">pred</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">+</span> <span class="n">ct</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">*</span><span class="n">shape</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">lwh</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">lo</span><span class="p">,</span> <span class="n">wo</span><span class="p">,</span> <span class="n">ho</span><span class="p">],</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">pred_len</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">pred</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">xy</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">lwh</span><span class="p">,</span> <span class="n">r</span><span class="p">],</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">ret</span> <span class="o">=</span> <span class="p">(</span><span class="n">ret</span><span class="p">,</span>  <span class="n">pred</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">ret</span></div></div>
+
+
+<div class="viewcode-block" id="BoxPredCoder"><a class="viewcode-back" href="../../../../cosense3d.modules.utils.html#cosense3d.modules.utils.box_coder.BoxPredCoder">[docs]</a><span class="k">class</span> <span class="nc">BoxPredCoder</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">with_velo</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">with_velo</span> <span class="o">=</span> <span class="n">with_velo</span>
+
+<div class="viewcode-block" id="BoxPredCoder.encode"><a class="viewcode-back" href="../../../../cosense3d.modules.utils.html#cosense3d.modules.utils.box_coder.BoxPredCoder.encode">[docs]</a>    <span class="k">def</span> <span class="nf">encode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">centers</span><span class="p">,</span> <span class="n">gt_boxes</span><span class="p">,</span> <span class="n">meter_per_pixel</span><span class="p">,</span> <span class="n">gt_preds</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        :param centers: (N, 3)</span>
+<span class="sd">        :param gt_boxes: (N, 8) [batch_idx, x, y, z, l, w, h, r]</span>
+<span class="sd">        :param meter_per_pixel: tuple with 2 elements</span>
+<span class="sd">        :param gt_preds: (N, 8) [batch_idx, x, y, z, l, w, h, r], gt boxes to be predicted</span>
+<span class="sd">        :return: encoded bbox targets.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">meter_per_pixel</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="k">assert</span> <span class="n">meter_per_pixel</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">meter_per_pixel</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="s1">&#39;only support unified pixel size for x and y&#39;</span>
+            <span class="c1"># TODO: adapt meter per pixel</span>
+            <span class="n">meter_per_pixel</span> <span class="o">=</span> <span class="n">meter_per_pixel</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">gt_boxes</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">valid</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">centers</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">bool</span><span class="p">()</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">valid</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">with_velo</span><span class="p">:</span>
+                <span class="n">res</span> <span class="o">=</span> <span class="n">res</span> <span class="o">+</span> <span class="p">(</span><span class="kc">None</span><span class="p">,)</span>
+            <span class="k">return</span> <span class="n">res</span>
+
+        <span class="c1"># match centers and gt_boxes</span>
+        <span class="n">dist_ctr_to_box</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">centers</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+                                     <span class="o">-</span> <span class="n">gt_boxes</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">cc</span><span class="p">,</span> <span class="n">bb</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">centers</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">gt_boxes</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">indexing</span><span class="o">=</span><span class="s1">&#39;ij&#39;</span><span class="p">)</span>
+        <span class="n">dist_ctr_to_box</span><span class="p">[</span><span class="n">cc</span> <span class="o">!=</span> <span class="n">bb</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1000</span>
+        <span class="n">min_dists</span><span class="p">,</span> <span class="n">box_idx_of_pts</span> <span class="o">=</span> <span class="n">dist_ctr_to_box</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">diagnal</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">gt_boxes</span><span class="p">[:,</span> <span class="mi">4</span><span class="p">:</span><span class="mi">6</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">valid</span> <span class="o">=</span> <span class="n">min_dists</span> <span class="o">&lt;</span> <span class="nb">max</span><span class="p">(</span><span class="n">diagnal</span><span class="p">,</span> <span class="n">meter_per_pixel</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="c1"># valid = min_dists &lt; self.reg_radius</span>
+        <span class="n">valid_center</span> <span class="o">=</span> <span class="n">centers</span><span class="p">[</span><span class="n">valid</span><span class="p">]</span>
+        <span class="n">valid_box</span> <span class="o">=</span> <span class="n">gt_preds</span><span class="p">[</span><span class="n">box_idx_of_pts</span><span class="p">[</span><span class="n">valid</span><span class="p">]]</span>
+
+        <span class="n">xc</span><span class="p">,</span> <span class="n">yc</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">valid_center</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">],</span> <span class="mi">1</span><span class="p">,</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">xg</span><span class="p">,</span> <span class="n">yg</span><span class="p">,</span> <span class="n">zg</span><span class="p">,</span> <span class="n">lg</span><span class="p">,</span> <span class="n">wg</span><span class="p">,</span> <span class="n">hg</span><span class="p">,</span> <span class="n">rg</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">valid_box</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:</span><span class="mi">8</span><span class="p">],</span> <span class="mi">1</span><span class="p">,</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">xt</span> <span class="o">=</span> <span class="n">xg</span> <span class="o">-</span> <span class="n">xc</span>
+        <span class="n">yt</span> <span class="o">=</span> <span class="n">yg</span> <span class="o">-</span> <span class="n">yc</span>
+        <span class="n">zt</span> <span class="o">=</span> <span class="n">zg</span> <span class="c1"># + self.z_offset</span>
+
+        <span class="n">lt</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">lg</span><span class="p">)</span>
+        <span class="n">wt</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">wg</span><span class="p">)</span>
+        <span class="n">ht</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">hg</span><span class="p">)</span>
+
+        <span class="c1"># encode box directions</span>
+        <span class="n">rgx</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">rg</span><span class="p">)</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>  <span class="c1"># N 1</span>
+        <span class="n">rgy</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">rg</span><span class="p">)</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>  <span class="c1"># N 1</span>
+        <span class="n">ra</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">xc</span><span class="o">.</span><span class="n">device</span><span class="p">)</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span>
+        <span class="n">ra_ext</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="n">valid_box</span><span class="p">[:,</span> <span class="p">:</span><span class="mi">4</span><span class="p">])</span> <span class="o">*</span> <span class="n">ra</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>  <span class="c1"># N 4</span>
+        <span class="n">rax</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">ra_ext</span><span class="p">)</span>  <span class="c1"># N 4</span>
+        <span class="n">ray</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">ra_ext</span><span class="p">)</span>  <span class="c1"># N 4</span>
+        <span class="c1"># cos(a - b) = cos(a)cos(b) + sin(a)sin(b)</span>
+        <span class="c1"># we use arccos instead of a-b to control the difference in 0-pi</span>
+        <span class="n">diff_angle</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">arccos</span><span class="p">(</span><span class="n">rax</span> <span class="o">*</span> <span class="n">rgx</span> <span class="o">+</span> <span class="n">ray</span> <span class="o">*</span> <span class="n">rgy</span><span class="p">)</span>  <span class="c1"># N 4</span>
+        <span class="n">dir_score</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">diff_angle</span> <span class="o">/</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span>  <span class="c1"># N 4</span>
+        <span class="n">rtx</span> <span class="o">=</span> <span class="n">rgx</span> <span class="o">-</span> <span class="n">rax</span>  <span class="c1"># N 4</span>
+        <span class="n">rty</span> <span class="o">=</span> <span class="n">rgy</span> <span class="o">-</span> <span class="n">ray</span>  <span class="c1"># N 4</span>
+
+        <span class="n">reg_box</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">xt</span><span class="p">,</span> <span class="n">yt</span><span class="p">,</span> <span class="n">zt</span><span class="p">,</span> <span class="n">lt</span><span class="p">,</span> <span class="n">wt</span><span class="p">,</span> <span class="n">ht</span><span class="p">],</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># N 6</span>
+        <span class="n">reg_dir</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">rtx</span><span class="p">,</span> <span class="n">rty</span><span class="p">],</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># N 8</span>
+        <span class="c1"># reg_box[..., :3] /= self.reg_radius</span>
+
+        <span class="n">res</span> <span class="o">=</span> <span class="p">(</span><span class="n">reg_box</span><span class="p">,</span> <span class="n">reg_dir</span><span class="p">,</span> <span class="n">dir_score</span><span class="p">,</span> <span class="n">valid</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">with_velo</span><span class="p">:</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="n">res</span> <span class="o">+</span> <span class="p">(</span><span class="n">valid_box</span><span class="p">[:,</span> <span class="mi">8</span><span class="p">:</span><span class="mi">10</span><span class="p">],)</span>
+        <span class="k">elif</span> <span class="n">valid_box</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">8</span><span class="p">:</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="n">res</span> <span class="o">+</span> <span class="p">(</span><span class="n">valid_box</span><span class="p">[:,</span> <span class="mi">8</span><span class="p">:</span><span class="mi">10</span><span class="p">],)</span>
+        <span class="k">return</span> <span class="n">res</span></div>
+
+<div class="viewcode-block" id="BoxPredCoder.decode"><a class="viewcode-back" href="../../../../cosense3d.modules.utils.html#cosense3d.modules.utils.box_coder.BoxPredCoder.decode">[docs]</a>    <span class="k">def</span> <span class="nf">decode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">centers</span><span class="p">,</span> <span class="n">reg</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        :param centers: Tensor (N, 3) or (B, N, 2+).</span>
+<span class="sd">        :param reg: dict,</span>
+<span class="sd">            box - (N, 6) or (B, N, 6)</span>
+<span class="sd">            dir - (N, 8) or (B, N, 8)</span>
+<span class="sd">            scr - (N, 4) or (B, N, 4)</span>
+<span class="sd">            vel - (N, 2) or (B, N, 2), optional</span>
+<span class="sd">            pred - (N, 5) or (B, N, 5), optional</span>
+<span class="sd">        :return: decoded bboxes.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">centers</span><span class="o">.</span><span class="n">ndim</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">xc</span><span class="p">,</span> <span class="n">yc</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">centers</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">],</span> <span class="mi">1</span><span class="p">,</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">xc</span><span class="p">,</span> <span class="n">yc</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">centers</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">],</span> <span class="mi">1</span><span class="p">,</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="c1"># reg[&#39;box&#39;][..., :3] *= self.reg_radius</span>
+        <span class="n">xt</span><span class="p">,</span> <span class="n">yt</span><span class="p">,</span> <span class="n">zt</span><span class="p">,</span> <span class="n">lt</span><span class="p">,</span> <span class="n">wt</span><span class="p">,</span> <span class="n">ht</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">reg</span><span class="p">[</span><span class="s1">&#39;box&#39;</span><span class="p">],</span> <span class="mi">1</span><span class="p">,</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">xo</span> <span class="o">=</span> <span class="n">xt</span> <span class="o">+</span> <span class="n">xc</span>
+        <span class="n">yo</span> <span class="o">=</span> <span class="n">yt</span> <span class="o">+</span> <span class="n">yc</span>
+        <span class="n">zo</span> <span class="o">=</span> <span class="n">zt</span> <span class="c1">#- self.z_offset</span>
+
+        <span class="n">lo</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">lt</span><span class="p">)</span>
+        <span class="n">wo</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">wt</span><span class="p">)</span>
+        <span class="n">ho</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">ht</span><span class="p">)</span>
+
+        <span class="c1"># decode box directions</span>
+        <span class="n">scr_max</span><span class="p">,</span> <span class="n">max_idx</span> <span class="o">=</span> <span class="n">reg</span><span class="p">[</span><span class="s1">&#39;scr&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">shape</span> <span class="o">=</span> <span class="n">max_idx</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">max_idx</span> <span class="o">=</span> <span class="n">max_idx</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">ii</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">max_idx</span><span class="p">))</span>
+        <span class="n">ra</span> <span class="o">=</span> <span class="n">max_idx</span><span class="o">.</span><span class="n">float</span><span class="p">()</span> <span class="o">*</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span>
+        <span class="n">ct</span> <span class="o">=</span> <span class="n">reg</span><span class="p">[</span><span class="s1">&#39;dir&#39;</span><span class="p">][</span><span class="o">...</span><span class="p">,</span> <span class="p">:</span><span class="mi">4</span><span class="p">]</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">)[</span><span class="n">ii</span><span class="p">,</span> <span class="n">max_idx</span><span class="p">]</span> <span class="o">+</span> <span class="n">torch</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">ra</span><span class="p">)</span>
+        <span class="n">st</span> <span class="o">=</span> <span class="n">reg</span><span class="p">[</span><span class="s1">&#39;dir&#39;</span><span class="p">][</span><span class="o">...</span><span class="p">,</span> <span class="mi">4</span><span class="p">:]</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">)[</span><span class="n">ii</span><span class="p">,</span> <span class="n">max_idx</span><span class="p">]</span> <span class="o">+</span> <span class="n">torch</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">ra</span><span class="p">)</span>
+        <span class="n">ro</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">atan2</span><span class="p">(</span><span class="n">st</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">*</span><span class="n">shape</span><span class="p">),</span> <span class="n">ct</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">*</span><span class="n">shape</span><span class="p">))</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">centers</span><span class="o">.</span><span class="n">ndim</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="c1"># dense tensor</span>
+            <span class="n">ret</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">xo</span><span class="p">,</span> <span class="n">yo</span><span class="p">,</span> <span class="n">zo</span><span class="p">,</span> <span class="n">lo</span><span class="p">,</span> <span class="n">wo</span><span class="p">,</span> <span class="n">ho</span><span class="p">,</span> <span class="n">ro</span><span class="p">],</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># sparse tensor with batch indices</span>
+            <span class="n">ret</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">centers</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="p">:</span><span class="mi">1</span><span class="p">],</span> <span class="n">xo</span><span class="p">,</span> <span class="n">yo</span><span class="p">,</span> <span class="n">zo</span><span class="p">,</span> <span class="n">lo</span><span class="p">,</span> <span class="n">wo</span><span class="p">,</span> <span class="n">ho</span><span class="p">,</span> <span class="n">ro</span><span class="p">],</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">with_velo</span><span class="p">:</span>
+            <span class="n">ret</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">ret</span><span class="p">,</span> <span class="n">reg</span><span class="p">[</span><span class="s1">&#39;vel&#39;</span><span class="p">]],</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">ret</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Anonymous Author.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

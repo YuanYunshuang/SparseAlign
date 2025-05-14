@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>cosense3d.agents.cav_prototype package &mdash; Cosense3D 1.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=af2ce170"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="cosense3d.agents.core package" href="cosense3d.agents.core.html" />
+    <link rel="prev" title="cosense3d.agents package" href="cosense3d.agents.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Cosense3D
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="md/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="md/prepare_data.html">Prepare Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="md/structure.html">The Structure of the framework</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">CoSense3D</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="cosense3d.agents.html">cosense3d.agents package</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="cosense3d.agents.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l4 current"><a class="current reference internal" href="#">cosense3d.agents.cav_prototype package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="cosense3d.agents.core.html">cosense3d.agents.core package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="cosense3d.agents.utils.html">cosense3d.agents.utils package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="cosense3d.agents.viewer.html">cosense3d.agents.viewer package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="cosense3d.agents.html#submodules">Submodules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cosense3d.agents.html#module-cosense3d.agents.center_controller">cosense3d.agents.center_controller module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cosense3d.agents.html#module-cosense3d.agents">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="cosense3d.dataset.html">cosense3d.dataset package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cosense3d.modules.html">cosense3d.modules package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cosense3d.utils.html">cosense3d.utils package</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Cosense3D</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">CoSense3D</a></li>
+          <li class="breadcrumb-item"><a href="cosense3d.agents.html">cosense3d.agents package</a></li>
+      <li class="breadcrumb-item active">cosense3d.agents.cav_prototype package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/cosense3d.agents.cav_prototype.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="cosense3d-agents-cav-prototype-package">
+<h1>cosense3d.agents.cav_prototype package<a class="headerlink" href="#cosense3d-agents-cav-prototype-package" title="Permalink to this heading"></a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this heading"></a></h2>
+</section>
+<section id="module-cosense3d.agents.cav_prototype.base_cav">
+<span id="cosense3d-agents-cav-prototype-base-cav-module"></span><h2>cosense3d.agents.cav_prototype.base_cav module<a class="headerlink" href="#module-cosense3d.agents.cav_prototype.base_cav" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="cosense3d.agents.cav_prototype.base_cav.BaseCAV">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cosense3d.agents.cav_prototype.base_cav.</span></span><span class="sig-name descname"><span class="pre">BaseCAV</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mapped_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_ego</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lidar_range</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">memory_len</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lidar_pose</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">require_grad</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seq_len</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/cav_prototype/base_cav.html#BaseCAV"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.cav_prototype.base_cav.BaseCAV" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.cav_prototype.base_cav.BaseCAV.apply_transform">
+<span class="sig-name descname"><span class="pre">apply_transform</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/cav_prototype/base_cav.html#BaseCAV.apply_transform"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.cav_prototype.base_cav.BaseCAV.apply_transform" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.cav_prototype.base_cav.BaseCAV.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tasks</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">training_mode</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/cav_prototype/base_cav.html#BaseCAV.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.cav_prototype.base_cav.BaseCAV.forward" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.cav_prototype.base_cav.BaseCAV.forward_fusion">
+<span class="sig-name descname"><span class="pre">forward_fusion</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tasks</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">training_mode</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/cav_prototype/base_cav.html#BaseCAV.forward_fusion"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.cav_prototype.base_cav.BaseCAV.forward_fusion" title="Permalink to this definition"></a></dt>
+<dd><p>To be overloaded.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.cav_prototype.base_cav.BaseCAV.forward_head">
+<span class="sig-name descname"><span class="pre">forward_head</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tasks</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">training_mode</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/cav_prototype/base_cav.html#BaseCAV.forward_head"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.cav_prototype.base_cav.BaseCAV.forward_head" title="Permalink to this definition"></a></dt>
+<dd><p>To be overloaded.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.cav_prototype.base_cav.BaseCAV.forward_local">
+<span class="sig-name descname"><span class="pre">forward_local</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tasks</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">training_mode</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/cav_prototype/base_cav.html#BaseCAV.forward_local"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.cav_prototype.base_cav.BaseCAV.forward_local" title="Permalink to this definition"></a></dt>
+<dd><p>To be overloaded.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.cav_prototype.base_cav.BaseCAV.get_request_cpm">
+<span class="sig-name descname"><span class="pre">get_request_cpm</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/cav_prototype/base_cav.html#BaseCAV.get_request_cpm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.cav_prototype.base_cav.BaseCAV.get_request_cpm" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.cav_prototype.base_cav.BaseCAV.get_response_cpm">
+<span class="sig-name descname"><span class="pre">get_response_cpm</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/cav_prototype/base_cav.html#BaseCAV.get_response_cpm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.cav_prototype.base_cav.BaseCAV.get_response_cpm" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.cav_prototype.base_cav.BaseCAV.has_request">
+<span class="sig-name descname"><span class="pre">has_request</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/cav_prototype/base_cav.html#BaseCAV.has_request"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.cav_prototype.base_cav.BaseCAV.has_request" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.cav_prototype.base_cav.BaseCAV.loss">
+<span class="sig-name descname"><span class="pre">loss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tasks</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/cav_prototype/base_cav.html#BaseCAV.loss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.cav_prototype.base_cav.BaseCAV.loss" title="Permalink to this definition"></a></dt>
+<dd><p>To be overloaded.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.cav_prototype.base_cav.BaseCAV.post_update_memory">
+<span class="sig-name descname"><span class="pre">post_update_memory</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/cav_prototype/base_cav.html#BaseCAV.post_update_memory"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.cav_prototype.base_cav.BaseCAV.post_update_memory" title="Permalink to this definition"></a></dt>
+<dd><p>Update memory after each forward run of a single frame.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.cav_prototype.base_cav.BaseCAV.pre_update_memory">
+<span class="sig-name descname"><span class="pre">pre_update_memory</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/cav_prototype/base_cav.html#BaseCAV.pre_update_memory"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.cav_prototype.base_cav.BaseCAV.pre_update_memory" title="Permalink to this definition"></a></dt>
+<dd><p>Update memory before each forward run of a single frame.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.cav_prototype.base_cav.BaseCAV.prepare_data">
+<span class="sig-name descname"><span class="pre">prepare_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/cav_prototype/base_cav.html#BaseCAV.prepare_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.cav_prototype.base_cav.BaseCAV.prepare_data" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.cav_prototype.base_cav.BaseCAV.receive_request">
+<span class="sig-name descname"><span class="pre">receive_request</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/cav_prototype/base_cav.html#BaseCAV.receive_request"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.cav_prototype.base_cav.BaseCAV.receive_request" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.cav_prototype.base_cav.BaseCAV.receive_response">
+<span class="sig-name descname"><span class="pre">receive_response</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">response</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/cav_prototype/base_cav.html#BaseCAV.receive_response"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.cav_prototype.base_cav.BaseCAV.receive_response" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.cav_prototype.base_cav.BaseCAV.reset_data">
+<span class="sig-name descname"><span class="pre">reset_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/cav_prototype/base_cav.html#BaseCAV.reset_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.cav_prototype.base_cav.BaseCAV.reset_data" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.cav_prototype.base_cav.BaseCAV.update">
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lidar_pose</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_ego</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">require_grad</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/cav_prototype/base_cav.html#BaseCAV.update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.cav_prototype.base_cav.BaseCAV.update" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="cosense3d.agents.cav_prototype.base_cav.BaseSeqCAV">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cosense3d.agents.cav_prototype.base_cav.</span></span><span class="sig-name descname"><span class="pre">BaseSeqCAV</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mapped_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_ego</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lidar_range</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">memory_len</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lidar_pose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">require_grad</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seq_len</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/cav_prototype/base_cav.html#BaseSeqCAV"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.cav_prototype.base_cav.BaseSeqCAV" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.cav_prototype.base_cav.BaseSeqCAV.apply_transform">
+<span class="sig-name descname"><span class="pre">apply_transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seq_idx</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/cav_prototype/base_cav.html#BaseSeqCAV.apply_transform"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.cav_prototype.base_cav.BaseSeqCAV.apply_transform" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.cav_prototype.base_cav.BaseSeqCAV.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tasks</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">training_mode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seq_idx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">with_loss</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/cav_prototype/base_cav.html#BaseSeqCAV.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.cav_prototype.base_cav.BaseSeqCAV.forward" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.cav_prototype.base_cav.BaseSeqCAV.forward_fusion">
+<span class="sig-name descname"><span class="pre">forward_fusion</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tasks</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">training_mode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seq_idx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">with_loss</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/cav_prototype/base_cav.html#BaseSeqCAV.forward_fusion"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.cav_prototype.base_cav.BaseSeqCAV.forward_fusion" title="Permalink to this definition"></a></dt>
+<dd><p>To be overloaded.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.cav_prototype.base_cav.BaseSeqCAV.forward_head">
+<span class="sig-name descname"><span class="pre">forward_head</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tasks</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">training_mode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seq_idx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">with_loss</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/cav_prototype/base_cav.html#BaseSeqCAV.forward_head"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.cav_prototype.base_cav.BaseSeqCAV.forward_head" title="Permalink to this definition"></a></dt>
+<dd><p>To be overloaded.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.cav_prototype.base_cav.BaseSeqCAV.forward_local">
+<span class="sig-name descname"><span class="pre">forward_local</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tasks</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">training_mode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seq_idx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">with_loss</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/cav_prototype/base_cav.html#BaseSeqCAV.forward_local"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.cav_prototype.base_cav.BaseSeqCAV.forward_local" title="Permalink to this definition"></a></dt>
+<dd><p>To be overloaded.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.cav_prototype.base_cav.BaseSeqCAV.get_data">
+<span class="sig-name descname"><span class="pre">get_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">keys</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seq_idx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/cav_prototype/base_cav.html#BaseSeqCAV.get_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.cav_prototype.base_cav.BaseSeqCAV.get_data" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.cav_prototype.base_cav.BaseSeqCAV.get_request_cpm">
+<span class="sig-name descname"><span class="pre">get_request_cpm</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/cav_prototype/base_cav.html#BaseSeqCAV.get_request_cpm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.cav_prototype.base_cav.BaseSeqCAV.get_request_cpm" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.cav_prototype.base_cav.BaseSeqCAV.get_response_cpm">
+<span class="sig-name descname"><span class="pre">get_response_cpm</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/cav_prototype/base_cav.html#BaseSeqCAV.get_response_cpm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.cav_prototype.base_cav.BaseSeqCAV.get_response_cpm" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.cav_prototype.base_cav.BaseSeqCAV.has_request">
+<span class="sig-name descname"><span class="pre">has_request</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/cav_prototype/base_cav.html#BaseSeqCAV.has_request"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.cav_prototype.base_cav.BaseSeqCAV.has_request" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.cav_prototype.base_cav.BaseSeqCAV.loss">
+<span class="sig-name descname"><span class="pre">loss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tasks</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">training_mode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seq_idx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">with_loss</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/cav_prototype/base_cav.html#BaseSeqCAV.loss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.cav_prototype.base_cav.BaseSeqCAV.loss" title="Permalink to this definition"></a></dt>
+<dd><p>To be overloaded.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.cav_prototype.base_cav.BaseSeqCAV.post_update_memory">
+<span class="sig-name descname"><span class="pre">post_update_memory</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seq_idx</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/cav_prototype/base_cav.html#BaseSeqCAV.post_update_memory"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.cav_prototype.base_cav.BaseSeqCAV.post_update_memory" title="Permalink to this definition"></a></dt>
+<dd><p>Update memory after each forward run of a single frame.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.cav_prototype.base_cav.BaseSeqCAV.pre_update_memory">
+<span class="sig-name descname"><span class="pre">pre_update_memory</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seq_idx</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/cav_prototype/base_cav.html#BaseSeqCAV.pre_update_memory"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.cav_prototype.base_cav.BaseSeqCAV.pre_update_memory" title="Permalink to this definition"></a></dt>
+<dd><p>Update memory before each forward run of a single frame.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.cav_prototype.base_cav.BaseSeqCAV.prepare_data">
+<span class="sig-name descname"><span class="pre">prepare_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seq_idx</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/cav_prototype/base_cav.html#BaseSeqCAV.prepare_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.cav_prototype.base_cav.BaseSeqCAV.prepare_data" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.cav_prototype.base_cav.BaseSeqCAV.receive_request">
+<span class="sig-name descname"><span class="pre">receive_request</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/cav_prototype/base_cav.html#BaseSeqCAV.receive_request"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.cav_prototype.base_cav.BaseSeqCAV.receive_request" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.cav_prototype.base_cav.BaseSeqCAV.receive_response">
+<span class="sig-name descname"><span class="pre">receive_response</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">response</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seq_idx</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/cav_prototype/base_cav.html#BaseSeqCAV.receive_response"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.cav_prototype.base_cav.BaseSeqCAV.receive_response" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.cav_prototype.base_cav.BaseSeqCAV.reset_data">
+<span class="sig-name descname"><span class="pre">reset_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/cav_prototype/base_cav.html#BaseSeqCAV.reset_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.cav_prototype.base_cav.BaseSeqCAV.reset_data" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.cav_prototype.base_cav.BaseSeqCAV.task_id">
+<span class="sig-name descname"><span class="pre">task_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seq_idx</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/cav_prototype/base_cav.html#BaseSeqCAV.task_id"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.cav_prototype.base_cav.BaseSeqCAV.task_id" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.cav_prototype.base_cav.BaseSeqCAV.update">
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lidar_pose</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/cav_prototype/base_cav.html#BaseSeqCAV.update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.cav_prototype.base_cav.BaseSeqCAV.update" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="cosense3d.agents.cav_prototype.base_cav.DairV2XCAV">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cosense3d.agents.cav_prototype.base_cav.</span></span><span class="sig-name descname"><span class="pre">DairV2XCAV</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/cav_prototype/base_cav.html#DairV2XCAV"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.cav_prototype.base_cav.DairV2XCAV" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#cosense3d.agents.cav_prototype.base_cav.BaseCAV" title="cosense3d.agents.cav_prototype.base_cav.BaseCAV"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseCAV</span></code></a></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="cosense3d.agents.cav_prototype.base_cav.OPV2VtCAV">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cosense3d.agents.cav_prototype.base_cav.</span></span><span class="sig-name descname"><span class="pre">OPV2VtCAV</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/cav_prototype/base_cav.html#OPV2VtCAV"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.cav_prototype.base_cav.OPV2VtCAV" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#cosense3d.agents.cav_prototype.base_cav.BaseCAV" title="cosense3d.agents.cav_prototype.base_cav.BaseCAV"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseCAV</span></code></a></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="cosense3d.agents.cav_prototype.base_cav.OPV2VtCAV_v2">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cosense3d.agents.cav_prototype.base_cav.</span></span><span class="sig-name descname"><span class="pre">OPV2VtCAV_v2</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/cav_prototype/base_cav.html#OPV2VtCAV_v2"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.cav_prototype.base_cav.OPV2VtCAV_v2" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#cosense3d.agents.cav_prototype.base_cav.BaseCAV" title="cosense3d.agents.cav_prototype.base_cav.BaseCAV"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseCAV</span></code></a></p>
+</dd></dl>
+
+</section>
+<section id="module-cosense3d.agents.cav_prototype.streamLTS_collection">
+<span id="cosense3d-agents-cav-prototype-streamlts-collection-module"></span><h2>cosense3d.agents.cav_prototype.streamLTS_collection module<a class="headerlink" href="#module-cosense3d.agents.cav_prototype.streamLTS_collection" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="cosense3d.agents.cav_prototype.streamLTS_collection.LTSCAVLocCorr">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cosense3d.agents.cav_prototype.streamLTS_collection.</span></span><span class="sig-name descname"><span class="pre">LTSCAVLocCorr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/cav_prototype/streamLTS_collection.html#LTSCAVLocCorr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.cav_prototype.streamLTS_collection.LTSCAVLocCorr" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#cosense3d.agents.cav_prototype.streamLTS_collection.StreamLidarCAV" title="cosense3d.agents.cav_prototype.streamLTS_collection.StreamLidarCAV"><code class="xref py py-class docutils literal notranslate"><span class="pre">StreamLidarCAV</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.cav_prototype.streamLTS_collection.LTSCAVLocCorr.prepare_data">
+<span class="sig-name descname"><span class="pre">prepare_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/cav_prototype/streamLTS_collection.html#LTSCAVLocCorr.prepare_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.cav_prototype.streamLTS_collection.LTSCAVLocCorr.prepare_data" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="cosense3d.agents.cav_prototype.streamLTS_collection.LTSDairV2X">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cosense3d.agents.cav_prototype.streamLTS_collection.</span></span><span class="sig-name descname"><span class="pre">LTSDairV2X</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/cav_prototype/streamLTS_collection.html#LTSDairV2X"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.cav_prototype.streamLTS_collection.LTSDairV2X" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#cosense3d.agents.cav_prototype.streamLTS_collection.StreamLidarCAV" title="cosense3d.agents.cav_prototype.streamLTS_collection.StreamLidarCAV"><code class="xref py py-class docutils literal notranslate"><span class="pre">StreamLidarCAV</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.cav_prototype.streamLTS_collection.LTSDairV2X.forward_fusion">
+<span class="sig-name descname"><span class="pre">forward_fusion</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tasks</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">training_mode</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/cav_prototype/streamLTS_collection.html#LTSDairV2X.forward_fusion"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.cav_prototype.streamLTS_collection.LTSDairV2X.forward_fusion" title="Permalink to this definition"></a></dt>
+<dd><p>To be overloaded.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.cav_prototype.streamLTS_collection.LTSDairV2X.forward_head">
+<span class="sig-name descname"><span class="pre">forward_head</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tasks</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">training_mode</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/cav_prototype/streamLTS_collection.html#LTSDairV2X.forward_head"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.cav_prototype.streamLTS_collection.LTSDairV2X.forward_head" title="Permalink to this definition"></a></dt>
+<dd><p>To be overloaded.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.cav_prototype.streamLTS_collection.LTSDairV2X.forward_local">
+<span class="sig-name descname"><span class="pre">forward_local</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tasks</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">training_mode</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/cav_prototype/streamLTS_collection.html#LTSDairV2X.forward_local"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.cav_prototype.streamLTS_collection.LTSDairV2X.forward_local" title="Permalink to this definition"></a></dt>
+<dd><p>To be overloaded.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.cav_prototype.streamLTS_collection.LTSDairV2X.loss">
+<span class="sig-name descname"><span class="pre">loss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tasks</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/cav_prototype/streamLTS_collection.html#LTSDairV2X.loss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.cav_prototype.streamLTS_collection.LTSDairV2X.loss" title="Permalink to this definition"></a></dt>
+<dd><p>To be overloaded.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="cosense3d.agents.cav_prototype.streamLTS_collection.StreamLidarCAV">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cosense3d.agents.cav_prototype.streamLTS_collection.</span></span><span class="sig-name descname"><span class="pre">StreamLidarCAV</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/cav_prototype/streamLTS_collection.html#StreamLidarCAV"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.cav_prototype.streamLTS_collection.StreamLidarCAV" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#cosense3d.agents.cav_prototype.base_cav.BaseCAV" title="cosense3d.agents.cav_prototype.base_cav.BaseCAV"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseCAV</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.cav_prototype.streamLTS_collection.StreamLidarCAV.apply_transform">
+<span class="sig-name descname"><span class="pre">apply_transform</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/cav_prototype/streamLTS_collection.html#StreamLidarCAV.apply_transform"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.cav_prototype.streamLTS_collection.StreamLidarCAV.apply_transform" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.cav_prototype.streamLTS_collection.StreamLidarCAV.forward_fusion">
+<span class="sig-name descname"><span class="pre">forward_fusion</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tasks</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">training_mode</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/cav_prototype/streamLTS_collection.html#StreamLidarCAV.forward_fusion"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.cav_prototype.streamLTS_collection.StreamLidarCAV.forward_fusion" title="Permalink to this definition"></a></dt>
+<dd><p>To be overloaded.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.cav_prototype.streamLTS_collection.StreamLidarCAV.forward_head">
+<span class="sig-name descname"><span class="pre">forward_head</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tasks</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">training_mode</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/cav_prototype/streamLTS_collection.html#StreamLidarCAV.forward_head"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.cav_prototype.streamLTS_collection.StreamLidarCAV.forward_head" title="Permalink to this definition"></a></dt>
+<dd><p>To be overloaded.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.cav_prototype.streamLTS_collection.StreamLidarCAV.forward_local">
+<span class="sig-name descname"><span class="pre">forward_local</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tasks</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">training_mode</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/cav_prototype/streamLTS_collection.html#StreamLidarCAV.forward_local"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.cav_prototype.streamLTS_collection.StreamLidarCAV.forward_local" title="Permalink to this definition"></a></dt>
+<dd><p>To be overloaded.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.cav_prototype.streamLTS_collection.StreamLidarCAV.get_response_cpm">
+<span class="sig-name descname"><span class="pre">get_response_cpm</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/cav_prototype/streamLTS_collection.html#StreamLidarCAV.get_response_cpm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.cav_prototype.streamLTS_collection.StreamLidarCAV.get_response_cpm" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.cav_prototype.streamLTS_collection.StreamLidarCAV.loss">
+<span class="sig-name descname"><span class="pre">loss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tasks</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/cav_prototype/streamLTS_collection.html#StreamLidarCAV.loss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.cav_prototype.streamLTS_collection.StreamLidarCAV.loss" title="Permalink to this definition"></a></dt>
+<dd><p>To be overloaded.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.cav_prototype.streamLTS_collection.StreamLidarCAV.post_update_memory">
+<span class="sig-name descname"><span class="pre">post_update_memory</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/cav_prototype/streamLTS_collection.html#StreamLidarCAV.post_update_memory"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.cav_prototype.streamLTS_collection.StreamLidarCAV.post_update_memory" title="Permalink to this definition"></a></dt>
+<dd><p>Update memory after each forward run of a single frame.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.cav_prototype.streamLTS_collection.StreamLidarCAV.pre_update_memory">
+<span class="sig-name descname"><span class="pre">pre_update_memory</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/cav_prototype/streamLTS_collection.html#StreamLidarCAV.pre_update_memory"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.cav_prototype.streamLTS_collection.StreamLidarCAV.pre_update_memory" title="Permalink to this definition"></a></dt>
+<dd><p>Update memory before each forward run of a single frame.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.cav_prototype.streamLTS_collection.StreamLidarCAV.prepare_data">
+<span class="sig-name descname"><span class="pre">prepare_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/cav_prototype/streamLTS_collection.html#StreamLidarCAV.prepare_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.cav_prototype.streamLTS_collection.StreamLidarCAV.prepare_data" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.cav_prototype.streamLTS_collection.StreamLidarCAV.prepare_time_scale">
+<span class="sig-name descname"><span class="pre">prepare_time_scale</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/cav_prototype/streamLTS_collection.html#StreamLidarCAV.prepare_time_scale"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.cav_prototype.streamLTS_collection.StreamLidarCAV.prepare_time_scale" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.cav_prototype.streamLTS_collection.StreamLidarCAV.refresh_memory">
+<span class="sig-name descname"><span class="pre">refresh_memory</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prev_exists</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/cav_prototype/streamLTS_collection.html#StreamLidarCAV.refresh_memory"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.cav_prototype.streamLTS_collection.StreamLidarCAV.refresh_memory" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="cosense3d.agents.cav_prototype.streamLTS_collection.StreamLidarCAV.timestamp">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">timestamp</span></span><a class="headerlink" href="#cosense3d.agents.cav_prototype.streamLTS_collection.StreamLidarCAV.timestamp" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.cav_prototype.streamLTS_collection.StreamLidarCAV.transform_ref_pts">
+<span class="sig-name descname"><span class="pre">transform_ref_pts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reference_points</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">matrix</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/cav_prototype/streamLTS_collection.html#StreamLidarCAV.transform_ref_pts"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.cav_prototype.streamLTS_collection.StreamLidarCAV.transform_ref_pts" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.cav_prototype.streamLTS_collection.StreamLidarCAV.update_memory_timestamps">
+<span class="sig-name descname"><span class="pre">update_memory_timestamps</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ref_pts</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/cav_prototype/streamLTS_collection.html#StreamLidarCAV.update_memory_timestamps"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.cav_prototype.streamLTS_collection.StreamLidarCAV.update_memory_timestamps" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.cav_prototype.streamLTS_collection.StreamLidarCAV.vis_local_detection">
+<span class="sig-name descname"><span class="pre">vis_local_detection</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/cav_prototype/streamLTS_collection.html#StreamLidarCAV.vis_local_detection"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.cav_prototype.streamLTS_collection.StreamLidarCAV.vis_local_detection" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.cav_prototype.streamLTS_collection.StreamLidarCAV.vis_local_pred">
+<span class="sig-name descname"><span class="pre">vis_local_pred</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/cav_prototype/streamLTS_collection.html#StreamLidarCAV.vis_local_pred"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.cav_prototype.streamLTS_collection.StreamLidarCAV.vis_local_pred" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.cav_prototype.streamLTS_collection.StreamLidarCAV.vis_poses">
+<span class="sig-name descname"><span class="pre">vis_poses</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">his_len</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/cav_prototype/streamLTS_collection.html#StreamLidarCAV.vis_poses"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.cav_prototype.streamLTS_collection.StreamLidarCAV.vis_poses" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.cav_prototype.streamLTS_collection.StreamLidarCAV.vis_ref_pts">
+<span class="sig-name descname"><span class="pre">vis_ref_pts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">his_len</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/cav_prototype/streamLTS_collection.html#StreamLidarCAV.vis_ref_pts"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.cav_prototype.streamLTS_collection.StreamLidarCAV.vis_ref_pts" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cosense3d.agents.cav_prototype.streamLTS_collection.slcAttnFusion">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.agents.cav_prototype.streamLTS_collection.</span></span><span class="sig-name descname"><span class="pre">slcAttnFusion</span></span><a class="headerlink" href="#cosense3d.agents.cav_prototype.streamLTS_collection.slcAttnFusion" title="Permalink to this definition"></a></dt>
+<dd><p>alias of <a class="reference internal" href="#cosense3d.agents.cav_prototype.streamLTS_collection.slcDenseToSparse" title="cosense3d.agents.cav_prototype.streamLTS_collection.slcDenseToSparse"><code class="xref py py-class docutils literal notranslate"><span class="pre">slcDenseToSparse</span></code></a></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="cosense3d.agents.cav_prototype.streamLTS_collection.slcCIASSD">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cosense3d.agents.cav_prototype.streamLTS_collection.</span></span><span class="sig-name descname"><span class="pre">slcCIASSD</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/cav_prototype/streamLTS_collection.html#slcCIASSD"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.cav_prototype.streamLTS_collection.slcCIASSD" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#cosense3d.agents.cav_prototype.streamLTS_collection.StreamLidarCAV" title="cosense3d.agents.cav_prototype.streamLTS_collection.StreamLidarCAV"><code class="xref py py-class docutils literal notranslate"><span class="pre">StreamLidarCAV</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.cav_prototype.streamLTS_collection.slcCIASSD.apply_transform">
+<span class="sig-name descname"><span class="pre">apply_transform</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/cav_prototype/streamLTS_collection.html#slcCIASSD.apply_transform"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.cav_prototype.streamLTS_collection.slcCIASSD.apply_transform" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.cav_prototype.streamLTS_collection.slcCIASSD.forward_fusion">
+<span class="sig-name descname"><span class="pre">forward_fusion</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tasks</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">training_mode</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/cav_prototype/streamLTS_collection.html#slcCIASSD.forward_fusion"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.cav_prototype.streamLTS_collection.slcCIASSD.forward_fusion" title="Permalink to this definition"></a></dt>
+<dd><p>To be overloaded.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.cav_prototype.streamLTS_collection.slcCIASSD.forward_head">
+<span class="sig-name descname"><span class="pre">forward_head</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tasks</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">training_mode</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/cav_prototype/streamLTS_collection.html#slcCIASSD.forward_head"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.cav_prototype.streamLTS_collection.slcCIASSD.forward_head" title="Permalink to this definition"></a></dt>
+<dd><p>To be overloaded.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.cav_prototype.streamLTS_collection.slcCIASSD.forward_local">
+<span class="sig-name descname"><span class="pre">forward_local</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tasks</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">training_mode</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/cav_prototype/streamLTS_collection.html#slcCIASSD.forward_local"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.cav_prototype.streamLTS_collection.slcCIASSD.forward_local" title="Permalink to this definition"></a></dt>
+<dd><p>To be overloaded.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.cav_prototype.streamLTS_collection.slcCIASSD.get_response_cpm">
+<span class="sig-name descname"><span class="pre">get_response_cpm</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/cav_prototype/streamLTS_collection.html#slcCIASSD.get_response_cpm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.cav_prototype.streamLTS_collection.slcCIASSD.get_response_cpm" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.cav_prototype.streamLTS_collection.slcCIASSD.loss">
+<span class="sig-name descname"><span class="pre">loss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tasks</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/cav_prototype/streamLTS_collection.html#slcCIASSD.loss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.cav_prototype.streamLTS_collection.slcCIASSD.loss" title="Permalink to this definition"></a></dt>
+<dd><p>To be overloaded.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.cav_prototype.streamLTS_collection.slcCIASSD.post_update_memory">
+<span class="sig-name descname"><span class="pre">post_update_memory</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/cav_prototype/streamLTS_collection.html#slcCIASSD.post_update_memory"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.cav_prototype.streamLTS_collection.slcCIASSD.post_update_memory" title="Permalink to this definition"></a></dt>
+<dd><p>Update memory after each forward run of a single frame.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.cav_prototype.streamLTS_collection.slcCIASSD.pre_update_memory">
+<span class="sig-name descname"><span class="pre">pre_update_memory</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/cav_prototype/streamLTS_collection.html#slcCIASSD.pre_update_memory"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.cav_prototype.streamLTS_collection.slcCIASSD.pre_update_memory" title="Permalink to this definition"></a></dt>
+<dd><p>Update memory before each forward run of a single frame.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.cav_prototype.streamLTS_collection.slcCIASSD.prepare_data">
+<span class="sig-name descname"><span class="pre">prepare_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/cav_prototype/streamLTS_collection.html#slcCIASSD.prepare_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.cav_prototype.streamLTS_collection.slcCIASSD.prepare_data" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="cosense3d.agents.cav_prototype.streamLTS_collection.slcDenseToSparse">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cosense3d.agents.cav_prototype.streamLTS_collection.</span></span><span class="sig-name descname"><span class="pre">slcDenseToSparse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/cav_prototype/streamLTS_collection.html#slcDenseToSparse"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.cav_prototype.streamLTS_collection.slcDenseToSparse" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#cosense3d.agents.cav_prototype.streamLTS_collection.StreamLidarCAV" title="cosense3d.agents.cav_prototype.streamLTS_collection.StreamLidarCAV"><code class="xref py py-class docutils literal notranslate"><span class="pre">StreamLidarCAV</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.cav_prototype.streamLTS_collection.slcDenseToSparse.forward_local">
+<span class="sig-name descname"><span class="pre">forward_local</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tasks</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">training_mode</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/cav_prototype/streamLTS_collection.html#slcDenseToSparse.forward_local"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.cav_prototype.streamLTS_collection.slcDenseToSparse.forward_local" title="Permalink to this definition"></a></dt>
+<dd><p>To be overloaded.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.cav_prototype.streamLTS_collection.slcDenseToSparse.prepare_data">
+<span class="sig-name descname"><span class="pre">prepare_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/cav_prototype/streamLTS_collection.html#slcDenseToSparse.prepare_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.cav_prototype.streamLTS_collection.slcDenseToSparse.prepare_data" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="cosense3d.agents.cav_prototype.streamLTS_collection.slcFPVRCNN">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cosense3d.agents.cav_prototype.streamLTS_collection.</span></span><span class="sig-name descname"><span class="pre">slcFPVRCNN</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/cav_prototype/streamLTS_collection.html#slcFPVRCNN"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.cav_prototype.streamLTS_collection.slcFPVRCNN" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#cosense3d.agents.cav_prototype.streamLTS_collection.StreamLidarCAV" title="cosense3d.agents.cav_prototype.streamLTS_collection.StreamLidarCAV"><code class="xref py py-class docutils literal notranslate"><span class="pre">StreamLidarCAV</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.cav_prototype.streamLTS_collection.slcFPVRCNN.forward_local">
+<span class="sig-name descname"><span class="pre">forward_local</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tasks</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">training_mode</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/cav_prototype/streamLTS_collection.html#slcFPVRCNN.forward_local"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.cav_prototype.streamLTS_collection.slcFPVRCNN.forward_local" title="Permalink to this definition"></a></dt>
+<dd><p>To be overloaded.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.cav_prototype.streamLTS_collection.slcFPVRCNN.prepare_data">
+<span class="sig-name descname"><span class="pre">prepare_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/cav_prototype/streamLTS_collection.html#slcFPVRCNN.prepare_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.cav_prototype.streamLTS_collection.slcFPVRCNN.prepare_data" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cosense3d.agents.cav_prototype.streamLTS_collection.slcFcooper">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.agents.cav_prototype.streamLTS_collection.</span></span><span class="sig-name descname"><span class="pre">slcFcooper</span></span><a class="headerlink" href="#cosense3d.agents.cav_prototype.streamLTS_collection.slcFcooper" title="Permalink to this definition"></a></dt>
+<dd><p>alias of <a class="reference internal" href="#cosense3d.agents.cav_prototype.streamLTS_collection.slcDenseToSparse" title="cosense3d.agents.cav_prototype.streamLTS_collection.slcDenseToSparse"><code class="xref py py-class docutils literal notranslate"><span class="pre">slcDenseToSparse</span></code></a></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="cosense3d.agents.cav_prototype.streamLTS_collection.slcNoBoxTime">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cosense3d.agents.cav_prototype.streamLTS_collection.</span></span><span class="sig-name descname"><span class="pre">slcNoBoxTime</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/cav_prototype/streamLTS_collection.html#slcNoBoxTime"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.cav_prototype.streamLTS_collection.slcNoBoxTime" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#cosense3d.agents.cav_prototype.streamLTS_collection.StreamLidarCAV" title="cosense3d.agents.cav_prototype.streamLTS_collection.StreamLidarCAV"><code class="xref py py-class docutils literal notranslate"><span class="pre">StreamLidarCAV</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.cav_prototype.streamLTS_collection.slcNoBoxTime.prepare_data">
+<span class="sig-name descname"><span class="pre">prepare_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/cav_prototype/streamLTS_collection.html#slcNoBoxTime.prepare_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.cav_prototype.streamLTS_collection.slcNoBoxTime.prepare_data" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.cav_prototype.streamLTS_collection.slcNoBoxTime.update_memory_timestamps">
+<span class="sig-name descname"><span class="pre">update_memory_timestamps</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ref_pts</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/cav_prototype/streamLTS_collection.html#slcNoBoxTime.update_memory_timestamps"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.cav_prototype.streamLTS_collection.slcNoBoxTime.update_memory_timestamps" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-cosense3d.agents.cav_prototype">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-cosense3d.agents.cav_prototype" title="Permalink to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.agents.cav_prototype.get_prototype">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.agents.cav_prototype.</span></span><span class="sig-name descname"><span class="pre">get_prototype</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">module_full_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/cav_prototype.html#get_prototype"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.cav_prototype.get_prototype" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="cosense3d.agents.html" class="btn btn-neutral float-left" title="cosense3d.agents package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="cosense3d.agents.core.html" class="btn btn-neutral float-right" title="cosense3d.agents.core package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Anonymous Author.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

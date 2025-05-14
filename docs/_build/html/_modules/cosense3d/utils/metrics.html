@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>cosense3d.utils.metrics &mdash; OpenCosense3D 1.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js?v=af2ce170"></script>
+        <script src="../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            OpenCosense3D
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../md/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../md/prepare_data.html">Prepare Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../md/structure.html">The Structure of the framework</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">CoSense3d</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">OpenCosense3D</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">cosense3d.utils.metrics</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for cosense3d.utils.metrics</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">import</span> <span class="nn">torch.nn.functional</span> <span class="k">as</span> <span class="nn">F</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">sklearn.metrics</span> <span class="kn">import</span> <span class="n">precision_recall_curve</span>
+
+<span class="kn">from</span> <span class="nn">cosense3d.ops.iou3d_nms_utils</span> <span class="kn">import</span> <span class="n">boxes_iou3d_gpu</span><span class="p">,</span> <span class="n">boxes_iou_bev</span>
+<span class="kn">from</span> <span class="nn">cosense3d.ops.utils</span> <span class="kn">import</span> <span class="n">points_in_boxes_gpu</span>
+<span class="kn">from</span> <span class="nn">cosense3d.utils.misc</span> <span class="kn">import</span> <span class="n">save_json</span><span class="p">,</span> <span class="n">update_dict</span>
+<span class="kn">from</span> <span class="nn">cosense3d.utils.box_utils</span> <span class="kn">import</span> <span class="n">mask_boxes_outside_range_torch</span>
+
+
+<div class="viewcode-block" id="Metric"><a class="viewcode-back" href="../../../cosense3d.utils.html#cosense3d.utils.metrics.Metric">[docs]</a><span class="k">class</span> <span class="nc">Metric</span><span class="p">:</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cfg</span><span class="p">,</span> <span class="n">log_dir</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span> <span class="o">=</span> <span class="n">cfg</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log_dir</span> <span class="o">=</span> <span class="n">log_dir</span>
+
+<div class="viewcode-block" id="Metric.add_samples"><a class="viewcode-back" href="../../../cosense3d.utils.html#cosense3d.utils.metrics.Metric.add_samples">[docs]</a>    <span class="k">def</span> <span class="nf">add_samples</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_dict</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
+
+<div class="viewcode-block" id="Metric.save_detections"><a class="viewcode-back" href="../../../cosense3d.utils.html#cosense3d.utils.metrics.Metric.save_detections">[docs]</a>    <span class="k">def</span> <span class="nf">save_detections</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
+
+<div class="viewcode-block" id="Metric.summary"><a class="viewcode-back" href="../../../cosense3d.utils.html#cosense3d.utils.metrics.Metric.summary">[docs]</a>    <span class="k">def</span> <span class="nf">summary</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span></div></div>
+
+
+<div class="viewcode-block" id="MetricObjDet"><a class="viewcode-back" href="../../../cosense3d.utils.html#cosense3d.utils.metrics.MetricObjDet">[docs]</a><span class="k">class</span> <span class="nc">MetricObjDet</span><span class="p">(</span><span class="n">Metric</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cfg</span><span class="p">,</span> <span class="n">log_dir</span><span class="p">,</span> <span class="n">logger</span><span class="p">,</span> <span class="n">bev</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">MetricObjDet</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">cfg</span><span class="p">,</span> <span class="n">log_dir</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">eval_func</span> <span class="o">=</span> <span class="n">cfg</span><span class="p">[</span><span class="s1">&#39;eval_func&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lidar_range</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;lidar_range&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">score_metric</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;score_metric&#39;</span><span class="p">,</span> <span class="s1">&#39;scr&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">score_thr</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;score_thr&#39;</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="n">logger</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">samples</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pred_boxes</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gt_boxes</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">confidences</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">v_ids</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bev</span> <span class="o">=</span> <span class="n">bev</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">iou_fn</span> <span class="o">=</span> <span class="n">boxes_iou_bev</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">bev</span> <span class="k">else</span> <span class="n">boxes_iou3d_gpu</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">file_test</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">log_dir</span><span class="p">,</span> <span class="s1">&#39;pred.json&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">has_test_detections</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">result</span> <span class="o">=</span> <span class="p">{}</span>
+
+<div class="viewcode-block" id="MetricObjDet.add_sample"><a class="viewcode-back" href="../../../cosense3d.utils.html#cosense3d.utils.metrics.MetricObjDet.add_sample">[docs]</a>    <span class="k">def</span> <span class="nf">add_sample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">pred_boxes</span><span class="p">,</span> <span class="n">gt_boxes</span><span class="p">,</span> <span class="n">confidences</span><span class="p">,</span> <span class="n">ids</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">samples</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+        <span class="n">valid</span> <span class="o">=</span> <span class="n">confidences</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">score_thr</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">lidar_range</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">in_range_gt</span> <span class="o">=</span> <span class="n">mask_boxes_outside_range_torch</span><span class="p">(</span><span class="n">gt_boxes</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lidar_range</span><span class="p">),</span>
+            <span class="n">in_range_pred</span> <span class="o">=</span> <span class="n">mask_boxes_outside_range_torch</span><span class="p">(</span><span class="n">pred_boxes</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lidar_range</span><span class="p">)</span>
+            <span class="n">valid</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span><span class="n">valid</span><span class="p">,</span> <span class="n">in_range_pred</span><span class="p">)</span>
+            <span class="n">gt_boxes</span> <span class="o">=</span> <span class="n">gt_boxes</span><span class="p">[</span><span class="n">in_range_gt</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pred_boxes</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">pred_boxes</span><span class="p">[</span><span class="n">valid</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gt_boxes</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">gt_boxes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">confidences</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">confidences</span><span class="p">[</span><span class="n">valid</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">ids</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">v_ids</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">ids</span>
+        <span class="n">ss</span> <span class="o">=</span> <span class="n">name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span>
+        <span class="n">scenario</span> <span class="o">=</span> <span class="n">ss</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">frame</span> <span class="o">=</span> <span class="n">ss</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">pred_boxes_np</span> <span class="o">=</span> <span class="n">pred_boxes</span><span class="p">[</span><span class="n">valid</span><span class="p">]</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+        <span class="n">bbx_out</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">pred_boxes_np</span><span class="p">),</span> <span class="mi">11</span><span class="p">))</span>
+        <span class="n">bbx_out</span><span class="p">[:,</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">10</span><span class="p">]]</span> <span class="o">=</span> <span class="n">pred_boxes_np</span>
+        <span class="n">bbx_out</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>  <span class="c1"># box id not set</span>
+        <span class="n">conf_out</span> <span class="o">=</span> <span class="n">confidences</span><span class="p">[</span><span class="n">valid</span><span class="p">]</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+        <span class="k">if</span> <span class="s1">&#39;.&#39;</span> <span class="ow">in</span> <span class="n">frame</span><span class="p">:</span>
+            <span class="n">frame</span><span class="p">,</span> <span class="n">agent_id</span> <span class="o">=</span> <span class="n">frame</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
+            <span class="n">fdict</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;agents&#39;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="n">agent_id</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s1">&#39;gt_boxes&#39;</span><span class="p">:</span> <span class="n">bbx_out</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span>
+                    <span class="s1">&#39;box_confidences&#39;</span><span class="p">:</span> <span class="n">conf_out</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+                <span class="p">}</span>
+            <span class="p">}}</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">fdict</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;meta&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;bbx_center_global&#39;</span><span class="p">:</span> <span class="n">bbx_out</span><span class="o">.</span><span class="n">tolist</span><span class="p">()}}</span>
+        <span class="n">update_dict</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">result</span><span class="p">,</span>
+            <span class="p">{</span><span class="n">scenario</span><span class="p">:</span> <span class="p">{</span><span class="n">frame</span><span class="p">:</span> <span class="n">fdict</span><span class="p">}}</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="MetricObjDet.add_samples"><a class="viewcode-back" href="../../../cosense3d.utils.html#cosense3d.utils.metrics.MetricObjDet.add_samples">[docs]</a>    <span class="nd">@torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">()</span>
+    <span class="k">def</span> <span class="nf">add_samples</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">out_dict</span><span class="p">):</span>
+        <span class="n">data_dict</span> <span class="o">=</span> <span class="n">out_dict</span><span class="p">[</span><span class="s1">&#39;detections&#39;</span><span class="p">]</span>
+        <span class="n">names</span> <span class="o">=</span> <span class="n">data_dict</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">names</span><span class="p">)):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_sample</span><span class="p">(</span><span class="n">names</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+                            <span class="n">data_dict</span><span class="p">[</span><span class="s1">&#39;pred_boxes&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">][</span><span class="s1">&#39;box&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">float</span><span class="p">(),</span>
+                            <span class="n">data_dict</span><span class="p">[</span><span class="s1">&#39;gt_boxes&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">float</span><span class="p">(),</span>
+                            <span class="n">data_dict</span><span class="p">[</span><span class="s1">&#39;pred_boxes&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">][</span><span class="bp">self</span><span class="o">.</span><span class="n">score_metric</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="MetricObjDet.save_detections"><a class="viewcode-back" href="../../../cosense3d.utils.html#cosense3d.utils.metrics.MetricObjDet.save_detections">[docs]</a>    <span class="k">def</span> <span class="nf">save_detections</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+        <span class="n">dict_detections</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;samples&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">samples</span><span class="p">,</span>
+            <span class="s1">&#39;pred_boxes&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">pred_boxes</span><span class="p">,</span>
+            <span class="s1">&#39;gt_boxes&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">gt_boxes</span><span class="p">,</span>
+            <span class="s1">&#39;confidences&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">confidences</span><span class="p">,</span>
+            <span class="s1">&#39;ids&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">v_ids</span>
+        <span class="p">}</span>
+        <span class="n">torch</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">dict_detections</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">has_test_detections</span> <span class="o">=</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="MetricObjDet.cal_precision_recall"><a class="viewcode-back" href="../../../cosense3d.utils.html#cosense3d.utils.metrics.MetricObjDet.cal_precision_recall">[docs]</a>    <span class="k">def</span> <span class="nf">cal_precision_recall</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">IoU_thr</span><span class="o">=</span><span class="mf">0.5</span><span class="p">):</span>
+        <span class="n">list_sample</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">list_confidence</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">list_tp</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">N_gt</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="k">for</span> <span class="n">sample</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">samples</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pred_boxes</span><span class="p">[</span><span class="n">sample</span><span class="p">])</span><span class="o">&gt;</span><span class="mi">0</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gt_boxes</span><span class="p">[</span><span class="n">sample</span><span class="p">])</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+                <span class="n">ious</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">iou_fn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pred_boxes</span><span class="p">[</span><span class="n">sample</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">gt_boxes</span><span class="p">[</span><span class="n">sample</span><span class="p">])</span>
+                <span class="n">n</span><span class="p">,</span> <span class="n">m</span> <span class="o">=</span> <span class="n">ious</span><span class="o">.</span><span class="n">shape</span>
+                <span class="n">list_sample</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="n">sample</span><span class="p">]</span> <span class="o">*</span> <span class="n">n</span><span class="p">)</span>
+                <span class="n">list_confidence</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">confidences</span><span class="p">[</span><span class="n">sample</span><span class="p">])</span>
+                <span class="n">N_gt</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gt_boxes</span><span class="p">[</span><span class="n">sample</span><span class="p">])</span>
+                <span class="n">max_iou_pred_to_gts</span> <span class="o">=</span> <span class="n">ious</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+                <span class="n">max_iou_gt_to_preds</span> <span class="o">=</span> <span class="n">ious</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+                <span class="n">tp</span> <span class="o">=</span> <span class="n">max_iou_pred_to_gts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">IoU_thr</span>
+                <span class="n">is_best_match</span> <span class="o">=</span> <span class="n">max_iou_gt_to_preds</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="n">max_iou_pred_to_gts</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span> \
+                                <span class="o">==</span><span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">tp</span><span class="p">))],</span> <span class="n">device</span><span class="o">=</span><span class="n">tp</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+                <span class="n">tp</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">logical_not</span><span class="p">(</span><span class="n">is_best_match</span><span class="p">)]</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="n">list_tp</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">tp</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pred_boxes</span><span class="p">[</span><span class="n">sample</span><span class="p">])</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+                <span class="n">N_gt</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gt_boxes</span><span class="p">[</span><span class="n">sample</span><span class="p">])</span>
+            <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gt_boxes</span><span class="p">[</span><span class="n">sample</span><span class="p">])</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+                <span class="n">tp</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pred_boxes</span><span class="p">[</span><span class="n">sample</span><span class="p">]),</span> <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pred_boxes</span><span class="p">[</span><span class="n">sample</span><span class="p">]</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+                <span class="n">list_tp</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">tp</span><span class="o">.</span><span class="n">bool</span><span class="p">())</span>
+        <span class="n">order_inds</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">list_confidence</span><span class="p">)</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">descending</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">tp_all</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">list_tp</span><span class="p">)[</span><span class="n">order_inds</span><span class="p">]</span>
+        <span class="n">list_accTP</span> <span class="o">=</span> <span class="n">tp_all</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="c1"># list_accFP = torch.logical_not(tp_all).cumsum(dim=0)</span>
+        <span class="n">list_precision</span> <span class="o">=</span> <span class="n">list_accTP</span><span class="o">.</span><span class="n">float</span><span class="p">()</span> <span class="o">/</span> <span class="n">torch</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">list_sample</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">list_recall</span> <span class="o">=</span> <span class="n">list_accTP</span><span class="o">.</span><span class="n">float</span><span class="p">()</span> <span class="o">/</span> <span class="n">N_gt</span>
+        <span class="c1"># plt.plot(list_recall.numpy(), list_precision.numpy(), &#39;k.&#39;)</span>
+        <span class="c1"># plt.savefig(str(model.run_path / &#39;auc_thr{}_ncoop{}.png&#39;</span>
+        <span class="c1">#                 .format(model.cfg[&#39;score_threshold&#39;], model.n_coop)))</span>
+        <span class="c1"># plt.close()</span>
+
+        <span class="k">return</span> <span class="n">list_precision</span><span class="p">,</span> <span class="n">list_recall</span></div>
+
+<div class="viewcode-block" id="MetricObjDet.cal_ap_all_point"><a class="viewcode-back" href="../../../cosense3d.utils.html#cosense3d.utils.metrics.MetricObjDet.cal_ap_all_point">[docs]</a>    <span class="k">def</span> <span class="nf">cal_ap_all_point</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">IoU_thr</span><span class="o">=</span><span class="mf">0.5</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        source: https://github.com/rafaelpadilla/Object-Detection-Metrics/blob/7c0bd0489e3fd4ae71fc0bc8f2a67dbab5dbdc9c/lib/Evaluator.py#L292</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="n">prec</span><span class="p">,</span> <span class="n">rec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cal_precision_recall</span><span class="p">(</span><span class="n">IoU_thr</span><span class="o">=</span><span class="n">IoU_thr</span><span class="p">)</span>
+        <span class="n">mrec</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">mrec</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="p">[</span><span class="n">mrec</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">item</span><span class="p">())</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">rec</span><span class="p">]</span>
+        <span class="n">mrec</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">mpre</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">mpre</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="p">[</span><span class="n">mpre</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">item</span><span class="p">())</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">prec</span><span class="p">]</span>
+        <span class="n">mpre</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">mpre</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+            <span class="n">mpre</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">mpre</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">],</span> <span class="n">mpre</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+        <span class="n">ii</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">mrec</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">mrec</span><span class="p">[</span><span class="mi">1</span><span class="p">:][</span><span class="n">i</span><span class="p">]</span> <span class="o">!=</span> <span class="n">mrec</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="n">i</span><span class="p">]:</span>
+                <span class="n">ii</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">ap</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">ii</span><span class="p">:</span>
+            <span class="n">ap</span> <span class="o">=</span> <span class="n">ap</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">mrec</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">mrec</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">])</span> <span class="o">*</span> <span class="n">mpre</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+        <span class="c1"># return [ap, mpre[1:len(mpre)-1], mrec[1:len(mpre)-1], ii]</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">ap</span><span class="p">,</span> <span class="n">mpre</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="nb">len</span><span class="p">(</span><span class="n">mpre</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">],</span> <span class="n">mrec</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="nb">len</span><span class="p">(</span><span class="n">mpre</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">],</span> <span class="n">ii</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="MetricObjDet.cal_ap_11_point"><a class="viewcode-back" href="../../../cosense3d.utils.html#cosense3d.utils.metrics.MetricObjDet.cal_ap_11_point">[docs]</a>    <span class="k">def</span> <span class="nf">cal_ap_11_point</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">IoU_thr</span><span class="o">=</span><span class="mf">0.5</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        source: https://github.com/rafaelpadilla/Object-Detection-Metrics/blob/7c0bd0489e3fd4ae71fc0bc8f2a67dbab5dbdc9c/lib/Evaluator.py#L315</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="c1"># 11-point interpolated average precision</span>
+        <span class="n">prec</span><span class="p">,</span> <span class="n">rec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cal_precision_recall</span><span class="p">(</span><span class="n">IoU_thr</span><span class="o">=</span><span class="n">IoU_thr</span><span class="p">)</span>
+        <span class="n">mrec</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c1"># mrec.append(0)</span>
+        <span class="p">[</span><span class="n">mrec</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">item</span><span class="p">())</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">rec</span><span class="p">]</span>
+        <span class="c1"># mrec.append(1)</span>
+        <span class="n">mpre</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c1"># mpre.append(0)</span>
+        <span class="p">[</span><span class="n">mpre</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">item</span><span class="p">())</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">prec</span><span class="p">]</span>
+        <span class="c1"># mpre.append(0)</span>
+        <span class="n">recallValues</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">11</span><span class="p">)</span>
+        <span class="n">recallValues</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">recallValues</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">rhoInterp</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">recallValid</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c1"># For each recallValues (0, 0.1, 0.2, ... , 1)</span>
+        <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">recallValues</span><span class="p">:</span>
+            <span class="c1"># Obtain all recall values higher or equal than det_r</span>
+            <span class="n">argGreaterRecalls</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argwhere</span><span class="p">(</span><span class="n">mrec</span><span class="p">[:]</span> <span class="o">&gt;=</span> <span class="n">r</span><span class="p">)</span>
+            <span class="n">pmax</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="c1"># If there are recalls above det_r</span>
+            <span class="k">if</span> <span class="n">argGreaterRecalls</span><span class="o">.</span><span class="n">size</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">pmax</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">mpre</span><span class="p">[</span><span class="n">argGreaterRecalls</span><span class="o">.</span><span class="n">min</span><span class="p">():])</span>
+            <span class="n">recallValid</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+            <span class="n">rhoInterp</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pmax</span><span class="p">)</span>
+        <span class="c1"># By definition AP = sum(max(precision whose recall is above det_r))/11</span>
+        <span class="n">ap</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">rhoInterp</span><span class="p">)</span> <span class="o">/</span> <span class="mi">11</span>
+        <span class="c1"># Generating values for the plot</span>
+        <span class="n">rvals</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">rvals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">recallValid</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="p">[</span><span class="n">rvals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">e</span><span class="p">)</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">recallValid</span><span class="p">]</span>
+        <span class="n">rvals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">pvals</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">pvals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="p">[</span><span class="n">pvals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">e</span><span class="p">)</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">rhoInterp</span><span class="p">]</span>
+        <span class="n">pvals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="c1"># rhoInterp = rhoInterp[::-1]</span>
+        <span class="n">cc</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">rvals</span><span class="p">)):</span>
+            <span class="n">p</span> <span class="o">=</span> <span class="p">(</span><span class="n">rvals</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">pvals</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">p</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">cc</span><span class="p">:</span>
+                <span class="n">cc</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+            <span class="n">p</span> <span class="o">=</span> <span class="p">(</span><span class="n">rvals</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">pvals</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">p</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">cc</span><span class="p">:</span>
+                <span class="n">cc</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+        <span class="n">recallValues</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">cc</span><span class="p">]</span>
+        <span class="n">rhoInterp</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">cc</span><span class="p">]</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">ap</span><span class="p">,</span> <span class="n">rhoInterp</span><span class="p">,</span> <span class="n">recallValues</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="MetricObjDet.summary"><a class="viewcode-back" href="../../../cosense3d.utils.html#cosense3d.utils.metrics.MetricObjDet.summary">[docs]</a>    <span class="k">def</span> <span class="nf">summary</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">thrs</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.7</span><span class="p">]</span>
+        <span class="n">ss</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">thr</span> <span class="ow">in</span> <span class="n">thrs</span><span class="p">:</span>
+            <span class="n">ap</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">eval_func</span><span class="p">)(</span><span class="n">thr</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">ss</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;AP@</span><span class="si">{</span><span class="n">thr</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">ap</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">ss</span> <span class="o">=</span> <span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Score metric: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">score_metric</span><span class="si">}</span><span class="se">\n</span><span class="s2"> &quot;</span>
+              <span class="sa">f</span><span class="s2">&quot;Score thr: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">score_thr</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+              <span class="sa">f</span><span class="s2">&quot;--------------</span><span class="se">\n</span><span class="s2">&quot;</span>
+              <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">ss</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">ss</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">ss</span><span class="p">)</span>
+
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">log_dir</span><span class="p">,</span> <span class="s2">&quot;jsons&quot;</span><span class="p">),</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">s</span><span class="p">,</span> <span class="n">sdict</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">result</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">save_json</span><span class="p">(</span><span class="n">sdict</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">log_dir</span><span class="p">,</span> <span class="s2">&quot;jsons&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">s</span><span class="si">}</span><span class="s1">.json&#39;</span><span class="p">))</span></div></div>
+
+
+<div class="viewcode-block" id="MetricSemSeg"><a class="viewcode-back" href="../../../cosense3d.utils.html#cosense3d.utils.metrics.MetricSemSeg">[docs]</a><span class="k">class</span> <span class="nc">MetricSemSeg</span><span class="p">(</span><span class="n">Metric</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cfg</span><span class="p">,</span> <span class="n">run_path</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;test&#39;</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">MetricSemSeg</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">cfg</span><span class="p">,</span> <span class="n">run_path</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">run_path</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_cls</span> <span class="o">=</span> <span class="n">cfg</span><span class="p">[</span><span class="s1">&#39;n_cls&#39;</span><span class="p">]</span>
+        <span class="c1"># model.result = {</span>
+        <span class="c1">#     &#39;tp&#39;: [],</span>
+        <span class="c1">#     &#39;tn&#39;: [],</span>
+        <span class="c1">#     &#39;fp&#39;: [],</span>
+        <span class="c1">#     &#39;fn&#39;: [],</span>
+        <span class="c1">#     &#39;N&#39;: 0</span>
+        <span class="c1"># }</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">result</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;area_intersect&#39;</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_cls</span><span class="p">),</span>
+            <span class="s1">&#39;area_label&#39;</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_cls</span><span class="p">),</span>
+            <span class="s1">&#39;area_pred&#39;</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_cls</span><span class="p">),</span>
+            <span class="s1">&#39;area_union&#39;</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_cls</span><span class="p">)</span>
+        <span class="p">}</span>
+
+<div class="viewcode-block" id="MetricSemSeg.add_samples"><a class="viewcode-back" href="../../../cosense3d.utils.html#cosense3d.utils.metrics.MetricSemSeg.add_samples">[docs]</a>    <span class="k">def</span> <span class="nf">add_samples</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_dict</span><span class="p">):</span>
+        <span class="n">preds</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">data_dict</span><span class="p">[</span><span class="s1">&#39;pred_cls&#39;</span><span class="p">],</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">tgts</span> <span class="o">=</span> <span class="n">data_dict</span><span class="p">[</span><span class="s1">&#39;tgt_cls&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="c1"># mask = (tgts != 0)</span>
+        <span class="c1"># preds = preds[mask]</span>
+        <span class="c1"># tgts = tgts[mask]</span>
+        <span class="n">classes</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_cls</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">preds</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">preds</span><span class="o">.</span><span class="n">device</span><span class="p">)</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">intersect</span> <span class="o">=</span> <span class="n">preds</span><span class="p">[</span><span class="n">preds</span> <span class="o">==</span> <span class="n">tgts</span><span class="p">]</span>
+        <span class="n">area_intersect</span> <span class="o">=</span> <span class="p">(</span><span class="n">intersect</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">==</span> <span class="p">(</span><span class="n">classes</span><span class="p">))</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">area_pred</span> <span class="o">=</span> <span class="p">(</span><span class="n">preds</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">==</span> <span class="p">(</span><span class="n">classes</span><span class="p">))</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">area_label</span> <span class="o">=</span> <span class="p">(</span><span class="n">tgts</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">==</span> <span class="p">(</span><span class="n">classes</span><span class="p">))</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">area_union</span> <span class="o">=</span> <span class="n">area_label</span> <span class="o">+</span> <span class="n">area_label</span> <span class="o">-</span> <span class="n">area_intersect</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">result</span><span class="p">[</span><span class="s1">&#39;area_intersect&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">result</span><span class="p">[</span><span class="s1">&#39;area_intersect&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">area_intersect</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">result</span><span class="p">[</span><span class="s1">&#39;area_label&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">result</span><span class="p">[</span><span class="s1">&#39;area_label&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">area_label</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">result</span><span class="p">[</span><span class="s1">&#39;area_pred&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">result</span><span class="p">[</span><span class="s1">&#39;area_pred&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">area_pred</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">result</span><span class="p">[</span><span class="s1">&#39;area_union&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">result</span><span class="p">[</span><span class="s1">&#39;area_union&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">area_union</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span></div>
+        <span class="c1"># pred_pos = preds.int() == classes</span>
+        <span class="c1"># pred_neg = torch.logical_not(pred_pos)</span>
+        <span class="c1"># tgt_pos = tgts.int() == classes</span>
+        <span class="c1"># tgt_neg = torch.logical_not(tgt_pos)</span>
+        <span class="c1"># tp = torch.logical_and(pred_pos, tgt_pos).sum(0)</span>
+        <span class="c1"># tn = torch.logical_and(pred_neg, tgt_neg).sum(0)</span>
+        <span class="c1"># fp = torch.logical_and(pred_pos, tgt_neg).sum(0)</span>
+        <span class="c1"># fn = torch.logical_and(pred_neg, tgt_pos).sum(0)</span>
+        <span class="c1"># acc_ = tp.sum() / len(tgts)</span>
+        <span class="c1"># model.result[&#39;tp&#39;].append(tp)</span>
+        <span class="c1"># model.result[&#39;tn&#39;].append(tn)</span>
+        <span class="c1"># model.result[&#39;fp&#39;].append(fp)</span>
+        <span class="c1"># model.result[&#39;fn&#39;].append(fn)</span>
+        <span class="c1"># model.result[&#39;N&#39;] += len(tgts)</span>
+
+<div class="viewcode-block" id="MetricSemSeg.cal_ious_and_accs"><a class="viewcode-back" href="../../../cosense3d.utils.html#cosense3d.utils.metrics.MetricSemSeg.cal_ious_and_accs">[docs]</a>    <span class="k">def</span> <span class="nf">cal_ious_and_accs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">area_intersect</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">result</span><span class="p">[</span><span class="s1">&#39;area_intersect&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">area_label</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">result</span><span class="p">[</span><span class="s1">&#39;area_label&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">area_union</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">result</span><span class="p">[</span><span class="s1">&#39;area_union&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">all_acc</span> <span class="o">=</span> <span class="n">area_intersect</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">/</span> <span class="n">area_label</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+        <span class="n">acc</span> <span class="o">=</span> <span class="n">area_intersect</span> <span class="o">/</span> <span class="n">area_label</span>
+        <span class="n">iou</span> <span class="o">=</span> <span class="n">area_intersect</span> <span class="o">/</span> <span class="n">area_union</span>
+
+        <span class="n">result</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;all_acc&#39;</span><span class="p">:</span> <span class="n">all_acc</span><span class="p">,</span>
+            <span class="s1">&#39;acc&#39;</span><span class="p">:</span> <span class="n">acc</span><span class="p">,</span>
+            <span class="s1">&#39;iou&#39;</span><span class="p">:</span> <span class="n">iou</span>
+        <span class="p">}</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">result</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">result</span></div>
+
+<div class="viewcode-block" id="MetricSemSeg.save_detections"><a class="viewcode-back" href="../../../cosense3d.utils.html#cosense3d.utils.metrics.MetricSemSeg.save_detections">[docs]</a>    <span class="k">def</span> <span class="nf">save_detections</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+        <span class="n">torch</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">result</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="MetricBev"><a class="viewcode-back" href="../../../cosense3d.utils.html#cosense3d.utils.metrics.MetricBev">[docs]</a><span class="k">class</span> <span class="nc">MetricBev</span><span class="p">(</span><span class="n">Metric</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cfg</span><span class="p">,</span> <span class="n">run_path</span><span class="p">,</span> <span class="n">logger</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;test&#39;</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">MetricBev</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">cfg</span><span class="p">,</span> <span class="n">run_path</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">run_path</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">filename_prefix</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="n">logger</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span> <span class="o">=</span> <span class="n">cfg</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">thrs</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">1.1</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">iou_sum</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">iou_cnt</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">result</span> <span class="o">=</span> <span class="p">{}</span>
+
+<div class="viewcode-block" id="MetricBev.add_samples"><a class="viewcode-back" href="../../../cosense3d.utils.html#cosense3d.utils.metrics.MetricBev.add_samples">[docs]</a>    <span class="k">def</span> <span class="nf">add_samples</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">out_dict</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Args:</span>
+<span class="sd">            out_dict:</span>
+<span class="sd">                bev:</span>
+<span class="sd">                    conf: Tensor, (B, H, W, C) or (N, C)</span>
+<span class="sd">                    unc: Tensor (optional), (B, H, W, C) or (N, C)</span>
+<span class="sd">                    gt: Tensor, (B, H, W, C) or (N, C)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">iou</span><span class="p">(</span><span class="o">**</span><span class="n">out_dict</span><span class="p">[</span><span class="s1">&#39;bev&#39;</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="MetricBev.iou"><a class="viewcode-back" href="../../../cosense3d.utils.html#cosense3d.utils.metrics.MetricBev.iou">[docs]</a>    <span class="k">def</span> <span class="nf">iou</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">conf</span><span class="p">,</span> <span class="n">gt</span><span class="p">,</span> <span class="n">unc</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compare the thresholded pred BEV map with the full gt BEV map (including non</span>
+<span class="sd">        observable area)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">unc</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">pred</span> <span class="o">=</span> <span class="n">conf</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mf">0.5</span>
+            <span class="n">mi</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span><span class="n">pred</span><span class="p">,</span> <span class="n">gt</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+            <span class="n">mu</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">logical_or</span><span class="p">(</span><span class="n">pred</span><span class="p">,</span> <span class="n">gt</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">iou_sum</span> <span class="o">+=</span> <span class="n">mi</span> <span class="o">/</span> <span class="n">mu</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">iou_cnt</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">pos_mask</span> <span class="o">=</span> <span class="n">conf</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mf">0.5</span>
+            <span class="n">pos_mask</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span><span class="n">pos_mask</span><span class="p">,</span> <span class="n">unc</span> <span class="o">&lt;</span> <span class="mf">1.0</span><span class="p">)</span>
+            <span class="n">mi</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span><span class="n">pos_mask</span><span class="p">,</span> <span class="n">gt</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+            <span class="n">mu</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">logical_or</span><span class="p">(</span><span class="n">pos_mask</span><span class="p">,</span> <span class="n">gt</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">iou_sum</span> <span class="o">+=</span> <span class="n">mi</span><span class="o">.</span><span class="n">item</span><span class="p">()</span> <span class="o">/</span> <span class="n">mu</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">iou_cnt</span> <span class="o">+=</span> <span class="mi">1</span></div>
+
+        <span class="c1"># import matplotlib.pyplot as plt</span>
+        <span class="c1"># plt.imshow(conf[0, ..., 1].cpu().numpy())</span>
+        <span class="c1"># plt.show()</span>
+        <span class="c1"># plt.close()</span>
+        <span class="c1"># plt.imshow(gt[0].cpu().numpy())</span>
+        <span class="c1"># plt.show()</span>
+        <span class="c1"># plt.close()</span>
+
+<div class="viewcode-block" id="MetricBev.summary"><a class="viewcode-back" href="../../../cosense3d.utils.html#cosense3d.utils.metrics.MetricBev.summary">[docs]</a>    <span class="k">def</span> <span class="nf">summary</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">iou_mean</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">iou_sum</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">iou_cnt</span> <span class="o">*</span> <span class="mi">100</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">summary_hook</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">result</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;BEV.iou&#39;</span><span class="p">:</span> <span class="n">iou_mean</span>
+        <span class="p">}</span>
+        <span class="n">ss</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">format_str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">result</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">ss</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">ss</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="MetricBev.summary_hook"><a class="viewcode-back" href="../../../cosense3d.utils.html#cosense3d.utils.metrics.MetricBev.summary_hook">[docs]</a>    <span class="k">def</span> <span class="nf">summary_hook</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="MetricBev.format_str"><a class="viewcode-back" href="../../../cosense3d.utils.html#cosense3d.utils.metrics.MetricBev.format_str">[docs]</a>    <span class="k">def</span> <span class="nf">format_str</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result_dict</span><span class="p">):</span>
+        <span class="n">ss</span> <span class="o">=</span> <span class="s2">&quot;==================================================================================</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">vs</span> <span class="ow">in</span> <span class="n">result_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">s1</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">k</span><span class="si">:</span><span class="s2">20s</span><span class="si">}</span><span class="s2"> : &quot;</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">vs</span><span class="p">,</span> <span class="nb">float</span><span class="p">):</span>
+                <span class="n">s2</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">vs</span><span class="si">:</span><span class="s2">4.1f</span><span class="si">}</span><span class="s2"> </span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">s2</span> <span class="o">=</span> <span class="s2">&quot;  &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">v</span><span class="si">:</span><span class="s2">4.1f</span><span class="si">}</span><span class="s2"> &quot;</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">vs</span><span class="p">])</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="n">ss</span> <span class="o">+=</span> <span class="n">s1</span> <span class="o">+</span> <span class="n">s2</span>
+        <span class="k">return</span> <span class="n">ss</span></div></div>
+
+
+
+<div class="viewcode-block" id="MetricMOT"><a class="viewcode-back" href="../../../cosense3d.utils.html#cosense3d.utils.metrics.MetricMOT">[docs]</a><span class="k">class</span> <span class="nc">MetricMOT</span><span class="p">(</span><span class="n">Metric</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cfg</span><span class="p">,</span> <span class="n">log_dir</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">cfg</span><span class="p">,</span> <span class="n">log_dir</span><span class="p">)</span>
+
+<div class="viewcode-block" id="MetricMOT.add_samples"><a class="viewcode-back" href="../../../cosense3d.utils.html#cosense3d.utils.metrics.MetricMOT.add_samples">[docs]</a>    <span class="k">def</span> <span class="nf">add_samples</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_dict</span><span class="p">):</span>
+        <span class="k">pass</span></div></div>
+
+
+
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Anonymous Author.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

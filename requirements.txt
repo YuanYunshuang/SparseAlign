@@ -1,0 +1,16 @@
+flash-attn
+opencv-python
+numpy
+torch-scatter
+PyYAML
+Shapely
+scipy
+rich
+tqdm
+open3d
+plyfile
+einops
+timm
+spconv-cu118
+pypcd
+g2o-python

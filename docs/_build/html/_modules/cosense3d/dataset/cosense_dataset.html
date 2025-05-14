@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>cosense3d.dataset.cosense_dataset &mdash; OpenCosense3D 1.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js?v=af2ce170"></script>
+        <script src="../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            OpenCosense3D
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../md/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../md/prepare_data.html">Prepare Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../md/structure.html">The Structure of the framework</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">CoSense3d</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">OpenCosense3D</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+          <li class="breadcrumb-item"><a href="../dataset.html">cosense3d.dataset</a></li>
+      <li class="breadcrumb-item active">cosense3d.dataset.cosense_dataset</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for cosense3d.dataset.cosense_dataset</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">glob</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">random</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span>
+
+<span class="kn">import</span> <span class="nn">open3d</span> <span class="k">as</span> <span class="nn">o3d</span>
+<span class="kn">import</span> <span class="nn">cv2</span>
+<span class="kn">from</span> <span class="nn">PIL</span> <span class="kn">import</span> <span class="n">Image</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">import</span> <span class="nn">torch.nn.functional</span> <span class="k">as</span> <span class="nn">F</span>
+<span class="kn">from</span> <span class="nn">torch.utils.data</span> <span class="kn">import</span> <span class="n">Dataset</span>
+
+<span class="kn">from</span> <span class="nn">cosense3d.dataset.pipeline</span> <span class="kn">import</span> <span class="n">Pipeline</span>
+<span class="kn">from</span> <span class="nn">cosense3d.utils.misc</span> <span class="kn">import</span> <span class="n">load_json</span>
+<span class="kn">from</span> <span class="nn">cosense3d.dataset.const</span> <span class="kn">import</span> <span class="n">CoSenseBenchmarks</span> <span class="k">as</span> <span class="n">csb</span>
+<span class="kn">from</span> <span class="nn">cosense3d.dataset.toolkit.cosense</span> <span class="kn">import</span> <span class="n">CoSenseDataConverter</span> <span class="k">as</span> <span class="n">cs</span>
+
+
+<div class="viewcode-block" id="CosenseDataset"><a class="viewcode-back" href="../../../cosense3d.dataset.html#cosense3d.dataset.cosense_dataset.CosenseDataset">[docs]</a><span class="k">class</span> <span class="nc">CosenseDataset</span><span class="p">(</span><span class="n">Dataset</span><span class="p">):</span>
+    <span class="n">LABEL_COLORS</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">VALID_CLS</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cfgs</span><span class="p">,</span> <span class="n">mode</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cfgs</span> <span class="o">=</span> <span class="n">cfgs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">=</span> <span class="n">mode</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">COM_RANGE</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfgs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;com_range&#39;</span><span class="p">,</span> <span class="mi">70</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">latency</span> <span class="o">=</span> <span class="n">cfgs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;latency&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">cfgs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;enable_split_sub_folder&#39;</span><span class="p">,</span> <span class="kc">True</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cfgs</span><span class="p">[</span><span class="s1">&#39;data_path&#39;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfgs</span><span class="p">[</span><span class="s1">&#39;data_path&#39;</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_num_cavs</span> <span class="o">=</span> <span class="n">cfgs</span><span class="p">[</span><span class="s1">&#39;max_num_cavs&#39;</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">init_dataset</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">pipeline</span> <span class="o">=</span> <span class="n">Pipeline</span><span class="p">(</span><span class="n">cfgs</span><span class="p">[</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">mode</span><span class="si">}</span><span class="s1">_pipeline&#39;</span><span class="p">])</span>
+        <span class="c1"># for frames that do not need loss calculation, omit gt-loading to save time</span>
+        <span class="k">if</span> <span class="s1">&#39;inf_pipeline&#39;</span> <span class="ow">in</span> <span class="n">cfgs</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">inf_pipeline</span> <span class="o">=</span> <span class="n">Pipeline</span><span class="p">(</span><span class="n">cfgs</span><span class="p">[</span><span class="s1">&#39;inf_pipeline&#39;</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">inf_pipeline</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipeline</span>
+
+    <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">samples</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">load_frame_data</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+
+<div class="viewcode-block" id="CosenseDataset.load_frame_data"><a class="viewcode-back" href="../../../cosense3d.dataset.html#cosense3d.dataset.cosense_dataset.CosenseDataset.load_frame_data">[docs]</a>    <span class="k">def</span> <span class="nf">load_frame_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                        <span class="n">item</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+                        <span class="n">prev_agents</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                        <span class="n">prev_item</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                        <span class="n">omit_gt</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Load all data and annotations from one frame to standard CoSense format.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        item: sample index.</span>
+<span class="sd">        prev_agents: only load data the previous agents if given, this is used for temporal data loading.</span>
+<span class="sd">        prev_item: the index of the previous loaded sample.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        data_dict:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">sample_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">load_sample_info</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">prev_agents</span><span class="p">,</span> <span class="n">prev_item</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">omit_gt</span><span class="p">:</span>
+            <span class="n">data_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inf_pipeline</span><span class="p">(</span><span class="n">sample_info</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">data_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipeline</span><span class="p">(</span><span class="n">sample_info</span><span class="p">)</span>
+        <span class="n">data_dict</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;sample_info&#39;</span><span class="p">)</span>
+        <span class="n">data_dict</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;data_path&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">data_dict</span></div>
+
+<div class="viewcode-block" id="CosenseDataset.init_dataset"><a class="viewcode-back" href="../../../cosense3d.dataset.html#cosense3d.dataset.cosense_dataset.CosenseDataset.init_dataset">[docs]</a>    <span class="k">def</span> <span class="nf">init_dataset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Load all necessary meta information&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">load_meta</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parse_samples</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="CosenseDataset.parse_samples"><a class="viewcode-back" href="../../../cosense3d.dataset.html#cosense3d.dataset.cosense_dataset.CosenseDataset.parse_samples">[docs]</a>    <span class="k">def</span> <span class="nf">parse_samples</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;List all frame-wise instances&quot;&quot;&quot;</span>
+        <span class="c1"># list all frames, each frame as a sample</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">samples</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">drop_scenarios</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfgs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;drop_scenarios&#39;</span><span class="p">,</span> <span class="p">[])</span>
+        <span class="k">for</span> <span class="n">scenario</span><span class="p">,</span> <span class="n">scontent</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">meta_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">scenario</span> <span class="ow">in</span> <span class="n">drop_scenarios</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">samples</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="nb">sorted</span><span class="p">([[</span><span class="n">scenario</span><span class="p">,</span> <span class="n">frame</span><span class="p">]</span> <span class="k">for</span> <span class="n">frame</span> <span class="ow">in</span> <span class="n">scontent</span><span class="o">.</span><span class="n">keys</span><span class="p">()]))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">samples</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">samples</span><span class="p">)</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">mode</span><span class="si">}</span><span class="s2"> : </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">samples</span><span class="p">)</span><span class="si">}</span><span class="s2"> samples.&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CosenseDataset.load_meta"><a class="viewcode-back" href="../../../cosense3d.dataset.html#cosense3d.dataset.cosense_dataset.CosenseDataset.load_meta">[docs]</a>    <span class="k">def</span> <span class="nf">load_meta</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Load meta data from CoSense json files&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">meta_dict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">meta_dir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfgs</span><span class="p">[</span><span class="s1">&#39;meta_path&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">meta_dir</span> <span class="o">==</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="k">if</span> <span class="s1">&#39;split&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfgs</span><span class="p">:</span>
+            <span class="n">scenarios</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfgs</span><span class="p">[</span><span class="s1">&#39;split&#39;</span><span class="p">][</span><span class="bp">self</span><span class="o">.</span><span class="n">mode</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cfgs</span><span class="p">[</span><span class="s1">&#39;meta_path&#39;</span><span class="p">],</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">mode</span><span class="si">}</span><span class="s2">.txt&quot;</span><span class="p">)):</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cfgs</span><span class="p">[</span><span class="s1">&#39;meta_path&#39;</span><span class="p">],</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">mode</span><span class="si">}</span><span class="s2">.txt&quot;</span><span class="p">),</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh</span><span class="p">:</span>
+                <span class="n">scenarios</span> <span class="o">=</span> <span class="p">[</span><span class="n">l</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">fh</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">l</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">scenarios</span> <span class="o">=</span> <span class="p">[</span><span class="n">d</span><span class="p">[:</span><span class="o">-</span><span class="mi">5</span><span class="p">]</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">meta_dir</span><span class="p">)</span> <span class="k">if</span> <span class="s1">&#39;json&#39;</span> <span class="ow">in</span> <span class="n">d</span><span class="p">]</span>
+
+        <span class="k">for</span> <span class="n">scenario</span> <span class="ow">in</span> <span class="n">scenarios</span><span class="p">:</span>
+            <span class="n">meta_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">meta_dir</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">scenario</span><span class="si">}</span><span class="s2">.json&quot;</span><span class="p">)</span>
+            <span class="n">scenario_dict</span> <span class="o">=</span> <span class="n">load_json</span><span class="p">(</span><span class="n">meta_file</span><span class="p">)</span>
+            <span class="c1"># scenario_dict = {s: scenario_dict[s] for s in list(scenario_dict.keys())[:1]}</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">meta_dict</span><span class="p">[</span><span class="n">scenario</span><span class="p">]</span> <span class="o">=</span> <span class="n">scenario_dict</span></div>
+
+<div class="viewcode-block" id="CosenseDataset.load_sample_info"><a class="viewcode-back" href="../../../cosense3d.dataset.html#cosense3d.dataset.cosense_dataset.CosenseDataset.load_sample_info">[docs]</a>    <span class="k">def</span> <span class="nf">load_sample_info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">prev_agents</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">prev_item</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Load meta info of the ```item```&#39;th sample.</span>
+
+<span class="sd">        :param item: sample index.</span>
+<span class="sd">        :param prev_agents: only load data the previous agents if given, this is used for temporal data loading.</span>
+<span class="sd">        :param prev_item: the index of the previous loaded sample.</span>
+<span class="sd">        :return: batch_dict: dict(scenario: str, frame: str, sample_info: dict)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># load meta info</span>
+        <span class="n">scenario</span><span class="p">,</span> <span class="n">frame</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">samples</span><span class="p">[</span><span class="n">item</span><span class="p">]</span>
+        <span class="n">sample_info</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">meta_dict</span><span class="p">[</span><span class="n">scenario</span><span class="p">][</span><span class="n">frame</span><span class="p">])</span>
+
+        <span class="k">if</span> <span class="n">prev_item</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">prev_item</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">item</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">prev_scenario</span><span class="p">,</span> <span class="n">prev_frame</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">samples</span><span class="p">[</span><span class="n">prev_item</span><span class="p">]</span>
+        <span class="n">prev_idx</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">prev_scenario</span><span class="si">}</span><span class="s1">.</span><span class="si">{</span><span class="n">prev_frame</span><span class="si">}</span><span class="s1">&#39;</span>
+        <span class="n">next_item</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">item</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__len__</span><span class="p">()</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">next_scenario</span><span class="p">,</span> <span class="n">next_frame</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">samples</span><span class="p">[</span><span class="n">next_item</span><span class="p">]</span>
+        <span class="n">next_idx</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">next_scenario</span><span class="si">}</span><span class="s1">.</span><span class="si">{</span><span class="n">next_frame</span><span class="si">}</span><span class="s1">&#39;</span>
+
+        <span class="k">if</span> <span class="n">prev_scenario</span> <span class="o">!=</span> <span class="n">scenario</span><span class="p">:</span>
+            <span class="n">prev_agents</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">valid_agent_ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_valid_agents</span><span class="p">(</span><span class="n">sample_info</span><span class="p">,</span> <span class="n">prev_agents</span><span class="p">)</span>
+
+        <span class="c1"># previous agents might not in current frame when load sequential data</span>
+        <span class="n">scenario_tokens</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">scenario</span><span class="si">}</span><span class="s1">.</span><span class="si">{</span><span class="n">ai</span><span class="si">}</span><span class="s1">&#39;</span> <span class="k">for</span> <span class="n">ai</span> <span class="ow">in</span> <span class="n">valid_agent_ids</span> <span class="k">if</span> <span class="n">ai</span> <span class="ow">in</span> <span class="n">sample_info</span><span class="p">[</span><span class="s1">&#39;agents&#39;</span><span class="p">]]</span>
+
+        <span class="c1"># if latency &gt; 0, set the sample info of coop. cavs to previous frame at -latency</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">latency</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># get random latency if latency flag is -1</span>
+            <span class="n">latency</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">latency</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">latency</span>
+            <span class="n">latent_item</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">item</span> <span class="o">-</span> <span class="n">latency</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="n">latent_scenario</span><span class="p">,</span> <span class="n">latent_frame</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">samples</span><span class="p">[</span><span class="n">latent_item</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">latent_scenario</span> <span class="o">!=</span> <span class="n">scenario</span><span class="p">:</span>
+                <span class="c1"># make sure the scenario is the same as the current frame</span>
+                <span class="n">latent_scenario</span> <span class="o">=</span> <span class="n">scenario</span>
+                <span class="n">latent_frame</span> <span class="o">=</span> <span class="n">frame</span>
+            <span class="n">latent_info</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">meta_dict</span><span class="p">[</span><span class="n">latent_scenario</span><span class="p">][</span><span class="n">latent_frame</span><span class="p">])</span>
+            <span class="c1"># update coop agent info to latent frame</span>
+            <span class="k">for</span> <span class="n">cav_id</span> <span class="ow">in</span> <span class="n">valid_agent_ids</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">cav_id</span> <span class="o">==</span> <span class="n">sample_info</span><span class="p">[</span><span class="s1">&#39;meta&#39;</span><span class="p">][</span><span class="s1">&#39;ego_id&#39;</span><span class="p">]:</span>
+                    <span class="k">continue</span>
+                <span class="k">if</span> <span class="n">cav_id</span> <span class="ow">in</span> <span class="n">latent_info</span><span class="p">[</span><span class="s1">&#39;agents&#39;</span><span class="p">]:</span>
+                    <span class="n">sample_info</span><span class="p">[</span><span class="s1">&#39;agents&#39;</span><span class="p">][</span><span class="n">cav_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">latent_info</span><span class="p">[</span><span class="s1">&#39;agents&#39;</span><span class="p">][</span><span class="n">cav_id</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s1">&#39;scenario&#39;</span><span class="p">:</span> <span class="n">scenario</span><span class="p">,</span>
+            <span class="s1">&#39;frame&#39;</span><span class="p">:</span> <span class="n">frame</span><span class="p">,</span>
+            <span class="s1">&#39;data_path&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_path</span><span class="p">,</span>
+            <span class="s1">&#39;sample_info&#39;</span><span class="p">:</span> <span class="n">sample_info</span><span class="p">,</span>
+            <span class="s1">&#39;valid_agent_ids&#39;</span><span class="p">:</span> <span class="n">valid_agent_ids</span><span class="p">,</span>
+            <span class="s1">&#39;scene_tokens&#39;</span><span class="p">:</span> <span class="n">scenario_tokens</span><span class="p">,</span>
+        <span class="p">}</span></div>
+
+<div class="viewcode-block" id="CosenseDataset.get_valid_agents"><a class="viewcode-back" href="../../../cosense3d.dataset.html#cosense3d.dataset.cosense_dataset.CosenseDataset.get_valid_agents">[docs]</a>    <span class="k">def</span> <span class="nf">get_valid_agents</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sample_info</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">prev_agents</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return prev_agents if given else select the given number of agents in the communication range</span>
+<span class="sd">         which includes the ego agent.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        sample_info: meta info the one sample.</span>
+<span class="sd">        prev_agents: list of the agent ids loader last time.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        agents_ids: list of valid agent for the current sample</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">prev_agents</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">prev_agents</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">agents</span> <span class="o">=</span> <span class="n">sample_info</span><span class="p">[</span><span class="s1">&#39;agents&#39;</span><span class="p">]</span>
+            <span class="n">ego_id</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">sample_info</span><span class="p">[</span><span class="s1">&#39;meta&#39;</span><span class="p">][</span><span class="s1">&#39;ego_id&#39;</span><span class="p">])</span>
+            <span class="n">agents_ids</span> <span class="o">=</span> <span class="p">[</span><span class="n">ego_id</span><span class="p">]</span>
+            <span class="c1"># filter cavs in communication range</span>
+            <span class="n">ego_pose_vec</span> <span class="o">=</span> <span class="n">agents</span><span class="p">[</span><span class="n">ego_id</span><span class="p">][</span><span class="s1">&#39;pose&#39;</span><span class="p">]</span>
+            <span class="n">in_range_cavs</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">ai</span><span class="p">,</span> <span class="n">adict</span> <span class="ow">in</span> <span class="n">agents</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">ai</span> <span class="o">==</span> <span class="n">ego_id</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="k">if</span> <span class="p">((</span><span class="n">adict</span><span class="p">[</span><span class="s1">&#39;pose&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">ego_pose_vec</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">adict</span><span class="p">[</span><span class="s1">&#39;pose&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">ego_pose_vec</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="o">**</span><span class="mi">2</span>
+                        <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">COM_RANGE</span><span class="o">**</span><span class="mi">2</span><span class="p">):</span>
+                    <span class="n">in_range_cavs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ai</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_num_cavs</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">agents_ids</span> <span class="o">+=</span> <span class="n">random</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">in_range_cavs</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_num_cavs</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">in_range_cavs</span><span class="p">)))</span>
+        <span class="k">return</span> <span class="n">agents_ids</span></div>
+
+<div class="viewcode-block" id="CosenseDataset.collate_batch"><a class="viewcode-back" href="../../../cosense3d.dataset.html#cosense3d.dataset.cosense_dataset.CosenseDataset.collate_batch">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">collate_batch</span><span class="p">(</span><span class="n">batch_list</span><span class="p">):</span>
+        <span class="n">keys</span> <span class="o">=</span> <span class="n">batch_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+        <span class="n">batch_dict</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:[]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">}</span>
+
+        <span class="k">def</span> <span class="nf">list_np_to_tensor</span><span class="p">(</span><span class="n">ls</span><span class="p">):</span>
+            <span class="n">ls_tensor</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">l</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">ls</span><span class="p">):</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                    <span class="n">l_tensor</span> <span class="o">=</span> <span class="n">list_np_to_tensor</span><span class="p">(</span><span class="n">l</span><span class="p">)</span>
+                    <span class="n">ls_tensor</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">l_tensor</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+                    <span class="n">tensor</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">l</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">l</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">:</span>
+                        <span class="n">tensor</span> <span class="o">=</span> <span class="n">tensor</span><span class="o">.</span><span class="n">float</span><span class="p">()</span>
+                    <span class="n">ls_tensor</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tensor</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">ls_tensor</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">l</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">ls_tensor</span>
+
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">batch_list</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">k</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+                <span class="n">batch_dict</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">batch</span><span class="p">[</span><span class="n">k</span><span class="p">])</span> <span class="k">for</span> <span class="n">batch</span> <span class="ow">in</span> <span class="n">batch_list</span><span class="p">]</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">batch_list</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">k</span><span class="p">],</span> <span class="nb">list</span><span class="p">):</span>
+                <span class="n">batch_dict</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">list_np_to_tensor</span><span class="p">(</span><span class="n">batch</span><span class="p">[</span><span class="n">k</span><span class="p">])</span> <span class="k">for</span> <span class="n">batch</span> <span class="ow">in</span> <span class="n">batch_list</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">batch_dict</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">batch</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">batch</span> <span class="ow">in</span> <span class="n">batch_list</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">batch_dict</span></div></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span><span class="o">==</span><span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">cosense3d.utils.misc</span> <span class="kn">import</span> <span class="n">load_yaml</span>
+    <span class="kn">from</span> <span class="nn">torch.utils.data</span> <span class="kn">import</span> <span class="n">DataLoader</span>
+    <span class="n">cfgs</span> <span class="o">=</span> <span class="n">load_yaml</span><span class="p">(</span><span class="s2">&quot;/mars/projects20/CoSense3D/cosense3d/config/petr.yaml&quot;</span><span class="p">)</span>
+    <span class="n">cosense_dataset</span> <span class="o">=</span> <span class="n">CosenseDataset</span><span class="p">(</span><span class="n">cfgs</span><span class="p">[</span><span class="s1">&#39;DATASET&#39;</span><span class="p">],</span> <span class="s1">&#39;train&#39;</span><span class="p">)</span>
+    <span class="n">cosense_dataloader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span><span class="n">dataset</span><span class="o">=</span><span class="n">cosense_dataset</span><span class="p">,</span> <span class="n">collate_fn</span><span class="o">=</span><span class="n">cosense_dataset</span><span class="o">.</span><span class="n">collate_batch</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">data</span> <span class="ow">in</span> <span class="n">cosense_dataloader</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Anonymous Author.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

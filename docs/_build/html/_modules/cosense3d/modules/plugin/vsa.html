@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>cosense3d.modules.plugin.vsa &mdash; OpenCosense3D 1.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js?v=af2ce170"></script>
+        <script src="../../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            OpenCosense3D
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../md/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../md/prepare_data.html">Prepare Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../md/structure.html">The Structure of the framework</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules.html">CoSense3d</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">OpenCosense3D</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+          <li class="breadcrumb-item"><a href="../../modules.html">cosense3d.modules</a></li>
+          <li class="breadcrumb-item"><a href="../plugin.html">cosense3d.modules.plugin</a></li>
+      <li class="breadcrumb-item active">cosense3d.modules.plugin.vsa</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for cosense3d.modules.plugin.vsa</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">random</span>
+
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">import</span> <span class="nn">torch.nn</span> <span class="k">as</span> <span class="nn">nn</span>
+
+<span class="kn">from</span> <span class="nn">cosense3d.ops</span> <span class="kn">import</span> <span class="n">pointnet2_utils</span>
+<span class="kn">from</span> <span class="nn">cosense3d.ops.utils</span> <span class="kn">import</span> <span class="n">points_in_boxes_gpu</span>
+<span class="kn">from</span> <span class="nn">cosense3d.modules.utils.common</span> <span class="kn">import</span> <span class="n">get_voxel_centers</span><span class="p">,</span> <span class="n">cat_coor_with_idx</span>
+
+<span class="n">sa_layer_default</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span>
+    <span class="n">raw_points</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span>
+    <span class="n">mlps</span><span class="o">=</span><span class="p">[[</span><span class="mi">16</span><span class="p">,</span> <span class="mi">16</span><span class="p">],</span> <span class="p">[</span><span class="mi">16</span><span class="p">,</span> <span class="mi">16</span><span class="p">]],</span>
+    <span class="n">pool_radius</span><span class="o">=</span><span class="p">[</span><span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">],</span>
+    <span class="n">n_sample</span><span class="o">=</span><span class="p">[</span><span class="mi">16</span><span class="p">,</span> <span class="mi">16</span><span class="p">],</span>
+    <span class="p">),</span>
+    <span class="n">x_conv1</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span>
+        <span class="n">downsample_factor</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">mlps</span><span class="o">=</span><span class="p">[[</span><span class="mi">16</span><span class="p">,</span> <span class="mi">16</span><span class="p">],</span> <span class="p">[</span><span class="mi">16</span><span class="p">,</span> <span class="mi">16</span><span class="p">]],</span>
+        <span class="n">pool_radius</span><span class="o">=</span><span class="p">[</span><span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">],</span>
+        <span class="n">n_sample</span><span class="o">=</span><span class="p">[</span><span class="mi">16</span><span class="p">,</span> <span class="mi">16</span><span class="p">],</span>
+    <span class="p">),</span>
+    <span class="n">x_conv2</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span>
+        <span class="n">downsample_factor</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+        <span class="n">mlps</span><span class="o">=</span><span class="p">[[</span><span class="mi">32</span><span class="p">,</span> <span class="mi">32</span><span class="p">],</span> <span class="p">[</span><span class="mi">32</span><span class="p">,</span> <span class="mi">32</span><span class="p">]],</span>
+        <span class="n">pool_radius</span><span class="o">=</span><span class="p">[</span><span class="mf">0.8</span><span class="p">,</span> <span class="mf">1.2</span><span class="p">],</span>
+        <span class="n">n_sample</span><span class="o">=</span><span class="p">[</span><span class="mi">16</span><span class="p">,</span> <span class="mi">32</span><span class="p">],</span>
+    <span class="p">),</span>
+    <span class="n">x_conv3</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span>
+        <span class="n">downsample_factor</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+        <span class="n">mlps</span><span class="o">=</span><span class="p">[[</span><span class="mi">64</span><span class="p">,</span> <span class="mi">64</span><span class="p">],</span> <span class="p">[</span><span class="mi">64</span><span class="p">,</span> <span class="mi">64</span><span class="p">]],</span>
+        <span class="n">pool_radius</span><span class="o">=</span><span class="p">[</span><span class="mf">1.2</span><span class="p">,</span> <span class="mf">2.4</span><span class="p">],</span>
+        <span class="n">n_sample</span><span class="o">=</span><span class="p">[</span><span class="mi">16</span><span class="p">,</span> <span class="mi">32</span><span class="p">],</span>
+    <span class="p">),</span>
+    <span class="n">x_conv4</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span>
+        <span class="n">downsample_factor</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
+        <span class="n">mlps</span><span class="o">=</span><span class="p">[[</span><span class="mi">64</span><span class="p">,</span> <span class="mi">64</span><span class="p">],</span> <span class="p">[</span><span class="mi">64</span><span class="p">,</span> <span class="mi">64</span><span class="p">]],</span>
+        <span class="n">pool_radius</span><span class="o">=</span><span class="p">[</span><span class="mf">2.4</span><span class="p">,</span> <span class="mf">4.8</span><span class="p">],</span>
+        <span class="n">n_sample</span><span class="o">=</span><span class="p">[</span><span class="mi">16</span><span class="p">,</span> <span class="mi">32</span><span class="p">],</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+
+<span class="n">default_feature_source</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;bev&#39;</span><span class="p">,</span> <span class="s1">&#39;x_conv1&#39;</span><span class="p">,</span> <span class="s1">&#39;x_conv2&#39;</span><span class="p">,</span> <span class="s1">&#39;x_conv3&#39;</span><span class="p">,</span> <span class="s1">&#39;x_conv4&#39;</span><span class="p">,</span> <span class="s1">&#39;raw_points&#39;</span><span class="p">]</span>
+
+<div class="viewcode-block" id="bilinear_interpolate_torch"><a class="viewcode-back" href="../../../../cosense3d.modules.plugin.html#cosense3d.modules.plugin.vsa.bilinear_interpolate_torch">[docs]</a><span class="k">def</span> <span class="nf">bilinear_interpolate_torch</span><span class="p">(</span><span class="n">im</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Args:</span>
+<span class="sd">        im: (H, W, C) [y, x]</span>
+<span class="sd">        x: (N)</span>
+<span class="sd">        y: (N)</span>
+
+<span class="sd">    Returns:</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">x0</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">long</span><span class="p">()</span>
+    <span class="n">x1</span> <span class="o">=</span> <span class="n">x0</span> <span class="o">+</span> <span class="mi">1</span>
+
+    <span class="n">y0</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">y</span><span class="p">)</span><span class="o">.</span><span class="n">long</span><span class="p">()</span>
+    <span class="n">y1</span> <span class="o">=</span> <span class="n">y0</span> <span class="o">+</span> <span class="mi">1</span>
+
+    <span class="n">x0</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">clamp</span><span class="p">(</span><span class="n">x0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">im</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">x1</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">clamp</span><span class="p">(</span><span class="n">x1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">im</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">y0</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">clamp</span><span class="p">(</span><span class="n">y0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">im</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">y1</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">clamp</span><span class="p">(</span><span class="n">y1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">im</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="n">Ia</span> <span class="o">=</span> <span class="n">im</span><span class="p">[</span><span class="n">y0</span><span class="p">,</span> <span class="n">x0</span><span class="p">]</span>
+    <span class="n">Ib</span> <span class="o">=</span> <span class="n">im</span><span class="p">[</span><span class="n">y1</span><span class="p">,</span> <span class="n">x0</span><span class="p">]</span>
+    <span class="n">Ic</span> <span class="o">=</span> <span class="n">im</span><span class="p">[</span><span class="n">y0</span><span class="p">,</span> <span class="n">x1</span><span class="p">]</span>
+    <span class="n">Id</span> <span class="o">=</span> <span class="n">im</span><span class="p">[</span><span class="n">y1</span><span class="p">,</span> <span class="n">x1</span><span class="p">]</span>
+
+    <span class="n">wa</span> <span class="o">=</span> <span class="p">(</span><span class="n">x1</span><span class="o">.</span><span class="n">type_as</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">-</span> <span class="n">x</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">y1</span><span class="o">.</span><span class="n">type_as</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="o">-</span> <span class="n">y</span><span class="p">)</span>
+    <span class="n">wb</span> <span class="o">=</span> <span class="p">(</span><span class="n">x1</span><span class="o">.</span><span class="n">type_as</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">-</span> <span class="n">x</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">y</span> <span class="o">-</span> <span class="n">y0</span><span class="o">.</span><span class="n">type_as</span><span class="p">(</span><span class="n">y</span><span class="p">))</span>
+    <span class="n">wc</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">x0</span><span class="o">.</span><span class="n">type_as</span><span class="p">(</span><span class="n">x</span><span class="p">))</span> <span class="o">*</span> <span class="p">(</span><span class="n">y1</span><span class="o">.</span><span class="n">type_as</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="o">-</span> <span class="n">y</span><span class="p">)</span>
+    <span class="n">wd</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">x0</span><span class="o">.</span><span class="n">type_as</span><span class="p">(</span><span class="n">x</span><span class="p">))</span> <span class="o">*</span> <span class="p">(</span><span class="n">y</span> <span class="o">-</span> <span class="n">y0</span><span class="o">.</span><span class="n">type_as</span><span class="p">(</span><span class="n">y</span><span class="p">))</span>
+    <span class="n">ans</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">t</span><span class="p">((</span><span class="n">torch</span><span class="o">.</span><span class="n">t</span><span class="p">(</span><span class="n">Ia</span><span class="p">)</span> <span class="o">*</span> <span class="n">wa</span><span class="p">))</span> <span class="o">+</span> <span class="n">torch</span><span class="o">.</span><span class="n">t</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">t</span><span class="p">(</span><span class="n">Ib</span><span class="p">)</span> <span class="o">*</span> <span class="n">wb</span><span class="p">)</span> <span class="o">+</span> <span class="n">torch</span><span class="o">.</span><span class="n">t</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">t</span><span class="p">(</span><span class="n">Ic</span><span class="p">)</span> <span class="o">*</span> <span class="n">wc</span><span class="p">)</span> <span class="o">+</span> <span class="n">torch</span><span class="o">.</span><span class="n">t</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">t</span><span class="p">(</span><span class="n">Id</span><span class="p">)</span> <span class="o">*</span> <span class="n">wd</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">ans</span></div>
+
+
+<div class="viewcode-block" id="VoxelSetAbstraction"><a class="viewcode-back" href="../../../../cosense3d.modules.plugin.html#cosense3d.modules.plugin.vsa.VoxelSetAbstraction">[docs]</a><span class="k">class</span> <span class="nc">VoxelSetAbstraction</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">voxel_size</span><span class="p">,</span>
+                 <span class="n">point_cloud_range</span><span class="p">,</span>
+                 <span class="n">num_keypoints</span><span class="o">=</span><span class="mi">4096</span><span class="p">,</span>
+                 <span class="n">num_out_features</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
+                 <span class="n">point_source</span><span class="o">=</span><span class="s1">&#39;raw_points&#39;</span><span class="p">,</span>
+                 <span class="n">features_source</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">num_bev_features</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span>
+                 <span class="n">bev_stride</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
+                 <span class="n">num_rawpoint_features</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+                 <span class="n">enlarge_selection_boxes</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                 <span class="n">sa_layer</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">min_selected_kpts</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span>
+                 <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">voxel_size</span> <span class="o">=</span> <span class="n">voxel_size</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">point_cloud_range</span> <span class="o">=</span> <span class="n">point_cloud_range</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">features_source</span> <span class="o">=</span> <span class="n">default_feature_source</span> \
+            <span class="k">if</span> <span class="n">features_source</span> <span class="ow">is</span> <span class="kc">None</span> \
+            <span class="k">else</span> <span class="n">features_source</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_keypoints</span> <span class="o">=</span> <span class="n">num_keypoints</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_out_features</span> <span class="o">=</span> <span class="n">num_out_features</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">point_source</span> <span class="o">=</span> <span class="n">point_source</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_bev_features</span> <span class="o">=</span> <span class="n">num_bev_features</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bev_stride</span> <span class="o">=</span> <span class="n">bev_stride</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_rawpoint_features</span> <span class="o">=</span> <span class="n">num_rawpoint_features</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">enlarge_selection_boxes</span> <span class="o">=</span> <span class="n">enlarge_selection_boxes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">min_selected_kpts</span> <span class="o">=</span> <span class="n">min_selected_kpts</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">SA_layers</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">ModuleList</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">SA_layer_names</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">downsample_times_map</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">c_in</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">sa_layer</span> <span class="o">=</span> <span class="n">sa_layer_default</span> <span class="k">if</span> <span class="n">sa_layer</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">sa_layer</span>
+        <span class="k">for</span> <span class="n">src_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">features_source</span> <span class="p">:</span>
+            <span class="k">if</span> <span class="n">src_name</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;bev&#39;</span><span class="p">,</span> <span class="s1">&#39;raw_points&#39;</span><span class="p">]:</span>
+                <span class="k">continue</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">downsample_times_map</span><span class="p">[</span><span class="n">src_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">sa_layer</span><span class="p">[</span><span class="n">src_name</span><span class="p">][</span><span class="s1">&#39;downsample_factor&#39;</span><span class="p">]</span>
+            <span class="n">mlps</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">sa_layer</span><span class="p">[</span><span class="n">src_name</span><span class="p">][</span><span class="s1">&#39;mlps&#39;</span><span class="p">])</span>
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">mlps</span><span class="p">)):</span>
+                <span class="n">mlps</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">mlps</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="mi">0</span><span class="p">]]</span> <span class="o">+</span> <span class="n">mlps</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+            <span class="n">cur_layer</span> <span class="o">=</span> <span class="n">pointnet2_utils</span><span class="o">.</span><span class="n">StackSAModuleMSG</span><span class="p">(</span>
+                <span class="n">radii</span><span class="o">=</span><span class="n">sa_layer</span><span class="p">[</span><span class="n">src_name</span><span class="p">][</span><span class="s1">&#39;pool_radius&#39;</span><span class="p">],</span>
+                <span class="n">nsamples</span><span class="o">=</span><span class="n">sa_layer</span><span class="p">[</span><span class="n">src_name</span><span class="p">][</span><span class="s1">&#39;n_sample&#39;</span><span class="p">],</span>
+                <span class="n">mlps</span><span class="o">=</span><span class="n">mlps</span><span class="p">,</span>
+                <span class="n">use_xyz</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">pool_method</span><span class="o">=</span><span class="s1">&#39;max_pool&#39;</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">SA_layers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cur_layer</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">SA_layer_names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">src_name</span><span class="p">)</span>
+
+            <span class="n">c_in</span> <span class="o">+=</span> <span class="nb">sum</span><span class="p">([</span><span class="n">x</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">mlps</span><span class="p">])</span>
+
+        <span class="k">if</span> <span class="s1">&#39;bev&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">features_source</span><span class="p">:</span>
+            <span class="n">c_bev</span> <span class="o">=</span> <span class="n">num_bev_features</span>
+            <span class="n">c_in</span> <span class="o">+=</span> <span class="n">c_bev</span>
+
+        <span class="k">if</span> <span class="s1">&#39;raw_points&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">features_source</span><span class="p">:</span>
+            <span class="n">mlps</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">sa_layer</span><span class="p">[</span><span class="s1">&#39;raw_points&#39;</span><span class="p">][</span><span class="s1">&#39;mlps&#39;</span><span class="p">])</span>
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">mlps</span><span class="p">)):</span>
+                <span class="n">mlps</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">num_rawpoint_features</span> <span class="o">-</span> <span class="mi">3</span><span class="p">]</span> <span class="o">+</span> <span class="n">mlps</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">SA_rawpoints</span> <span class="o">=</span> <span class="n">pointnet2_utils</span><span class="o">.</span><span class="n">StackSAModuleMSG</span><span class="p">(</span>
+                <span class="n">radii</span><span class="o">=</span><span class="n">sa_layer</span><span class="p">[</span><span class="s1">&#39;raw_points&#39;</span><span class="p">][</span><span class="s1">&#39;pool_radius&#39;</span><span class="p">],</span>
+                <span class="n">nsamples</span><span class="o">=</span><span class="n">sa_layer</span><span class="p">[</span><span class="s1">&#39;raw_points&#39;</span><span class="p">][</span><span class="s1">&#39;n_sample&#39;</span><span class="p">],</span>
+                <span class="n">mlps</span><span class="o">=</span><span class="n">mlps</span><span class="p">,</span>
+                <span class="n">use_xyz</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">pool_method</span><span class="o">=</span><span class="s1">&#39;max_pool&#39;</span>
+            <span class="p">)</span>
+            <span class="n">c_in</span> <span class="o">+=</span> <span class="nb">sum</span><span class="p">([</span><span class="n">x</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">mlps</span><span class="p">])</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">vsa_point_feature_fusion</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span>
+            <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">c_in</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_out_features</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
+            <span class="n">nn</span><span class="o">.</span><span class="n">BatchNorm1d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_out_features</span><span class="p">),</span>
+            <span class="n">nn</span><span class="o">.</span><span class="n">ReLU</span><span class="p">(),</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_point_features</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_out_features</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_point_features_before_fusion</span> <span class="o">=</span> <span class="n">c_in</span>
+
+<div class="viewcode-block" id="VoxelSetAbstraction.interpolate_from_bev_features"><a class="viewcode-back" href="../../../../cosense3d.modules.plugin.html#cosense3d.modules.plugin.vsa.VoxelSetAbstraction.interpolate_from_bev_features">[docs]</a>    <span class="k">def</span> <span class="nf">interpolate_from_bev_features</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">keypoints_list</span><span class="p">,</span> <span class="n">bev_features</span><span class="p">):</span>
+        <span class="n">B</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">bev_features</span><span class="p">)</span>
+        <span class="n">point_bev_features_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">B</span><span class="p">):</span>
+            <span class="n">keypoints</span> <span class="o">=</span> <span class="n">keypoints_list</span><span class="p">[</span><span class="n">i</span><span class="p">][:,</span> <span class="p">:</span><span class="mi">3</span><span class="p">]</span>
+            <span class="n">x_idxs</span> <span class="o">=</span> <span class="p">(</span><span class="n">keypoints</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">point_cloud_range</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">voxel_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">y_idxs</span> <span class="o">=</span> <span class="p">(</span><span class="n">keypoints</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">point_cloud_range</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">voxel_size</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">x_idxs</span> <span class="o">=</span> <span class="n">x_idxs</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">bev_stride</span>
+            <span class="n">y_idxs</span> <span class="o">=</span> <span class="n">y_idxs</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">bev_stride</span>
+            <span class="n">cur_bev_features</span> <span class="o">=</span> <span class="n">bev_features</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">permute</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>  <span class="c1"># (H, W, C)</span>
+            <span class="n">point_bev_features</span> <span class="o">=</span> <span class="n">bilinear_interpolate_torch</span><span class="p">(</span><span class="n">cur_bev_features</span><span class="p">,</span> <span class="n">x_idxs</span><span class="p">,</span> <span class="n">y_idxs</span><span class="p">)</span>
+            <span class="n">point_bev_features_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">point_bev_features</span><span class="p">)</span>
+
+        <span class="n">point_bev_features</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">point_bev_features_list</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>  <span class="c1"># (B, N, C0)</span>
+        <span class="k">return</span> <span class="n">point_bev_features</span></div>
+
+<div class="viewcode-block" id="VoxelSetAbstraction.get_sampled_points"><a class="viewcode-back" href="../../../../cosense3d.modules.plugin.html#cosense3d.modules.plugin.vsa.VoxelSetAbstraction.get_sampled_points">[docs]</a>    <span class="k">def</span> <span class="nf">get_sampled_points</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">points</span><span class="p">,</span> <span class="n">voxel_coords</span><span class="p">):</span>
+        <span class="n">B</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">points</span><span class="p">)</span>
+        <span class="n">keypoints_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">B</span><span class="p">):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">point_source</span> <span class="o">==</span> <span class="s1">&#39;raw_points&#39;</span><span class="p">:</span>
+                <span class="n">src_points</span> <span class="o">=</span> <span class="n">points</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+            <span class="c1"># # generate random keypoints in the perception view field</span>
+            <span class="c1"># keypoints = torch.randn((self.num_keypoints, 4), device=src_points.device)</span>
+            <span class="c1"># keypoints[..., 0] = keypoints[..., 0] * 140</span>
+            <span class="c1"># keypoints[..., 1] = keypoints[..., 1] * 40</span>
+            <span class="c1"># # points with height flag 10 are padding/invalid, for later filtering</span>
+            <span class="c1"># keypoints[..., 2] = 10.0</span>
+
+            <span class="n">sampled_points</span> <span class="o">=</span> <span class="n">src_points</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>  <span class="c1"># (1, N, 3)</span>
+            <span class="c1"># sample points with FPS</span>
+            <span class="c1"># some cropped pcd may have very few points, select various number</span>
+            <span class="c1"># of points to ensure similar sample density</span>
+            <span class="c1"># 50000 is approximately the number of points in one full pcd</span>
+            <span class="n">num_kpts</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_keypoints</span> <span class="o">*</span> <span class="n">sampled_points</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="mi">50000</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="n">num_kpts</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">num_kpts</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_keypoints</span><span class="p">)</span>
+            <span class="n">cur_pt_idxs</span> <span class="o">=</span> <span class="n">pointnet2_utils</span><span class="o">.</span><span class="n">furthest_point_sample</span><span class="p">(</span>
+                <span class="n">sampled_points</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="p">:</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">contiguous</span><span class="p">(),</span> <span class="n">num_kpts</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">long</span><span class="p">()</span>
+
+            <span class="k">if</span> <span class="n">sampled_points</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">num_kpts</span><span class="p">:</span>
+                <span class="n">empty_num</span> <span class="o">=</span> <span class="n">num_kpts</span> <span class="o">-</span> <span class="n">sampled_points</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                <span class="n">cur_pt_idxs</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="n">empty_num</span><span class="p">:]</span> <span class="o">=</span> <span class="n">cur_pt_idxs</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:</span><span class="n">empty_num</span><span class="p">]</span>
+
+            <span class="n">keypoints</span> <span class="o">=</span> <span class="n">sampled_points</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">cur_pt_idxs</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+
+            <span class="c1"># keypoints[:len(kpts[0]), :] = kpts</span>
+            <span class="n">keypoints_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">keypoints</span><span class="p">)</span>
+
+        <span class="c1"># keypoints = torch.cat(keypoints_list, dim=0)  # (B, M, 3)</span>
+        <span class="k">return</span> <span class="n">keypoints_list</span></div>
+
+<div class="viewcode-block" id="VoxelSetAbstraction.forward"><a class="viewcode-back" href="../../../../cosense3d.modules.plugin.html#cosense3d.modules.plugin.vsa.VoxelSetAbstraction.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">det_out</span><span class="p">,</span> <span class="n">bev_feat</span><span class="p">,</span> <span class="n">voxel_feat</span><span class="p">,</span> <span class="n">points</span><span class="p">):</span>
+        <span class="n">B</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">points</span><span class="p">)</span>
+        <span class="n">preds</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="s1">&#39;preds&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">det_out</span><span class="p">]</span>
+        <span class="n">keypoints_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_sampled_points</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">voxel_feat</span><span class="p">)</span> <span class="c1"># BxNx4</span>
+
+        <span class="c1"># Only select the points that are in the predicted bounding boxes</span>
+        <span class="n">boxes</span> <span class="o">=</span> <span class="n">cat_coor_with_idx</span><span class="p">([</span><span class="n">x</span><span class="p">[</span><span class="s1">&#39;box&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">preds</span><span class="p">])</span>
+        <span class="n">scores</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">x</span><span class="p">[</span><span class="s1">&#39;scr&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">preds</span><span class="p">])</span>
+        <span class="c1"># At the early training stage, there might be too many boxes,</span>
+        <span class="c1"># we select limited number of boxes for the second stage.</span>
+        <span class="k">if</span> <span class="n">boxes</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">B</span> <span class="o">*</span> <span class="mi">100</span><span class="p">:</span>
+            <span class="n">topk</span> <span class="o">=</span> <span class="n">scores</span><span class="o">.</span><span class="n">topk</span><span class="p">(</span><span class="n">k</span><span class="o">=</span><span class="mi">100</span> <span class="o">*</span> <span class="n">B</span><span class="p">)</span><span class="o">.</span><span class="n">indices</span>
+            <span class="n">scores</span> <span class="o">=</span> <span class="n">scores</span><span class="p">[</span><span class="n">topk</span><span class="p">]</span>
+            <span class="n">boxes</span> <span class="o">=</span> <span class="n">boxes</span><span class="p">[</span><span class="n">topk</span><span class="p">]</span>
+
+        <span class="n">boxes_tmp</span> <span class="o">=</span> <span class="n">boxes</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">enlarge_selection_boxes</span><span class="p">:</span>
+            <span class="n">boxes_tmp</span><span class="p">[:,</span> <span class="mi">4</span><span class="p">:</span><span class="mi">7</span><span class="p">]</span> <span class="o">+=</span> <span class="mf">0.5</span>
+        <span class="n">keypoints</span> <span class="o">=</span> <span class="n">cat_coor_with_idx</span><span class="p">(</span><span class="n">keypoints_list</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">boxes_tmp</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">pts_idx_of_box</span> <span class="o">=</span> <span class="n">points_in_boxes_gpu</span><span class="p">(</span><span class="n">keypoints</span><span class="p">[:,</span> <span class="p">:</span><span class="mi">4</span><span class="p">],</span> <span class="n">boxes_tmp</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">B</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">pts_idx_of_box</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">full</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">keypoints</span><span class="p">),),</span> <span class="n">fill_value</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">keypoints</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+        <span class="n">kpt_mask</span> <span class="o">=</span> <span class="n">pts_idx_of_box</span> <span class="o">&gt;=</span> <span class="mi">0</span>
+        <span class="c1"># Ensure enough points are selected to satisfy the</span>
+        <span class="c1"># condition of batch norm in the FC layers of feature fusion module</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">B</span><span class="p">):</span>
+            <span class="n">batch_mask</span> <span class="o">=</span> <span class="n">keypoints</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">i</span>
+            <span class="k">if</span> <span class="n">kpt_mask</span><span class="p">[</span><span class="n">batch_mask</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="o">.</span><span class="n">item</span><span class="p">()</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_selected_kpts</span><span class="p">:</span>
+                <span class="n">tmp</span> <span class="o">=</span> <span class="n">kpt_mask</span><span class="p">[</span><span class="n">batch_mask</span><span class="p">]</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span>
+                <span class="n">tmp</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">batch_mask</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="o">.</span><span class="n">item</span><span class="p">(),</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">min_selected_kpts</span><span class="p">,))]</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="n">kpt_mask</span><span class="p">[</span><span class="n">batch_mask</span><span class="p">]</span> <span class="o">=</span> <span class="n">tmp</span>
+
+        <span class="n">point_features_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="s1">&#39;bev&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">features_source</span><span class="p">:</span>
+            <span class="n">point_bev_features</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">interpolate_from_bev_features</span><span class="p">(</span>
+                <span class="n">keypoints_list</span><span class="p">,</span> <span class="n">bev_feat</span>
+            <span class="p">)</span>
+            <span class="n">point_features_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">point_bev_features</span><span class="p">[</span><span class="n">kpt_mask</span><span class="p">])</span>
+
+        <span class="n">new_xyz</span> <span class="o">=</span> <span class="n">keypoints</span><span class="p">[</span><span class="n">kpt_mask</span><span class="p">]</span>
+        <span class="n">new_xyz_scrs</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">kpt_mask</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="o">.</span><span class="n">item</span><span class="p">(),),</span> <span class="n">device</span><span class="o">=</span><span class="n">keypoints</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+        <span class="n">valid</span> <span class="o">=</span> <span class="n">pts_idx_of_box</span><span class="p">[</span><span class="n">kpt_mask</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="mi">0</span>
+        <span class="n">new_xyz_scrs</span><span class="p">[</span><span class="n">valid</span><span class="p">]</span> <span class="o">=</span> <span class="n">scores</span><span class="p">[</span><span class="n">pts_idx_of_box</span><span class="p">[</span><span class="n">kpt_mask</span><span class="p">][</span><span class="n">valid</span><span class="p">]]</span>
+        <span class="n">new_xyz_batch_cnt</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([(</span><span class="n">new_xyz</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">b</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">B</span><span class="p">)],</span>
+                                         <span class="n">device</span><span class="o">=</span><span class="n">new_xyz</span><span class="o">.</span><span class="n">device</span><span class="p">)</span><span class="o">.</span><span class="n">int</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="s1">&#39;raw_points&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">features_source</span><span class="p">:</span>
+            <span class="n">xyz_batch_cnt</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([</span><span class="nb">len</span><span class="p">(</span><span class="n">pts</span><span class="p">)</span> <span class="k">for</span> <span class="n">pts</span> <span class="ow">in</span> <span class="n">points</span><span class="p">],</span>
+                                         <span class="n">device</span><span class="o">=</span><span class="n">points</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">device</span><span class="p">)</span><span class="o">.</span><span class="n">int</span><span class="p">()</span>
+            <span class="n">raw_points</span> <span class="o">=</span> <span class="n">cat_coor_with_idx</span><span class="p">(</span><span class="n">points</span><span class="p">)</span>
+            <span class="n">xyz</span> <span class="o">=</span> <span class="n">raw_points</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:</span><span class="mi">4</span><span class="p">]</span>
+            <span class="n">point_features</span> <span class="o">=</span> <span class="kc">None</span>
+
+            <span class="n">pooled_points</span><span class="p">,</span> <span class="n">pooled_features</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">SA_rawpoints</span><span class="p">(</span>
+                <span class="n">xyz</span><span class="o">=</span><span class="n">xyz</span><span class="o">.</span><span class="n">contiguous</span><span class="p">(),</span>
+                <span class="n">xyz_batch_cnt</span><span class="o">=</span><span class="n">xyz_batch_cnt</span><span class="p">,</span>
+                <span class="n">new_xyz</span><span class="o">=</span><span class="n">new_xyz</span><span class="p">[:,</span> <span class="p">:</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">contiguous</span><span class="p">(),</span>
+                <span class="n">new_xyz_batch_cnt</span><span class="o">=</span><span class="n">new_xyz_batch_cnt</span><span class="p">,</span>
+                <span class="n">features</span><span class="o">=</span><span class="n">point_features</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">point_features_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pooled_features</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">src_name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">SA_layer_names</span><span class="p">):</span>
+            <span class="n">cur_stride</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">**</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">src_name</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">cur_coords</span> <span class="o">=</span> <span class="p">[</span><span class="n">feat</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;p</span><span class="si">{</span><span class="n">cur_stride</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">][</span><span class="s1">&#39;coor&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">feat</span> <span class="ow">in</span> <span class="n">voxel_feat</span><span class="p">]</span>
+            <span class="n">cur_feats</span> <span class="o">=</span> <span class="p">[</span><span class="n">feat</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;p</span><span class="si">{</span><span class="n">cur_stride</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">][</span><span class="s1">&#39;feat&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">feat</span> <span class="ow">in</span> <span class="n">voxel_feat</span><span class="p">]</span>
+            <span class="n">xyz</span> <span class="o">=</span> <span class="n">get_voxel_centers</span><span class="p">(</span>
+                <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">cur_coords</span><span class="p">),</span>
+                <span class="n">downsample_times</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">downsample_times_map</span><span class="p">[</span><span class="n">src_name</span><span class="p">],</span>
+                <span class="n">voxel_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">voxel_size</span><span class="p">,</span>
+                <span class="n">point_cloud_range</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">point_cloud_range</span>
+            <span class="p">)</span>
+            <span class="n">xyz_batch_cnt</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([</span><span class="nb">len</span><span class="p">(</span><span class="n">coor</span><span class="p">)</span> <span class="k">for</span> <span class="n">coor</span> <span class="ow">in</span> <span class="n">cur_coords</span><span class="p">],</span>
+                                         <span class="n">device</span><span class="o">=</span><span class="n">cur_coords</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">device</span><span class="p">)</span><span class="o">.</span><span class="n">int</span><span class="p">()</span>
+            <span class="n">pooled_points</span><span class="p">,</span> <span class="n">pooled_features</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">SA_layers</span><span class="p">[</span><span class="n">k</span><span class="p">](</span>
+                <span class="n">xyz</span><span class="o">=</span><span class="n">xyz</span><span class="o">.</span><span class="n">contiguous</span><span class="p">(),</span>
+                <span class="n">xyz_batch_cnt</span><span class="o">=</span><span class="n">xyz_batch_cnt</span><span class="p">,</span>
+                <span class="n">new_xyz</span><span class="o">=</span><span class="n">new_xyz</span><span class="p">[:,</span> <span class="p">:</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">contiguous</span><span class="p">(),</span>
+                <span class="n">new_xyz_batch_cnt</span><span class="o">=</span><span class="n">new_xyz_batch_cnt</span><span class="p">,</span>
+                <span class="n">features</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">cur_feats</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span>
+            <span class="p">)</span>
+
+            <span class="n">point_features_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pooled_features</span><span class="p">)</span>
+
+        <span class="n">point_features</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">point_features_list</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">out_dict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="c1"># out_dict[&#39;point_features_before_fusion&#39;] = point_features</span>
+        <span class="n">point_features</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vsa_point_feature_fusion</span><span class="p">(</span><span class="n">point_features</span><span class="p">)</span>
+
+        <span class="n">cur_idx</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">out_dict</span><span class="p">[</span><span class="s1">&#39;point_features&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">out_dict</span><span class="p">[</span><span class="s1">&#39;point_coords&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">out_dict</span><span class="p">[</span><span class="s1">&#39;point_scores&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">out_dict</span><span class="p">[</span><span class="s1">&#39;boxes&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">out_dict</span><span class="p">[</span><span class="s1">&#39;scores&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">num</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">new_xyz_batch_cnt</span><span class="p">):</span>
+            <span class="n">out_dict</span><span class="p">[</span><span class="s1">&#39;point_features&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">point_features</span><span class="p">[</span><span class="n">cur_idx</span><span class="p">:</span><span class="n">cur_idx</span> <span class="o">+</span> <span class="n">num</span><span class="p">])</span>
+            <span class="n">out_dict</span><span class="p">[</span><span class="s1">&#39;point_coords&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_xyz</span><span class="p">[</span><span class="n">cur_idx</span><span class="p">:</span><span class="n">cur_idx</span> <span class="o">+</span> <span class="n">num</span><span class="p">])</span>
+            <span class="n">out_dict</span><span class="p">[</span><span class="s1">&#39;point_scores&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_xyz_scrs</span><span class="p">[</span><span class="n">cur_idx</span><span class="p">:</span><span class="n">cur_idx</span> <span class="o">+</span> <span class="n">num</span><span class="p">])</span>
+            <span class="n">mask</span> <span class="o">=</span> <span class="n">boxes</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">i</span>
+            <span class="n">out_dict</span><span class="p">[</span><span class="s1">&#39;boxes&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">boxes</span><span class="p">[</span><span class="n">mask</span><span class="p">,</span> <span class="mi">1</span><span class="p">:])</span>
+            <span class="n">out_dict</span><span class="p">[</span><span class="s1">&#39;scores&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">scores</span><span class="p">[</span><span class="n">mask</span><span class="p">])</span>
+            <span class="n">cur_idx</span> <span class="o">+=</span> <span class="n">num</span>
+
+        <span class="k">return</span> <span class="n">out_dict</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Anonymous Author.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

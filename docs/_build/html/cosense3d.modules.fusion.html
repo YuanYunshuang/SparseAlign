@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>cosense3d.modules.fusion package &mdash; Cosense3D 1.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=af2ce170"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="cosense3d.modules.heads package" href="cosense3d.modules.heads.html" />
+    <link rel="prev" title="cosense3d.modules.backbone3d package" href="cosense3d.modules.backbone3d.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Cosense3D
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="md/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="md/prepare_data.html">Prepare Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="md/structure.html">The Structure of the framework</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">CoSense3D</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="cosense3d.agents.html">cosense3d.agents package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cosense3d.dataset.html">cosense3d.dataset package</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="cosense3d.modules.html">cosense3d.modules package</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="cosense3d.modules.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="cosense3d.modules.backbone2d.html">cosense3d.modules.backbone2d package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="cosense3d.modules.backbone3d.html">cosense3d.modules.backbone3d package</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">cosense3d.modules.fusion package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="cosense3d.modules.heads.html">cosense3d.modules.heads package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="cosense3d.modules.losses.html">cosense3d.modules.losses package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="cosense3d.modules.necks.html">cosense3d.modules.necks package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="cosense3d.modules.plugin.html">cosense3d.modules.plugin package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="cosense3d.modules.projection.html">cosense3d.modules.projection package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="cosense3d.modules.utils.html">cosense3d.modules.utils package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="cosense3d.modules.html#module-cosense3d.modules">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="cosense3d.utils.html">cosense3d.utils package</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Cosense3D</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">CoSense3D</a></li>
+          <li class="breadcrumb-item"><a href="cosense3d.modules.html">cosense3d.modules package</a></li>
+      <li class="breadcrumb-item active">cosense3d.modules.fusion package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/cosense3d.modules.fusion.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="cosense3d-modules-fusion-package">
+<h1>cosense3d.modules.fusion package<a class="headerlink" href="#cosense3d-modules-fusion-package" title="Permalink to this heading"></a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this heading"></a></h2>
+</section>
+<section id="module-cosense3d.modules.fusion.attn_fusion">
+<span id="cosense3d-modules-fusion-attn-fusion-module"></span><h2>cosense3d.modules.fusion.attn_fusion module<a class="headerlink" href="#module-cosense3d.modules.fusion.attn_fusion" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="cosense3d.modules.fusion.attn_fusion.DenseAttentionFusion">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cosense3d.modules.fusion.attn_fusion.</span></span><span class="sig-name descname"><span class="pre">DenseAttentionFusion</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feature_dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">neck</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/fusion/attn_fusion.html#DenseAttentionFusion"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.fusion.attn_fusion.DenseAttentionFusion" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="cosense3d.modules.html#cosense3d.modules.BaseModule" title="cosense3d.modules.BaseModule"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModule</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.modules.fusion.attn_fusion.DenseAttentionFusion.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ego_feats</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coop_feats</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/fusion/attn_fusion.html#DenseAttentionFusion.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.fusion.attn_fusion.DenseAttentionFusion.forward" title="Permalink to this definition"></a></dt>
+<dd><p>Defines the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cosense3d.modules.fusion.attn_fusion.DenseAttentionFusion.training">
+<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#cosense3d.modules.fusion.attn_fusion.DenseAttentionFusion.training" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="cosense3d.modules.fusion.attn_fusion.SparseAttentionFusion">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cosense3d.modules.fusion.attn_fusion.</span></span><span class="sig-name descname"><span class="pre">SparseAttentionFusion</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stride</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_channels</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/fusion/attn_fusion.html#SparseAttentionFusion"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.fusion.attn_fusion.SparseAttentionFusion" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="cosense3d.modules.html#cosense3d.modules.BaseModule" title="cosense3d.modules.BaseModule"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModule</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.modules.fusion.attn_fusion.SparseAttentionFusion.format_output">
+<span class="sig-name descname"><span class="pre">format_output</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/fusion/attn_fusion.html#SparseAttentionFusion.format_output"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.fusion.attn_fusion.SparseAttentionFusion.format_output" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.modules.fusion.attn_fusion.SparseAttentionFusion.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ego_feats</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coop_feats</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/fusion/attn_fusion.html#SparseAttentionFusion.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.fusion.attn_fusion.SparseAttentionFusion.forward" title="Permalink to this definition"></a></dt>
+<dd><p>Defines the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.modules.fusion.attn_fusion.SparseAttentionFusion.fuse_feature_at_stride">
+<span class="sig-name descname"><span class="pre">fuse_feature_at_stride</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ego_feat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coop_feat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stride</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fuse_key</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/fusion/attn_fusion.html#SparseAttentionFusion.fuse_feature_at_stride"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.fusion.attn_fusion.SparseAttentionFusion.fuse_feature_at_stride" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cosense3d.modules.fusion.attn_fusion.SparseAttentionFusion.training">
+<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#cosense3d.modules.fusion.attn_fusion.SparseAttentionFusion.training" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-cosense3d.modules.fusion.box_fusion">
+<span id="cosense3d-modules-fusion-box-fusion-module"></span><h2>cosense3d.modules.fusion.box_fusion module<a class="headerlink" href="#module-cosense3d.modules.fusion.box_fusion" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="cosense3d.modules.fusion.box_fusion.BoxFusion">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cosense3d.modules.fusion.box_fusion.</span></span><span class="sig-name descname"><span class="pre">BoxFusion</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lidar_range</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/fusion/box_fusion.html#BoxFusion"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.fusion.box_fusion.BoxFusion" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="cosense3d.modules.html#cosense3d.modules.BaseModule" title="cosense3d.modules.BaseModule"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModule</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.modules.fusion.box_fusion.BoxFusion.cluster_fusion">
+<span class="sig-name descname"><span class="pre">cluster_fusion</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">clusters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scores</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">times</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">global_time</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/fusion/box_fusion.html#BoxFusion.cluster_fusion"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.fusion.box_fusion.BoxFusion.cluster_fusion" title="Permalink to this definition"></a></dt>
+<dd><p>Merge boxes in each cluster with scores as weights for merging</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.modules.fusion.box_fusion.BoxFusion.clustering">
+<span class="sig-name descname"><span class="pre">clustering</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">boxes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scores</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">times</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">global_time</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/fusion/box_fusion.html#BoxFusion.clustering"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.fusion.box_fusion.BoxFusion.clustering" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.modules.fusion.box_fusion.BoxFusion.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ego_preds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coop_preds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">memory</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">global_times</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/fusion/box_fusion.html#BoxFusion.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.fusion.box_fusion.BoxFusion.forward" title="Permalink to this definition"></a></dt>
+<dd><p>Defines the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.modules.fusion.box_fusion.BoxFusion.merge_sync_boxes">
+<span class="sig-name descname"><span class="pre">merge_sync_boxes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">c</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">s</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/fusion/box_fusion.html#BoxFusion.merge_sync_boxes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.fusion.box_fusion.BoxFusion.merge_sync_boxes" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.modules.fusion.box_fusion.BoxFusion.temporal_cluster_fusion">
+<span class="sig-name descname"><span class="pre">temporal_cluster_fusion</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">clusters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scores</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">times</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">global_time</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/fusion/box_fusion.html#BoxFusion.temporal_cluster_fusion"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.fusion.box_fusion.BoxFusion.temporal_cluster_fusion" title="Permalink to this definition"></a></dt>
+<dd><p>Merge boxes in each cluster with scores as weights for merging</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cosense3d.modules.fusion.box_fusion.BoxFusion.training">
+<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#cosense3d.modules.fusion.box_fusion.BoxFusion.training" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.modules.fusion.box_fusion.limit_period">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.modules.fusion.box_fusion.</span></span><span class="sig-name descname"><span class="pre">limit_period</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">val</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">period</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">6.283185306</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/fusion/box_fusion.html#limit_period"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.fusion.box_fusion.limit_period" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="module-cosense3d.modules.fusion.fax">
+<span id="cosense3d-modules-fusion-fax-module"></span><h2>cosense3d.modules.fusion.fax module<a class="headerlink" href="#module-cosense3d.modules.fusion.fax" title="Permalink to this heading"></a></h2>
+<p>This class is about swap fusion applications</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="cosense3d.modules.fusion.fax.Attention">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cosense3d.modules.fusion.fax.</span></span><span class="sig-name descname"><span class="pre">Attention</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dim_head</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">32</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">agent_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">6</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">window_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">7</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/fusion/fax.html#Attention"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.fusion.fax.Attention" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
+<p>Unit Attention class. Todo: mask is not added yet.</p>
+<section id="parameters">
+<h3>Parameters<a class="headerlink" href="#parameters" title="Permalink to this heading"></a></h3>
+<dl class="simple">
+<dt>dim: int</dt><dd><p>Input feature dimension.</p>
+</dd>
+<dt>dim_head: int</dt><dd><p>The head dimension.</p>
+</dd>
+<dt>dropout: float</dt><dd><p>Dropout rate</p>
+</dd>
+<dt>agent_size: int</dt><dd><p>The agent can be different views, timestamps or vehicles.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.modules.fusion.fax.Attention.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/fusion/fax.html#Attention.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.fusion.fax.Attention.forward" title="Permalink to this definition"></a></dt>
+<dd><p>Defines the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cosense3d.modules.fusion.fax.Attention.training">
+<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#cosense3d.modules.fusion.fax.Attention.training" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</section>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="cosense3d.modules.fusion.fax.FeedForward">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cosense3d.modules.fusion.fax.</span></span><span class="sig-name descname"><span class="pre">FeedForward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hidden_dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/fusion/fax.html#FeedForward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.fusion.fax.FeedForward" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.modules.fusion.fax.FeedForward.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/fusion/fax.html#FeedForward.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.fusion.fax.FeedForward.forward" title="Permalink to this definition"></a></dt>
+<dd><p>Defines the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cosense3d.modules.fusion.fax.FeedForward.training">
+<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#cosense3d.modules.fusion.fax.FeedForward.training" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="cosense3d.modules.fusion.fax.PreNormResidual">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cosense3d.modules.fusion.fax.</span></span><span class="sig-name descname"><span class="pre">PreNormResidual</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fn</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/fusion/fax.html#PreNormResidual"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.fusion.fax.PreNormResidual" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.modules.fusion.fax.PreNormResidual.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/fusion/fax.html#PreNormResidual.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.fusion.fax.PreNormResidual.forward" title="Permalink to this definition"></a></dt>
+<dd><p>Defines the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cosense3d.modules.fusion.fax.PreNormResidual.training">
+<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#cosense3d.modules.fusion.fax.PreNormResidual.training" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="cosense3d.modules.fusion.fax.SwapFusionBlock">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cosense3d.modules.fusion.fax.</span></span><span class="sig-name descname"><span class="pre">SwapFusionBlock</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mlp_dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dim_head</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">window_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">agent_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drop_out</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/fusion/fax.html#SwapFusionBlock"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.fusion.fax.SwapFusionBlock" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
+<p>Swap Fusion Block contains window attention and grid attention.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.modules.fusion.fax.SwapFusionBlock.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/fusion/fax.html#SwapFusionBlock.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.fusion.fax.SwapFusionBlock.forward" title="Permalink to this definition"></a></dt>
+<dd><p>Defines the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cosense3d.modules.fusion.fax.SwapFusionBlock.training">
+<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#cosense3d.modules.fusion.fax.SwapFusionBlock.training" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="cosense3d.modules.fusion.fax.SwapFusionBlockMask">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cosense3d.modules.fusion.fax.</span></span><span class="sig-name descname"><span class="pre">SwapFusionBlockMask</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mlp_dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dim_head</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">window_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">agent_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drop_out</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/fusion/fax.html#SwapFusionBlockMask"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.fusion.fax.SwapFusionBlockMask" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
+<p>Swap Fusion Block contains window attention and grid attention with
+mask enabled for multi-vehicle cooperation.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.modules.fusion.fax.SwapFusionBlockMask.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/fusion/fax.html#SwapFusionBlockMask.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.fusion.fax.SwapFusionBlockMask.forward" title="Permalink to this definition"></a></dt>
+<dd><p>Defines the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cosense3d.modules.fusion.fax.SwapFusionBlockMask.training">
+<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#cosense3d.modules.fusion.fax.SwapFusionBlockMask.training" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="cosense3d.modules.fusion.fax.SwapFusionEncoder">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cosense3d.modules.fusion.fax.</span></span><span class="sig-name descname"><span class="pre">SwapFusionEncoder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_dim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">128</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mlp_dim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">256</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">agent_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">window_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dim_head</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">32</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drop_out</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">depth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decoder</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/fusion/fax.html#SwapFusionEncoder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.fusion.fax.SwapFusionEncoder" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="cosense3d.modules.html#cosense3d.modules.BaseModule" title="cosense3d.modules.BaseModule"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModule</span></code></a></p>
+<p>Data rearrange -&gt; swap block -&gt; mlp_head</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.modules.fusion.fax.SwapFusionEncoder.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ego_feat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coop_cpm</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/fusion/fax.html#SwapFusionEncoder.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.fusion.fax.SwapFusionEncoder.forward" title="Permalink to this definition"></a></dt>
+<dd><p>Defines the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cosense3d.modules.fusion.fax.SwapFusionEncoder.training">
+<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#cosense3d.modules.fusion.fax.SwapFusionEncoder.training" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-cosense3d.modules.fusion.keypoints">
+<span id="cosense3d-modules-fusion-keypoints-module"></span><h2>cosense3d.modules.fusion.keypoints module<a class="headerlink" href="#module-cosense3d.modules.fusion.keypoints" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="cosense3d.modules.fusion.keypoints.KeypointsFusion">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cosense3d.modules.fusion.keypoints.</span></span><span class="sig-name descname"><span class="pre">KeypointsFusion</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lidar_range</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_from_epoch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/fusion/keypoints.html#KeypointsFusion"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.fusion.keypoints.KeypointsFusion" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="cosense3d.modules.html#cosense3d.modules.BaseModule" title="cosense3d.modules.BaseModule"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModule</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.modules.fusion.keypoints.KeypointsFusion.cluster_fusion">
+<span class="sig-name descname"><span class="pre">cluster_fusion</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">clusters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scores</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/fusion/keypoints.html#KeypointsFusion.cluster_fusion"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.fusion.keypoints.KeypointsFusion.cluster_fusion" title="Permalink to this definition"></a></dt>
+<dd><p>Merge boxes in each cluster with scores as weights for merging</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.modules.fusion.keypoints.KeypointsFusion.clustering">
+<span class="sig-name descname"><span class="pre">clustering</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">boxes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scores</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/fusion/keypoints.html#KeypointsFusion.clustering"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.fusion.keypoints.KeypointsFusion.clustering" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.modules.fusion.keypoints.KeypointsFusion.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ego_feats</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coop_feats</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/fusion/keypoints.html#KeypointsFusion.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.fusion.keypoints.KeypointsFusion.forward" title="Permalink to this definition"></a></dt>
+<dd><p>Defines the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cosense3d.modules.fusion.keypoints.KeypointsFusion.training">
+<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#cosense3d.modules.fusion.keypoints.KeypointsFusion.training" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.modules.fusion.keypoints.limit_period">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.modules.fusion.keypoints.</span></span><span class="sig-name descname"><span class="pre">limit_period</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">val</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">period</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">6.283185306</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/fusion/keypoints.html#limit_period"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.fusion.keypoints.limit_period" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="module-cosense3d.modules.fusion.maxout_fusion">
+<span id="cosense3d-modules-fusion-maxout-fusion-module"></span><h2>cosense3d.modules.fusion.maxout_fusion module<a class="headerlink" href="#module-cosense3d.modules.fusion.maxout_fusion" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="cosense3d.modules.fusion.maxout_fusion.BEVMaxoutFusion">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cosense3d.modules.fusion.maxout_fusion.</span></span><span class="sig-name descname"><span class="pre">BEVMaxoutFusion</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/fusion/maxout_fusion.html#BEVMaxoutFusion"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.fusion.maxout_fusion.BEVMaxoutFusion" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="cosense3d.modules.html#cosense3d.modules.BaseModule" title="cosense3d.modules.BaseModule"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModule</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.modules.fusion.maxout_fusion.BEVMaxoutFusion.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ego_feats</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coop_feats</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/fusion/maxout_fusion.html#BEVMaxoutFusion.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.fusion.maxout_fusion.BEVMaxoutFusion.forward" title="Permalink to this definition"></a></dt>
+<dd><p>Defines the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cosense3d.modules.fusion.maxout_fusion.BEVMaxoutFusion.training">
+<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#cosense3d.modules.fusion.maxout_fusion.BEVMaxoutFusion.training" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="cosense3d.modules.fusion.maxout_fusion.SparseBEVMaxoutFusion">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cosense3d.modules.fusion.maxout_fusion.</span></span><span class="sig-name descname"><span class="pre">SparseBEVMaxoutFusion</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pc_range</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolution</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/fusion/maxout_fusion.html#SparseBEVMaxoutFusion"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.fusion.maxout_fusion.SparseBEVMaxoutFusion" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="cosense3d.modules.html#cosense3d.modules.BaseModule" title="cosense3d.modules.BaseModule"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModule</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.modules.fusion.maxout_fusion.SparseBEVMaxoutFusion.format_output">
+<span class="sig-name descname"><span class="pre">format_output</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/fusion/maxout_fusion.html#SparseBEVMaxoutFusion.format_output"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.fusion.maxout_fusion.SparseBEVMaxoutFusion.format_output" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.modules.fusion.maxout_fusion.SparseBEVMaxoutFusion.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ego_feats</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coop_feats</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/fusion/maxout_fusion.html#SparseBEVMaxoutFusion.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.fusion.maxout_fusion.SparseBEVMaxoutFusion.forward" title="Permalink to this definition"></a></dt>
+<dd><p>Defines the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cosense3d.modules.fusion.maxout_fusion.SparseBEVMaxoutFusion.training">
+<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#cosense3d.modules.fusion.maxout_fusion.SparseBEVMaxoutFusion.training" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-cosense3d.modules.fusion.naive_fusion">
+<span id="cosense3d-modules-fusion-naive-fusion-module"></span><h2>cosense3d.modules.fusion.naive_fusion module<a class="headerlink" href="#module-cosense3d.modules.fusion.naive_fusion" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="cosense3d.modules.fusion.naive_fusion.NaiveFusion">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cosense3d.modules.fusion.naive_fusion.</span></span><span class="sig-name descname"><span class="pre">NaiveFusion</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stride</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/fusion/naive_fusion.html#NaiveFusion"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.fusion.naive_fusion.NaiveFusion" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="cosense3d.modules.html#cosense3d.modules.BaseModule" title="cosense3d.modules.BaseModule"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModule</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.modules.fusion.naive_fusion.NaiveFusion.format_output">
+<span class="sig-name descname"><span class="pre">format_output</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/fusion/naive_fusion.html#NaiveFusion.format_output"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.fusion.naive_fusion.NaiveFusion.format_output" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.modules.fusion.naive_fusion.NaiveFusion.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ego_feats</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coop_feats</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/fusion/naive_fusion.html#NaiveFusion.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.fusion.naive_fusion.NaiveFusion.forward" title="Permalink to this definition"></a></dt>
+<dd><p>Defines the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.modules.fusion.naive_fusion.NaiveFusion.fuse_feature_at_stride">
+<span class="sig-name descname"><span class="pre">fuse_feature_at_stride</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ego_feat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coop_feat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stride</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fuse_key</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/fusion/naive_fusion.html#NaiveFusion.fuse_feature_at_stride"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.fusion.naive_fusion.NaiveFusion.fuse_feature_at_stride" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cosense3d.modules.fusion.naive_fusion.NaiveFusion.training">
+<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#cosense3d.modules.fusion.naive_fusion.NaiveFusion.training" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-cosense3d.modules.fusion.spatial_query_fusion">
+<span id="cosense3d-modules-fusion-spatial-query-fusion-module"></span><h2>cosense3d.modules.fusion.spatial_query_fusion module<a class="headerlink" href="#module-cosense3d.modules.fusion.spatial_query_fusion" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="cosense3d.modules.fusion.spatial_query_fusion.SpatialQueryFusion">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cosense3d.modules.fusion.spatial_query_fusion.</span></span><span class="sig-name descname"><span class="pre">SpatialQueryFusion</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_channels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pc_range</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolution</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/fusion/spatial_query_fusion.html#SpatialQueryFusion"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.fusion.spatial_query_fusion.SpatialQueryFusion" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="cosense3d.modules.html#cosense3d.modules.BaseModule" title="cosense3d.modules.BaseModule"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModule</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.modules.fusion.spatial_query_fusion.SpatialQueryFusion.format_output">
+<span class="sig-name descname"><span class="pre">format_output</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/fusion/spatial_query_fusion.html#SpatialQueryFusion.format_output"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.fusion.spatial_query_fusion.SpatialQueryFusion.format_output" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.modules.fusion.spatial_query_fusion.SpatialQueryFusion.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ego_feats</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coop_feats</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/fusion/spatial_query_fusion.html#SpatialQueryFusion.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.fusion.spatial_query_fusion.SpatialQueryFusion.forward" title="Permalink to this definition"></a></dt>
+<dd><p>Defines the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cosense3d.modules.fusion.spatial_query_fusion.SpatialQueryFusion.training">
+<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#cosense3d.modules.fusion.spatial_query_fusion.SpatialQueryFusion.training" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-cosense3d.modules.fusion.temporal_fusion">
+<span id="cosense3d-modules-fusion-temporal-fusion-module"></span><h2>cosense3d.modules.fusion.temporal_fusion module<a class="headerlink" href="#module-cosense3d.modules.fusion.temporal_fusion" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="cosense3d.modules.fusion.temporal_fusion.LocalTemporalFusion">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cosense3d.modules.fusion.temporal_fusion.</span></span><span class="sig-name descname"><span class="pre">LocalTemporalFusion</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_channels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transformer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">feature_stride</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lidar_range</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pos_dim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_pose_feat</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">128</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">topk_ref_pts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1024</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">topk_feat</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">512</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_propagated</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">256</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">memory_len</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1024</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ref_pts_stride</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transformer_itrs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">global_ref_time</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">norm_fusion</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/fusion/temporal_fusion.html#LocalTemporalFusion"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.fusion.temporal_fusion.LocalTemporalFusion" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="cosense3d.modules.html#cosense3d.modules.BaseModule" title="cosense3d.modules.BaseModule"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModule</span></code></a></p>
+<p>Modified from TemporalFusion to standardize input and output keys</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.modules.fusion.temporal_fusion.LocalTemporalFusion.embed_pos">
+<span class="sig-name descname"><span class="pre">embed_pos</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pos</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/fusion/temporal_fusion.html#LocalTemporalFusion.embed_pos"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.fusion.temporal_fusion.LocalTemporalFusion.embed_pos" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.modules.fusion.temporal_fusion.LocalTemporalFusion.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">local_roi</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">global_roi</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bev_feat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mem_dict</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/fusion/temporal_fusion.html#LocalTemporalFusion.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.fusion.temporal_fusion.LocalTemporalFusion.forward" title="Permalink to this definition"></a></dt>
+<dd><p>Defines the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.modules.fusion.temporal_fusion.LocalTemporalFusion.gather_topk">
+<span class="sig-name descname"><span class="pre">gather_topk</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rois</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bev_feats</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stride</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">topk</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/fusion/temporal_fusion.html#LocalTemporalFusion.gather_topk"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.fusion.temporal_fusion.LocalTemporalFusion.gather_topk" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.modules.fusion.temporal_fusion.LocalTemporalFusion.init_weights">
+<span class="sig-name descname"><span class="pre">init_weights</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/fusion/temporal_fusion.html#LocalTemporalFusion.init_weights"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.fusion.temporal_fusion.LocalTemporalFusion.init_weights" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.modules.fusion.temporal_fusion.LocalTemporalFusion.temporal_alignment">
+<span class="sig-name descname"><span class="pre">temporal_alignment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">query_pos</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tgt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ref_pts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ref_feat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mem_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ref_time</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/fusion/temporal_fusion.html#LocalTemporalFusion.temporal_alignment"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.fusion.temporal_fusion.LocalTemporalFusion.temporal_alignment" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cosense3d.modules.fusion.temporal_fusion.LocalTemporalFusion.training">
+<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#cosense3d.modules.fusion.temporal_fusion.LocalTemporalFusion.training" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="cosense3d.modules.fusion.temporal_fusion.LocalTemporalFusionV1">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cosense3d.modules.fusion.temporal_fusion.</span></span><span class="sig-name descname"><span class="pre">LocalTemporalFusionV1</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_channels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transformer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">feature_stride</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lidar_range</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pos_dim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_pose_feat</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">128</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">topk_ref_pts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1024</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">topk_feat</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">512</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_propagated</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">256</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">memory_len</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1024</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ref_pts_stride</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transformer_itrs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">global_ref_time</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">norm_fusion</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/fusion/temporal_fusion.html#LocalTemporalFusionV1"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.fusion.temporal_fusion.LocalTemporalFusionV1" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#cosense3d.modules.fusion.temporal_fusion.LocalTemporalFusion" title="cosense3d.modules.fusion.temporal_fusion.LocalTemporalFusion"><code class="xref py py-class docutils literal notranslate"><span class="pre">LocalTemporalFusion</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.modules.fusion.temporal_fusion.LocalTemporalFusionV1.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rois</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bev_feat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mem_dict</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/fusion/temporal_fusion.html#LocalTemporalFusionV1.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.fusion.temporal_fusion.LocalTemporalFusionV1.forward" title="Permalink to this definition"></a></dt>
+<dd><p>Defines the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cosense3d.modules.fusion.temporal_fusion.LocalTemporalFusionV1.training">
+<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#cosense3d.modules.fusion.temporal_fusion.LocalTemporalFusionV1.training" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="cosense3d.modules.fusion.temporal_fusion.LocalTemporalFusionV2">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cosense3d.modules.fusion.temporal_fusion.</span></span><span class="sig-name descname"><span class="pre">LocalTemporalFusionV2</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_channels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transformer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">feature_stride</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lidar_range</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pos_dim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_pose_feat</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">128</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">topk_ref_pts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1024</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">topk_feat</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">512</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_propagated</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">256</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">memory_len</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1024</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ref_pts_stride</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transformer_itrs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">global_ref_time</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">norm_fusion</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/fusion/temporal_fusion.html#LocalTemporalFusionV2"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.fusion.temporal_fusion.LocalTemporalFusionV2" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#cosense3d.modules.fusion.temporal_fusion.LocalTemporalFusion" title="cosense3d.modules.fusion.temporal_fusion.LocalTemporalFusion"><code class="xref py py-class docutils literal notranslate"><span class="pre">LocalTemporalFusion</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.modules.fusion.temporal_fusion.LocalTemporalFusionV2.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">local_roi</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bev_feat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mem_dict</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/fusion/temporal_fusion.html#LocalTemporalFusionV2.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.fusion.temporal_fusion.LocalTemporalFusionV2.forward" title="Permalink to this definition"></a></dt>
+<dd><p>Defines the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cosense3d.modules.fusion.temporal_fusion.LocalTemporalFusionV2.training">
+<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#cosense3d.modules.fusion.temporal_fusion.LocalTemporalFusionV2.training" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="cosense3d.modules.fusion.temporal_fusion.LocalTemporalFusionV3">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cosense3d.modules.fusion.temporal_fusion.</span></span><span class="sig-name descname"><span class="pre">LocalTemporalFusionV3</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_channels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transformer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">feature_stride</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lidar_range</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pos_dim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_pose_feat</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">128</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">topk_ref_pts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1024</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">topk_feat</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">512</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_propagated</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">256</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">memory_len</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1024</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ref_pts_stride</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transformer_itrs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">global_ref_time</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">norm_fusion</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/fusion/temporal_fusion.html#LocalTemporalFusionV3"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.fusion.temporal_fusion.LocalTemporalFusionV3" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="cosense3d.modules.html#cosense3d.modules.BaseModule" title="cosense3d.modules.BaseModule"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModule</span></code></a></p>
+<p>TemporalFusion with feature flow</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.modules.fusion.temporal_fusion.LocalTemporalFusionV3.embed_pos">
+<span class="sig-name descname"><span class="pre">embed_pos</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pos</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/fusion/temporal_fusion.html#LocalTemporalFusionV3.embed_pos"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.fusion.temporal_fusion.LocalTemporalFusionV3.embed_pos" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.modules.fusion.temporal_fusion.LocalTemporalFusionV3.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">local_roi</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">global_roi</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bev_feat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mem_dict</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/fusion/temporal_fusion.html#LocalTemporalFusionV3.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.fusion.temporal_fusion.LocalTemporalFusionV3.forward" title="Permalink to this definition"></a></dt>
+<dd><p>Defines the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.modules.fusion.temporal_fusion.LocalTemporalFusionV3.gather_topk">
+<span class="sig-name descname"><span class="pre">gather_topk</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rois</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bev_feats</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stride</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">topk</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/fusion/temporal_fusion.html#LocalTemporalFusionV3.gather_topk"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.fusion.temporal_fusion.LocalTemporalFusionV3.gather_topk" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.modules.fusion.temporal_fusion.LocalTemporalFusionV3.init_weights">
+<span class="sig-name descname"><span class="pre">init_weights</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/fusion/temporal_fusion.html#LocalTemporalFusionV3.init_weights"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.fusion.temporal_fusion.LocalTemporalFusionV3.init_weights" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.modules.fusion.temporal_fusion.LocalTemporalFusionV3.temporal_alignment">
+<span class="sig-name descname"><span class="pre">temporal_alignment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">query_pos</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tgt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ref_pts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ref_feat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mem_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ref_time</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/fusion/temporal_fusion.html#LocalTemporalFusionV3.temporal_alignment"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.fusion.temporal_fusion.LocalTemporalFusionV3.temporal_alignment" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cosense3d.modules.fusion.temporal_fusion.LocalTemporalFusionV3.training">
+<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#cosense3d.modules.fusion.temporal_fusion.LocalTemporalFusionV3.training" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="cosense3d.modules.fusion.temporal_fusion.TemporalFusion">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cosense3d.modules.fusion.temporal_fusion.</span></span><span class="sig-name descname"><span class="pre">TemporalFusion</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_channels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transformer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">feature_stride</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lidar_range</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pos_dim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_pose_feat</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">128</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">topk_ref_pts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1024</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">topk_feat</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">512</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_propagated</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">256</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">memory_len</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1024</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ref_pts_stride</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transformer_itrs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">global_ref_time</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/fusion/temporal_fusion.html#TemporalFusion"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.fusion.temporal_fusion.TemporalFusion" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="cosense3d.modules.html#cosense3d.modules.BaseModule" title="cosense3d.modules.BaseModule"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModule</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.modules.fusion.temporal_fusion.TemporalFusion.embed_pos">
+<span class="sig-name descname"><span class="pre">embed_pos</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pos</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/fusion/temporal_fusion.html#TemporalFusion.embed_pos"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.fusion.temporal_fusion.TemporalFusion.embed_pos" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.modules.fusion.temporal_fusion.TemporalFusion.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rois</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bev_feat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mem_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/fusion/temporal_fusion.html#TemporalFusion.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.fusion.temporal_fusion.TemporalFusion.forward" title="Permalink to this definition"></a></dt>
+<dd><p>Defines the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.modules.fusion.temporal_fusion.TemporalFusion.gather_topk">
+<span class="sig-name descname"><span class="pre">gather_topk</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rois</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bev_feats</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stride</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">topk</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/fusion/temporal_fusion.html#TemporalFusion.gather_topk"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.fusion.temporal_fusion.TemporalFusion.gather_topk" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.modules.fusion.temporal_fusion.TemporalFusion.init_weights">
+<span class="sig-name descname"><span class="pre">init_weights</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/fusion/temporal_fusion.html#TemporalFusion.init_weights"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.fusion.temporal_fusion.TemporalFusion.init_weights" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.modules.fusion.temporal_fusion.TemporalFusion.temporal_alignment">
+<span class="sig-name descname"><span class="pre">temporal_alignment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">query_pos</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tgt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ref_pts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ref_feat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mem_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ref_time</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/fusion/temporal_fusion.html#TemporalFusion.temporal_alignment"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.fusion.temporal_fusion.TemporalFusion.temporal_alignment" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cosense3d.modules.fusion.temporal_fusion.TemporalFusion.training">
+<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#cosense3d.modules.fusion.temporal_fusion.TemporalFusion.training" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="cosense3d.modules.fusion.temporal_fusion.TemporalLidarFusion">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cosense3d.modules.fusion.temporal_fusion.</span></span><span class="sig-name descname"><span class="pre">TemporalLidarFusion</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_channels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transformer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">feature_stride</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lidar_range</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pos_dim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_pose_feat</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">64</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">topk</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2048</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_propagated</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">256</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">memory_len</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1024</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_query</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">644</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/fusion/temporal_fusion.html#TemporalLidarFusion"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.fusion.temporal_fusion.TemporalLidarFusion" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="cosense3d.modules.html#cosense3d.modules.BaseModule" title="cosense3d.modules.BaseModule"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModule</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.modules.fusion.temporal_fusion.TemporalLidarFusion.embed_pos">
+<span class="sig-name descname"><span class="pre">embed_pos</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pos</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/fusion/temporal_fusion.html#TemporalLidarFusion.embed_pos"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.fusion.temporal_fusion.TemporalLidarFusion.embed_pos" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.modules.fusion.temporal_fusion.TemporalLidarFusion.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rois</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bev_feat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mem_dict</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/fusion/temporal_fusion.html#TemporalLidarFusion.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.fusion.temporal_fusion.TemporalLidarFusion.forward" title="Permalink to this definition"></a></dt>
+<dd><p>Defines the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.modules.fusion.temporal_fusion.TemporalLidarFusion.gather_topk">
+<span class="sig-name descname"><span class="pre">gather_topk</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rois</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bev_feats</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/fusion/temporal_fusion.html#TemporalLidarFusion.gather_topk"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.fusion.temporal_fusion.TemporalLidarFusion.gather_topk" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.modules.fusion.temporal_fusion.TemporalLidarFusion.init_weights">
+<span class="sig-name descname"><span class="pre">init_weights</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/fusion/temporal_fusion.html#TemporalLidarFusion.init_weights"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.fusion.temporal_fusion.TemporalLidarFusion.init_weights" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.modules.fusion.temporal_fusion.TemporalLidarFusion.temporal_alignment">
+<span class="sig-name descname"><span class="pre">temporal_alignment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">query_pos</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tgt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ref_pts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mem_dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/modules/fusion/temporal_fusion.html#TemporalLidarFusion.temporal_alignment"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.modules.fusion.temporal_fusion.TemporalLidarFusion.temporal_alignment" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cosense3d.modules.fusion.temporal_fusion.TemporalLidarFusion.training">
+<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#cosense3d.modules.fusion.temporal_fusion.TemporalLidarFusion.training" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-cosense3d.modules.fusion">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-cosense3d.modules.fusion" title="Permalink to this heading"></a></h2>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="cosense3d.modules.backbone3d.html" class="btn btn-neutral float-left" title="cosense3d.modules.backbone3d package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="cosense3d.modules.heads.html" class="btn btn-neutral float-right" title="cosense3d.modules.heads package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Anonymous Author.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>cosense3d.agents.core.hooks &mdash; OpenCosense3D 1.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js?v=af2ce170"></script>
+        <script src="../../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            OpenCosense3D
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../md/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../md/prepare_data.html">Prepare Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../md/structure.html">The Structure of the framework</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules.html">CoSense3d</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">OpenCosense3D</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">cosense3d.agents.core.hooks</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for cosense3d.agents.core.hooks</h1><div class="highlight"><pre>
+<span></span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">time</span>
+
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">import</span> <span class="nn">torch.nn.functional</span> <span class="k">as</span> <span class="nn">F</span>
+<span class="kn">from</span> <span class="nn">importlib</span> <span class="kn">import</span> <span class="n">import_module</span>
+
+<span class="kn">from</span> <span class="nn">cosense3d.ops.utils</span> <span class="kn">import</span> <span class="n">points_in_boxes_gpu</span>
+
+
+<div class="viewcode-block" id="Hooks"><a class="viewcode-back" href="../../../../cosense3d.agents.core.html#cosense3d.agents.core.hooks.Hooks">[docs]</a><span class="k">class</span> <span class="nc">Hooks</span><span class="p">:</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cfg</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hooks</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="n">cfg</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="k">for</span> <span class="n">hook_cfg</span> <span class="ow">in</span> <span class="n">cfg</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">hooks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="nb">globals</span><span class="p">()[</span><span class="n">hook_cfg</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]](</span><span class="o">**</span><span class="n">hook_cfg</span><span class="p">)</span>
+            <span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">runner</span><span class="p">,</span> <span class="n">hook_stage</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">hook</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">hooks</span><span class="p">:</span>
+            <span class="nb">getattr</span><span class="p">(</span><span class="n">hook</span><span class="p">,</span> <span class="n">hook_stage</span><span class="p">)(</span><span class="n">runner</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Hooks.set_logger"><a class="viewcode-back" href="../../../../cosense3d.agents.core.html#cosense3d.agents.core.hooks.Hooks.set_logger">[docs]</a>    <span class="k">def</span> <span class="nf">set_logger</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">hook</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">hooks</span><span class="p">:</span>
+            <span class="n">hook</span><span class="o">.</span><span class="n">set_logger</span><span class="p">(</span><span class="n">logger</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="BaseHook"><a class="viewcode-back" href="../../../../cosense3d.agents.core.html#cosense3d.agents.core.hooks.BaseHook">[docs]</a><span class="k">class</span> <span class="nc">BaseHook</span><span class="p">:</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+<div class="viewcode-block" id="BaseHook.pre_iter"><a class="viewcode-back" href="../../../../cosense3d.agents.core.html#cosense3d.agents.core.hooks.BaseHook.pre_iter">[docs]</a>    <span class="k">def</span> <span class="nf">pre_iter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">runner</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="BaseHook.post_iter"><a class="viewcode-back" href="../../../../cosense3d.agents.core.html#cosense3d.agents.core.hooks.BaseHook.post_iter">[docs]</a>    <span class="k">def</span> <span class="nf">post_iter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">runner</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="BaseHook.pre_epoch"><a class="viewcode-back" href="../../../../cosense3d.agents.core.html#cosense3d.agents.core.hooks.BaseHook.pre_epoch">[docs]</a>    <span class="k">def</span> <span class="nf">pre_epoch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">runner</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="BaseHook.post_epoch"><a class="viewcode-back" href="../../../../cosense3d.agents.core.html#cosense3d.agents.core.hooks.BaseHook.post_epoch">[docs]</a>    <span class="k">def</span> <span class="nf">post_epoch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">runner</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="BaseHook.set_logger"><a class="viewcode-back" href="../../../../cosense3d.agents.core.html#cosense3d.agents.core.hooks.BaseHook.set_logger">[docs]</a>    <span class="k">def</span> <span class="nf">set_logger</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="n">logger</span></div></div>
+
+
+<div class="viewcode-block" id="MemoryUsageHook"><a class="viewcode-back" href="../../../../cosense3d.agents.core.html#cosense3d.agents.core.hooks.MemoryUsageHook">[docs]</a><span class="k">class</span> <span class="nc">MemoryUsageHook</span><span class="p">(</span><span class="n">BaseHook</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="s1">&#39;cuda:0&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">device</span> <span class="o">=</span> <span class="n">device</span>
+
+<div class="viewcode-block" id="MemoryUsageHook.post_iter"><a class="viewcode-back" href="../../../../cosense3d.agents.core.html#cosense3d.agents.core.hooks.MemoryUsageHook.post_iter">[docs]</a>    <span class="k">def</span> <span class="nf">post_iter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">runner</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">memory</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">max_memory_allocated</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span> <span class="o">/</span> <span class="mi">1024</span> <span class="o">/</span> <span class="mi">1024</span>
+        <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">empty_cache</span><span class="p">()</span>
+        <span class="n">runner</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">memory</span><span class="o">=</span><span class="n">memory</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="TrainTimerHook"><a class="viewcode-back" href="../../../../cosense3d.agents.core.html#cosense3d.agents.core.hooks.TrainTimerHook">[docs]</a><span class="k">class</span> <span class="nc">TrainTimerHook</span><span class="p">(</span><span class="n">BaseHook</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">elapsed_time</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">start_time</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mean_time_per_itr</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">observations</span> <span class="o">=</span> <span class="mi">0</span>
+
+<div class="viewcode-block" id="TrainTimerHook.pre_epoch"><a class="viewcode-back" href="../../../../cosense3d.agents.core.html#cosense3d.agents.core.hooks.TrainTimerHook.pre_epoch">[docs]</a>    <span class="k">def</span> <span class="nf">pre_epoch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">runner</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">start_time</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">last_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="TrainTimerHook.post_iter"><a class="viewcode-back" href="../../../../cosense3d.agents.core.html#cosense3d.agents.core.hooks.TrainTimerHook.post_iter">[docs]</a>    <span class="k">def</span> <span class="nf">post_iter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">runner</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">cur_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">elapsed_time</span> <span class="o">=</span> <span class="p">(</span><span class="n">cur_time</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">start_time</span><span class="p">)</span> <span class="o">/</span> <span class="mi">3600</span>
+        <span class="c1"># total_run_iter = (runner.total_iter * (runner.epoch - runner.start_epoch)) + runner.iter</span>
+        <span class="c1"># time_per_iter = self.elapsed_time / total_run_iter</span>
+        <span class="n">time_per_iter</span> <span class="o">=</span> <span class="p">(</span><span class="n">cur_time</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">last_time</span><span class="p">)</span> <span class="o">/</span> <span class="mi">3600</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">observations</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mean_time_per_itr</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mean_time_per_itr</span> <span class="o">=</span> <span class="n">time_per_iter</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mean_time_per_itr</span> <span class="o">=</span> <span class="n">m</span> <span class="o">/</span> <span class="p">(</span><span class="n">m</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">mean_time_per_itr</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="n">m</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">time_per_iter</span>
+        <span class="n">iter_remain</span> <span class="o">=</span> <span class="n">runner</span><span class="o">.</span><span class="n">total_iter</span> <span class="o">*</span> <span class="p">(</span><span class="n">runner</span><span class="o">.</span><span class="n">total_epochs</span> <span class="o">-</span> <span class="n">runner</span><span class="o">.</span><span class="n">epoch</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="n">runner</span><span class="o">.</span><span class="n">iter</span>
+        <span class="n">time_remain</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mean_time_per_itr</span> <span class="o">*</span> <span class="n">iter_remain</span>
+        <span class="n">runner</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">t_remain</span><span class="o">=</span><span class="n">time_remain</span><span class="p">,</span> <span class="n">t_used</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">elapsed_time</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">last_time</span> <span class="o">=</span> <span class="n">cur_time</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">observations</span> <span class="o">+=</span> <span class="mi">1</span></div></div>
+
+
+<div class="viewcode-block" id="CheckPointsHook"><a class="viewcode-back" href="../../../../cosense3d.agents.core.html#cosense3d.agents.core.hooks.CheckPointsHook">[docs]</a><span class="k">class</span> <span class="nc">CheckPointsHook</span><span class="p">(</span><span class="n">BaseHook</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">max_ckpt</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">epoch_every</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">iter_every</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_ckpt</span> <span class="o">=</span> <span class="n">max_ckpt</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">epoch_every</span> <span class="o">=</span> <span class="n">epoch_every</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">iter_every</span> <span class="o">=</span> <span class="n">iter_every</span>
+
+<div class="viewcode-block" id="CheckPointsHook.post_epoch"><a class="viewcode-back" href="../../../../cosense3d.agents.core.html#cosense3d.agents.core.hooks.CheckPointsHook.post_epoch">[docs]</a>    <span class="k">def</span> <span class="nf">post_epoch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">runner</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">runner</span><span class="o">.</span><span class="n">gpu_id</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">runner</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;epoch</span><span class="si">{</span><span class="n">runner</span><span class="o">.</span><span class="n">epoch</span><span class="si">}</span><span class="s1">.pth&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">runner</span><span class="o">.</span><span class="n">epoch</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_ckpt</span><span class="p">:</span>
+            <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">epoch_every</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="ow">not</span>
+            <span class="p">(</span><span class="n">runner</span><span class="o">.</span><span class="n">epoch</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_ckpt</span><span class="p">)</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">epoch_every</span> <span class="o">==</span> <span class="mi">0</span><span class="p">):</span>
+                <span class="n">filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                    <span class="n">runner</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">logdir</span><span class="p">,</span>
+                    <span class="sa">f</span><span class="s1">&#39;epoch</span><span class="si">{</span><span class="n">runner</span><span class="o">.</span><span class="n">epoch</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="bp">self</span><span class="o">.</span><span class="n">max_ckpt</span><span class="si">}</span><span class="s1">.pth&#39;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
+                    <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CheckPointsHook.post_iter"><a class="viewcode-back" href="../../../../cosense3d.agents.core.html#cosense3d.agents.core.hooks.CheckPointsHook.post_iter">[docs]</a>    <span class="k">def</span> <span class="nf">post_iter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">runner</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">runner</span><span class="o">.</span><span class="n">gpu_id</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">iter_every</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">runner</span><span class="o">.</span><span class="n">iter</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">iter_every</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">runner</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;latest.pth&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CheckPointsHook.save"><a class="viewcode-back" href="../../../../cosense3d.agents.core.html#cosense3d.agents.core.hooks.CheckPointsHook.save">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="n">runner</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="n">save_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">runner</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">logdir</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Saving checkpoint to </span><span class="si">{</span><span class="n">save_path</span><span class="si">}</span><span class="s1">.&#39;</span><span class="p">)</span>
+        <span class="n">torch</span><span class="o">.</span><span class="n">save</span><span class="p">({</span>
+            <span class="s1">&#39;epoch&#39;</span><span class="p">:</span> <span class="n">runner</span><span class="o">.</span><span class="n">epoch</span><span class="p">,</span>
+            <span class="s1">&#39;model&#39;</span><span class="p">:</span> <span class="n">runner</span><span class="o">.</span><span class="n">forward_runner</span><span class="o">.</span><span class="n">state_dict</span><span class="p">(),</span>
+            <span class="s1">&#39;optimizer&#39;</span><span class="p">:</span> <span class="n">runner</span><span class="o">.</span><span class="n">optimizer</span><span class="o">.</span><span class="n">state_dict</span><span class="p">(),</span>
+            <span class="s1">&#39;lr_scheduler&#39;</span><span class="p">:</span> <span class="n">runner</span><span class="o">.</span><span class="n">lr_scheduler</span><span class="o">.</span><span class="n">state_dict</span><span class="p">(),</span>
+        <span class="p">},</span> <span class="n">save_path</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="DetectionNMSHook"><a class="viewcode-back" href="../../../../cosense3d.agents.core.html#cosense3d.agents.core.hooks.DetectionNMSHook">[docs]</a><span class="k">class</span> <span class="nc">DetectionNMSHook</span><span class="p">(</span><span class="n">BaseHook</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nms_thr</span><span class="p">,</span> <span class="n">pre_max_size</span><span class="p">,</span>
+                 <span class="n">det_key</span><span class="o">=</span><span class="s1">&#39;detection&#39;</span><span class="p">,</span>
+                 <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nms_thr</span> <span class="o">=</span> <span class="n">nms_thr</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pre_max_size</span> <span class="o">=</span> <span class="n">pre_max_size</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nms</span> <span class="o">=</span> <span class="n">import_module</span><span class="p">(</span><span class="s1">&#39;cosense3d.ops.iou3d_nms_utils&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">nms_gpu</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">det_key</span> <span class="o">=</span> <span class="n">det_key</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">defual_pred_keys</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;box&#39;</span><span class="p">,</span> <span class="s1">&#39;scr&#39;</span><span class="p">,</span> <span class="s1">&#39;lbl&#39;</span><span class="p">,</span> <span class="s1">&#39;idx&#39;</span><span class="p">]</span>
+
+<div class="viewcode-block" id="DetectionNMSHook.post_iter"><a class="viewcode-back" href="../../../../cosense3d.agents.core.html#cosense3d.agents.core.hooks.DetectionNMSHook.post_iter">[docs]</a>    <span class="k">def</span> <span class="nf">post_iter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">runner</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">detection_out</span> <span class="o">=</span> <span class="n">runner</span><span class="o">.</span><span class="n">controller</span><span class="o">.</span><span class="n">data_manager</span><span class="o">.</span><span class="n">gather_ego_data</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">det_key</span><span class="p">)</span>
+        <span class="n">preds</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">cav_ids</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">cav_id</span><span class="p">,</span> <span class="n">values</span> <span class="ow">in</span> <span class="n">detection_out</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">cav_ids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cav_id</span><span class="p">)</span>
+
+            <span class="n">boxes</span> <span class="o">=</span>   <span class="n">values</span><span class="p">[</span><span class="s1">&#39;preds&#39;</span><span class="p">][</span><span class="s1">&#39;box&#39;</span><span class="p">]</span>
+            <span class="n">scores</span> <span class="o">=</span>  <span class="n">values</span><span class="p">[</span><span class="s1">&#39;preds&#39;</span><span class="p">][</span><span class="s1">&#39;scr&#39;</span><span class="p">]</span>
+            <span class="n">labels</span> <span class="o">=</span>  <span class="n">values</span><span class="p">[</span><span class="s1">&#39;preds&#39;</span><span class="p">][</span><span class="s1">&#39;lbl&#39;</span><span class="p">]</span>
+            <span class="n">indices</span> <span class="o">=</span> <span class="n">values</span><span class="p">[</span><span class="s1">&#39;preds&#39;</span><span class="p">][</span><span class="s1">&#39;idx&#39;</span><span class="p">]</span>  <span class="c1"># map index for retrieving features</span>
+
+            <span class="n">out</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">if</span> <span class="s1">&#39;center&#39;</span> <span class="ow">in</span> <span class="n">values</span><span class="p">:</span>
+                <span class="n">out</span><span class="p">[</span><span class="s1">&#39;ctr&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">values</span><span class="p">[</span><span class="s1">&#39;center&#39;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="s1">&#39;conf&#39;</span> <span class="ow">in</span> <span class="n">values</span><span class="p">:</span>
+                <span class="n">out</span><span class="p">[</span><span class="s1">&#39;conf&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">values</span><span class="p">[</span><span class="s1">&#39;conf&#39;</span><span class="p">]</span>
+
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">[</span><span class="s1">&#39;preds&#39;</span><span class="p">][</span><span class="s1">&#39;box&#39;</span><span class="p">])</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">out</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
+                    <span class="s1">&#39;box&#39;</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">7</span><span class="p">),</span> <span class="n">device</span><span class="o">=</span><span class="n">boxes</span><span class="o">.</span><span class="n">device</span><span class="p">),</span>
+                    <span class="s1">&#39;scr&#39;</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">0</span><span class="p">,),</span> <span class="n">device</span><span class="o">=</span><span class="n">scores</span><span class="o">.</span><span class="n">device</span><span class="p">),</span>
+                    <span class="s1">&#39;lbl&#39;</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">0</span><span class="p">,),</span> <span class="n">device</span><span class="o">=</span><span class="n">labels</span><span class="o">.</span><span class="n">device</span><span class="p">),</span>
+                    <span class="s1">&#39;idx&#39;</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">indices</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">indices</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="k">else</span> <span class="p">(</span><span class="mi">0</span><span class="p">,),</span>
+                                       <span class="n">device</span><span class="o">=</span><span class="n">indices</span><span class="o">.</span><span class="n">device</span><span class="p">),</span>
+                <span class="p">})</span>
+                <span class="k">if</span> <span class="s1">&#39;pred&#39;</span> <span class="ow">in</span> <span class="n">values</span><span class="p">[</span><span class="s1">&#39;preds&#39;</span><span class="p">]:</span>
+                    <span class="n">out</span><span class="p">[</span><span class="s1">&#39;pred&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">7</span><span class="p">),</span> <span class="n">device</span><span class="o">=</span><span class="n">boxes</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">keep</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nms</span><span class="p">(</span>
+                    <span class="n">boxes</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="p">:</span><span class="mi">7</span><span class="p">],</span>
+                    <span class="n">scores</span><span class="p">,</span>
+                    <span class="n">thresh</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nms_thr</span><span class="p">,</span>
+                    <span class="n">pre_maxsize</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pre_max_size</span>
+                <span class="p">)</span>
+                <span class="n">out</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
+                    <span class="s1">&#39;box&#39;</span><span class="p">:</span> <span class="n">boxes</span><span class="p">[</span><span class="n">keep</span><span class="p">],</span>
+                    <span class="s1">&#39;scr&#39;</span><span class="p">:</span> <span class="n">scores</span><span class="p">[</span><span class="n">keep</span><span class="p">],</span>
+                    <span class="s1">&#39;lbl&#39;</span><span class="p">:</span> <span class="n">labels</span><span class="p">[</span><span class="n">keep</span><span class="p">],</span>
+                    <span class="s1">&#39;idx&#39;</span><span class="p">:</span> <span class="n">indices</span><span class="p">[</span><span class="n">keep</span><span class="p">],</span>
+                <span class="p">})</span>
+                <span class="k">if</span> <span class="s1">&#39;pred&#39;</span> <span class="ow">in</span> <span class="n">values</span><span class="p">[</span><span class="s1">&#39;preds&#39;</span><span class="p">]</span> <span class="ow">and</span> <span class="n">values</span><span class="p">[</span><span class="s1">&#39;preds&#39;</span><span class="p">][</span><span class="s1">&#39;pred&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">out</span><span class="p">[</span><span class="s1">&#39;pred&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">values</span><span class="p">[</span><span class="s1">&#39;preds&#39;</span><span class="p">][</span><span class="s1">&#39;pred&#39;</span><span class="p">][</span><span class="n">keep</span><span class="p">]</span>
+                    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">out</span><span class="p">[</span><span class="s1">&#39;pred&#39;</span><span class="p">])</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">out</span><span class="p">[</span><span class="s1">&#39;box&#39;</span><span class="p">])</span>
+            <span class="n">preds</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
+
+            <span class="c1"># from cosense3d.utils.vislib import draw_points_boxes_plt</span>
+            <span class="c1"># points = out[&#39;ctr&#39;].detach().cpu().numpy()</span>
+            <span class="c1"># boxes = out[&#39;box&#39;].detach().cpu().numpy()</span>
+            <span class="c1"># draw_points_boxes_plt(</span>
+            <span class="c1">#     pc_range=[-140.8, -38.4, -3.0, 140.8, 38.4, 1.0],</span>
+            <span class="c1">#     boxes_pred=boxes,</span>
+            <span class="c1">#     points=points,</span>
+            <span class="c1">#     filename=&quot;/home/yuan/Pictures/tmp.png&quot;</span>
+            <span class="c1"># )</span>
+
+        <span class="n">runner</span><span class="o">.</span><span class="n">controller</span><span class="o">.</span><span class="n">data_manager</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">cav_ids</span><span class="p">,</span> <span class="p">{</span><span class="bp">self</span><span class="o">.</span><span class="n">det_key</span><span class="p">:</span> <span class="n">preds</span><span class="p">})</span></div></div>
+
+
+<div class="viewcode-block" id="EvalDetectionBEVHook"><a class="viewcode-back" href="../../../../cosense3d.agents.core.html#cosense3d.agents.core.hooks.EvalDetectionBEVHook">[docs]</a><span class="k">class</span> <span class="nc">EvalDetectionBEVHook</span><span class="p">(</span><span class="n">BaseHook</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pc_range</span><span class="p">,</span> <span class="n">iou_thr</span><span class="o">=</span><span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.7</span><span class="p">],</span> <span class="n">save_result</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                 <span class="n">det_key</span><span class="o">=</span><span class="s1">&#39;detection&#39;</span><span class="p">,</span> <span class="n">gt_key</span><span class="o">=</span><span class="s1">&#39;global_bboxes_3d&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">iou_thr</span> <span class="o">=</span> <span class="n">iou_thr</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pc_range</span> <span class="o">=</span> <span class="n">pc_range</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">save_result</span> <span class="o">=</span> <span class="n">save_result</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">det_key</span> <span class="o">=</span> <span class="n">det_key</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gt_key</span> <span class="o">=</span> <span class="n">gt_key</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">result</span> <span class="o">=</span> <span class="p">{</span><span class="n">iou</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;tp&#39;</span><span class="p">:</span> <span class="p">[],</span> <span class="s1">&#39;fp&#39;</span><span class="p">:</span> <span class="p">[],</span> <span class="s1">&#39;gt&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;scr&#39;</span><span class="p">:</span> <span class="p">[]}</span> <span class="k">for</span> <span class="n">iou</span> <span class="ow">in</span> <span class="n">iou_thr</span><span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">eval_funcs</span> <span class="o">=</span> <span class="n">import_module</span><span class="p">(</span><span class="s1">&#39;cosense3d.utils.eval_detection_utils&#39;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="EvalDetectionBEVHook.set_logger"><a class="viewcode-back" href="../../../../cosense3d.agents.core.html#cosense3d.agents.core.hooks.EvalDetectionBEVHook.set_logger">[docs]</a>    <span class="k">def</span> <span class="nf">set_logger</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">set_logger</span><span class="p">(</span><span class="n">logger</span><span class="p">)</span>
+        <span class="n">logdir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">logger</span><span class="o">.</span><span class="n">logdir</span><span class="p">,</span> <span class="s1">&#39;detection_eval&#39;</span><span class="p">)</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">logdir</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logdir</span> <span class="o">=</span> <span class="n">logdir</span></div>
+
+<div class="viewcode-block" id="EvalDetectionBEVHook.post_iter"><a class="viewcode-back" href="../../../../cosense3d.agents.core.html#cosense3d.agents.core.hooks.EvalDetectionBEVHook.post_iter">[docs]</a>    <span class="k">def</span> <span class="nf">post_iter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">runner</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">detection</span> <span class="o">=</span> <span class="n">runner</span><span class="o">.</span><span class="n">controller</span><span class="o">.</span><span class="n">data_manager</span><span class="o">.</span><span class="n">gather_ego_data</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">det_key</span><span class="p">)</span>
+        <span class="n">gt_boxes</span> <span class="o">=</span> <span class="n">runner</span><span class="o">.</span><span class="n">controller</span><span class="o">.</span><span class="n">data_manager</span><span class="o">.</span><span class="n">gather_ego_data</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gt_key</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">cav_id</span><span class="p">,</span> <span class="n">preds</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">detection</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
+            <span class="k">if</span> <span class="s1">&#39;preds&#39;</span> <span class="ow">in</span> <span class="n">preds</span><span class="p">:</span>
+                <span class="n">preds</span> <span class="o">=</span> <span class="n">preds</span><span class="p">[</span><span class="s1">&#39;preds&#39;</span><span class="p">]</span>
+            <span class="n">preds</span><span class="p">[</span><span class="s1">&#39;box&#39;</span><span class="p">],</span> <span class="n">preds</span><span class="p">[</span><span class="s1">&#39;scr&#39;</span><span class="p">],</span> <span class="n">preds</span><span class="p">[</span><span class="s1">&#39;lbl&#39;</span><span class="p">],</span> <span class="n">preds</span><span class="p">[</span><span class="s1">&#39;idx&#39;</span><span class="p">],</span> <span class="n">preds</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">]</span> <span class="o">=</span> \
+            <span class="bp">self</span><span class="o">.</span><span class="n">filter_box_ranges</span><span class="p">(</span><span class="n">preds</span><span class="p">[</span><span class="s1">&#39;box&#39;</span><span class="p">],</span> <span class="n">preds</span><span class="p">[</span><span class="s1">&#39;scr&#39;</span><span class="p">],</span> <span class="n">preds</span><span class="p">[</span><span class="s1">&#39;lbl&#39;</span><span class="p">],</span> <span class="n">preds</span><span class="p">[</span><span class="s1">&#39;idx&#39;</span><span class="p">],</span> <span class="n">preds</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;time&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
+            <span class="n">cur_gt_boxes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">filter_box_ranges</span><span class="p">(</span><span class="n">gt_boxes</span><span class="p">[</span><span class="n">cav_id</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">cur_points</span> <span class="o">=</span> <span class="n">runner</span><span class="o">.</span><span class="n">controller</span><span class="o">.</span><span class="n">data_manager</span><span class="o">.</span><span class="n">gather_batch</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="s1">&#39;points&#39;</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">save_result</span><span class="p">:</span>
+                <span class="n">ego_key</span> <span class="o">=</span> <span class="n">cav_id</span>
+                <span class="n">senario</span> <span class="o">=</span> <span class="n">runner</span><span class="o">.</span><span class="n">controller</span><span class="o">.</span><span class="n">data_manager</span><span class="o">.</span><span class="n">gather_ego_data</span><span class="p">(</span><span class="s1">&#39;scenario&#39;</span><span class="p">)[</span><span class="n">ego_key</span><span class="p">]</span>
+                <span class="n">frame</span> <span class="o">=</span> <span class="n">runner</span><span class="o">.</span><span class="n">controller</span><span class="o">.</span><span class="n">data_manager</span><span class="o">.</span><span class="n">gather_ego_data</span><span class="p">(</span><span class="s1">&#39;frame&#39;</span><span class="p">)[</span><span class="n">ego_key</span><span class="p">]</span>
+                <span class="n">filename</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">senario</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">frame</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">ego_key</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">.pth&quot;</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;detection&#39;</span><span class="p">:</span> <span class="n">preds</span><span class="p">,</span>
+                          <span class="s1">&#39;gt_boxes&#39;</span><span class="p">:</span> <span class="n">cur_gt_boxes</span><span class="p">,</span>
+                          <span class="s1">&#39;points&#39;</span><span class="p">:</span> <span class="n">cur_points</span><span class="p">}</span>
+                <span class="n">torch</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">logdir</span><span class="p">,</span> <span class="n">filename</span><span class="p">))</span>
+
+            <span class="k">for</span> <span class="n">iou</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">iou_thr</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">eval_funcs</span><span class="o">.</span><span class="n">caluclate_tp_fp</span><span class="p">(</span>
+                    <span class="n">preds</span><span class="p">[</span><span class="s1">&#39;box&#39;</span><span class="p">][</span><span class="o">...</span><span class="p">,</span> <span class="p">:</span><span class="mi">7</span><span class="p">],</span> <span class="n">preds</span><span class="p">[</span><span class="s1">&#39;scr&#39;</span><span class="p">],</span> <span class="n">cur_gt_boxes</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="p">:</span><span class="mi">7</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">result</span><span class="p">,</span> <span class="n">iou</span>
+                <span class="p">)</span></div>
+
+<div class="viewcode-block" id="EvalDetectionBEVHook.filter_box_ranges"><a class="viewcode-back" href="../../../../cosense3d.agents.core.html#cosense3d.agents.core.hooks.EvalDetectionBEVHook.filter_box_ranges">[docs]</a>    <span class="k">def</span> <span class="nf">filter_box_ranges</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">boxes</span><span class="p">,</span> <span class="n">scores</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">indices</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">times</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">boxes</span><span class="o">.</span><span class="n">new_ones</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">boxes</span><span class="p">),))</span><span class="o">.</span><span class="n">bool</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">boxes</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="n">centers</span> <span class="o">=</span> <span class="n">boxes</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">centers</span> <span class="o">=</span> <span class="n">boxes</span><span class="p">[:,</span> <span class="p">:</span><span class="mi">3</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">):</span>
+            <span class="n">mask</span> <span class="o">=</span> <span class="n">mask</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">centers</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">pc_range</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">centers</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">pc_range</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">3</span><span class="p">])</span>
+        <span class="n">boxes</span> <span class="o">=</span> <span class="n">boxes</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">scores</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">scores</span> <span class="o">=</span> <span class="n">scores</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">labels</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">labels</span> <span class="o">=</span> <span class="n">labels</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">indices</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">indices</span> <span class="o">=</span> <span class="n">indices</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Number of boxes doesn&#39;t match the number of indices&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">times</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">times</span> <span class="o">=</span> <span class="n">times</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">boxes</span><span class="p">,</span> <span class="n">scores</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">indices</span><span class="p">,</span> <span class="n">times</span></div>
+
+<div class="viewcode-block" id="EvalDetectionBEVHook.post_epoch"><a class="viewcode-back" href="../../../../cosense3d.agents.core.html#cosense3d.agents.core.hooks.EvalDetectionBEVHook.post_epoch">[docs]</a>    <span class="k">def</span> <span class="nf">post_epoch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">runner</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">fmt_str</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;################</span><span class="se">\n</span><span class="s2">&quot;</span>
+                   <span class="s2">&quot;DETECTION RESULT</span><span class="se">\n</span><span class="s2">&quot;</span>
+                   <span class="s2">&quot;################</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">out_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">eval_funcs</span><span class="o">.</span><span class="n">eval_final_results</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">result</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">iou_thr</span><span class="p">,</span>
+            <span class="n">global_sort_detections</span><span class="o">=</span><span class="kc">True</span>
+        <span class="p">)</span>
+        <span class="n">fmt_str</span> <span class="o">+=</span> <span class="s2">&quot;OPV2V BEV Global sorted:</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="n">fmt_str</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">format_final_result</span><span class="p">(</span><span class="n">out_dict</span><span class="p">)</span>
+        <span class="n">fmt_str</span> <span class="o">+=</span> <span class="s2">&quot;----------------</span><span class="se">\n</span><span class="s2">&quot;</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="n">fmt_str</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">fmt_str</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="EvalDetectionBEVHook.format_final_result"><a class="viewcode-back" href="../../../../cosense3d.agents.core.html#cosense3d.agents.core.hooks.EvalDetectionBEVHook.format_final_result">[docs]</a>    <span class="k">def</span> <span class="nf">format_final_result</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">out_dict</span><span class="p">):</span>
+        <span class="n">fmt_str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">iou</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">iou_thr</span><span class="p">:</span>
+            <span class="n">iou_str</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">iou</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">100</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="n">fmt_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;AP@</span><span class="si">{</span><span class="n">iou_str</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">out_dict</span><span class="p">[</span><span class="sa">f</span><span class="s1">&#39;ap_</span><span class="si">{</span><span class="n">iou_str</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="k">return</span> <span class="n">fmt_str</span></div></div>
+
+
+<div class="viewcode-block" id="EvalDetectionHook"><a class="viewcode-back" href="../../../../cosense3d.agents.core.html#cosense3d.agents.core.hooks.EvalDetectionHook">[docs]</a><span class="k">class</span> <span class="nc">EvalDetectionHook</span><span class="p">(</span><span class="n">BaseHook</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pc_range</span><span class="p">,</span> <span class="n">iou_thr</span><span class="o">=</span><span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.7</span><span class="p">],</span> <span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;CoSense3D&#39;</span><span class="p">],</span> <span class="n">save_result</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                 <span class="n">det_key</span><span class="o">=</span><span class="s1">&#39;detection&#39;</span><span class="p">,</span> <span class="n">gt_key</span><span class="o">=</span><span class="s1">&#39;global_bboxes_3d&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">iou_thr</span> <span class="o">=</span> <span class="n">iou_thr</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pc_range</span> <span class="o">=</span> <span class="n">pc_range</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">save_result</span> <span class="o">=</span> <span class="n">save_result</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">det_key</span> <span class="o">=</span> <span class="n">det_key</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gt_key</span> <span class="o">=</span> <span class="n">gt_key</span>
+        <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">metrics</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="n">m</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;OPV2V&#39;</span><span class="p">,</span> <span class="s1">&#39;CoSense3D&#39;</span><span class="p">]</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">m</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="si">}</span><span class="s1">_result&#39;</span><span class="p">,</span>
+                    <span class="p">{</span><span class="n">iou</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;tp&#39;</span><span class="p">:</span> <span class="p">[],</span> <span class="s1">&#39;fp&#39;</span><span class="p">:</span> <span class="p">[],</span> <span class="s1">&#39;gt&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;scr&#39;</span><span class="p">:</span> <span class="p">[]}</span> <span class="k">for</span> <span class="n">iou</span> <span class="ow">in</span> <span class="n">iou_thr</span><span class="p">})</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">metrics</span> <span class="o">=</span> <span class="n">metrics</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">eval_funcs</span> <span class="o">=</span> <span class="n">import_module</span><span class="p">(</span><span class="s1">&#39;cosense3d.utils.eval_detection_utils&#39;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="EvalDetectionHook.set_logger"><a class="viewcode-back" href="../../../../cosense3d.agents.core.html#cosense3d.agents.core.hooks.EvalDetectionHook.set_logger">[docs]</a>    <span class="k">def</span> <span class="nf">set_logger</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">set_logger</span><span class="p">(</span><span class="n">logger</span><span class="p">)</span>
+        <span class="n">logdir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">logger</span><span class="o">.</span><span class="n">logdir</span><span class="p">,</span> <span class="s1">&#39;detection_eval&#39;</span><span class="p">)</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">logdir</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logdir</span> <span class="o">=</span> <span class="n">logdir</span></div>
+
+<div class="viewcode-block" id="EvalDetectionHook.post_iter"><a class="viewcode-back" href="../../../../cosense3d.agents.core.html#cosense3d.agents.core.hooks.EvalDetectionHook.post_iter">[docs]</a>    <span class="k">def</span> <span class="nf">post_iter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">runner</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">detection</span> <span class="o">=</span> <span class="n">runner</span><span class="o">.</span><span class="n">controller</span><span class="o">.</span><span class="n">data_manager</span><span class="o">.</span><span class="n">gather_ego_data</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">det_key</span><span class="p">)</span>
+        <span class="n">gt_boxes</span> <span class="o">=</span> <span class="n">runner</span><span class="o">.</span><span class="n">controller</span><span class="o">.</span><span class="n">data_manager</span><span class="o">.</span><span class="n">gather_ego_data</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gt_key</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">cav_id</span><span class="p">,</span> <span class="n">preds</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">detection</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
+            <span class="k">if</span> <span class="s1">&#39;preds&#39;</span> <span class="ow">in</span> <span class="n">preds</span><span class="p">:</span>
+                <span class="n">preds</span> <span class="o">=</span> <span class="n">preds</span><span class="p">[</span><span class="s1">&#39;preds&#39;</span><span class="p">]</span>
+            <span class="n">preds</span><span class="p">[</span><span class="s1">&#39;box&#39;</span><span class="p">],</span> <span class="n">preds</span><span class="p">[</span><span class="s1">&#39;scr&#39;</span><span class="p">],</span> <span class="n">preds</span><span class="p">[</span><span class="s1">&#39;lbl&#39;</span><span class="p">],</span> <span class="n">preds</span><span class="p">[</span><span class="s1">&#39;idx&#39;</span><span class="p">],</span> <span class="n">preds</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">]</span> <span class="o">=</span> \
+            <span class="bp">self</span><span class="o">.</span><span class="n">filter_box_ranges</span><span class="p">(</span><span class="n">preds</span><span class="p">[</span><span class="s1">&#39;box&#39;</span><span class="p">],</span> <span class="n">preds</span><span class="p">[</span><span class="s1">&#39;scr&#39;</span><span class="p">],</span> <span class="n">preds</span><span class="p">[</span><span class="s1">&#39;lbl&#39;</span><span class="p">],</span> <span class="n">preds</span><span class="p">[</span><span class="s1">&#39;idx&#39;</span><span class="p">],</span> <span class="n">preds</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;time&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
+            <span class="n">cur_gt_boxes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">filter_box_ranges</span><span class="p">(</span><span class="n">gt_boxes</span><span class="p">[</span><span class="n">cav_id</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">cur_points</span> <span class="o">=</span> <span class="n">runner</span><span class="o">.</span><span class="n">controller</span><span class="o">.</span><span class="n">data_manager</span><span class="o">.</span><span class="n">gather_batch</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="s1">&#39;points&#39;</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">save_result</span><span class="p">:</span>
+                <span class="n">ego_key</span> <span class="o">=</span> <span class="n">cav_id</span>
+                <span class="n">senario</span> <span class="o">=</span> <span class="n">runner</span><span class="o">.</span><span class="n">controller</span><span class="o">.</span><span class="n">data_manager</span><span class="o">.</span><span class="n">gather_ego_data</span><span class="p">(</span><span class="s1">&#39;scenario&#39;</span><span class="p">)[</span><span class="n">ego_key</span><span class="p">]</span>
+                <span class="n">frame</span> <span class="o">=</span> <span class="n">runner</span><span class="o">.</span><span class="n">controller</span><span class="o">.</span><span class="n">data_manager</span><span class="o">.</span><span class="n">gather_ego_data</span><span class="p">(</span><span class="s1">&#39;frame&#39;</span><span class="p">)[</span><span class="n">ego_key</span><span class="p">]</span>
+                <span class="n">filename</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">senario</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">frame</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">ego_key</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">.pth&quot;</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;detection&#39;</span><span class="p">:</span> <span class="n">preds</span><span class="p">,</span>
+                          <span class="s1">&#39;gt_boxes&#39;</span><span class="p">:</span> <span class="n">cur_gt_boxes</span><span class="p">,</span>
+                          <span class="s1">&#39;points&#39;</span><span class="p">:</span> <span class="n">cur_points</span><span class="p">}</span>
+                <span class="n">torch</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">logdir</span><span class="p">,</span> <span class="n">filename</span><span class="p">))</span>
+
+            <span class="k">for</span> <span class="n">iou</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">iou_thr</span><span class="p">:</span>
+                <span class="k">if</span> <span class="s1">&#39;OPV2V&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">metrics</span><span class="p">:</span>
+                    <span class="n">result_dict</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;opv2v_result&#39;</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">eval_funcs</span><span class="o">.</span><span class="n">caluclate_tp_fp</span><span class="p">(</span>
+                        <span class="n">preds</span><span class="p">[</span><span class="s1">&#39;box&#39;</span><span class="p">][</span><span class="o">...</span><span class="p">,</span> <span class="p">:</span><span class="mi">7</span><span class="p">],</span> <span class="n">preds</span><span class="p">[</span><span class="s1">&#39;scr&#39;</span><span class="p">],</span> <span class="n">cur_gt_boxes</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="p">:</span><span class="mi">7</span><span class="p">],</span> <span class="n">result_dict</span><span class="p">,</span> <span class="n">iou</span>
+                    <span class="p">)</span>
+                <span class="k">if</span> <span class="s1">&#39;CoSense3D&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">metrics</span><span class="p">:</span>
+                    <span class="n">result_dict</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;cosense3d_result&#39;</span><span class="p">)</span>
+                    <span class="n">tp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">eval_funcs</span><span class="o">.</span><span class="n">ops_cal_tp</span><span class="p">(</span>
+                        <span class="n">preds</span><span class="p">[</span><span class="s1">&#39;box&#39;</span><span class="p">][</span><span class="o">...</span><span class="p">,</span> <span class="p">:</span><span class="mi">7</span><span class="p">]</span><span class="o">.</span><span class="n">detach</span><span class="p">(),</span> <span class="n">cur_gt_boxes</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="p">:</span><span class="mi">7</span><span class="p">]</span><span class="o">.</span><span class="n">detach</span><span class="p">(),</span> <span class="n">IoU_thr</span><span class="o">=</span><span class="n">iou</span>
+                    <span class="p">)</span>
+                    <span class="n">result_dict</span><span class="p">[</span><span class="n">iou</span><span class="p">][</span><span class="s1">&#39;tp&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tp</span><span class="o">.</span><span class="n">cpu</span><span class="p">())</span>
+                    <span class="n">result_dict</span><span class="p">[</span><span class="n">iou</span><span class="p">][</span><span class="s1">&#39;gt&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">cur_gt_boxes</span><span class="p">)</span>
+                    <span class="n">result_dict</span><span class="p">[</span><span class="n">iou</span><span class="p">][</span><span class="s1">&#39;scr&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">preds</span><span class="p">[</span><span class="s1">&#39;scr&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">cpu</span><span class="p">())</span></div>
+
+<div class="viewcode-block" id="EvalDetectionHook.filter_box_ranges"><a class="viewcode-back" href="../../../../cosense3d.agents.core.html#cosense3d.agents.core.hooks.EvalDetectionHook.filter_box_ranges">[docs]</a>    <span class="k">def</span> <span class="nf">filter_box_ranges</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">boxes</span><span class="p">,</span> <span class="n">scores</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">indices</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">times</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">boxes</span><span class="o">.</span><span class="n">new_ones</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">boxes</span><span class="p">),))</span><span class="o">.</span><span class="n">bool</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">boxes</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="n">centers</span> <span class="o">=</span> <span class="n">boxes</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">centers</span> <span class="o">=</span> <span class="n">boxes</span><span class="p">[:,</span> <span class="p">:</span><span class="mi">3</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">):</span>
+            <span class="n">mask</span> <span class="o">=</span> <span class="n">mask</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">centers</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">pc_range</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">centers</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">pc_range</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">3</span><span class="p">])</span>
+        <span class="n">boxes</span> <span class="o">=</span> <span class="n">boxes</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">scores</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">scores</span> <span class="o">=</span> <span class="n">scores</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">labels</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">labels</span> <span class="o">=</span> <span class="n">labels</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">indices</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">indices</span> <span class="o">=</span> <span class="n">indices</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Number of boxes doesn&#39;t match the number of indices&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">times</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">times</span> <span class="o">=</span> <span class="n">times</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">boxes</span><span class="p">,</span> <span class="n">scores</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">indices</span><span class="p">,</span> <span class="n">times</span></div>
+
+<div class="viewcode-block" id="EvalDetectionHook.post_epoch"><a class="viewcode-back" href="../../../../cosense3d.agents.core.html#cosense3d.agents.core.hooks.EvalDetectionHook.post_epoch">[docs]</a>    <span class="k">def</span> <span class="nf">post_epoch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">runner</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">fmt_str</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;################</span><span class="se">\n</span><span class="s2">&quot;</span>
+                   <span class="s2">&quot;DETECTION RESULT</span><span class="se">\n</span><span class="s2">&quot;</span>
+                   <span class="s2">&quot;################</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s1">&#39;OPV2V&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">metrics</span><span class="p">:</span>
+            <span class="n">result_dict</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;opv2v_result&#39;</span><span class="p">)</span>
+            <span class="n">out_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">eval_funcs</span><span class="o">.</span><span class="n">eval_final_results</span><span class="p">(</span>
+                <span class="n">result_dict</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">iou_thr</span><span class="p">,</span>
+                <span class="n">global_sort_detections</span><span class="o">=</span><span class="kc">True</span>
+            <span class="p">)</span>
+            <span class="n">fmt_str</span> <span class="o">+=</span> <span class="s2">&quot;OPV2V BEV Global sorted:</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="n">fmt_str</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">format_final_result</span><span class="p">(</span><span class="n">out_dict</span><span class="p">)</span>
+            <span class="n">fmt_str</span> <span class="o">+=</span> <span class="s2">&quot;----------------</span><span class="se">\n</span><span class="s2">&quot;</span>
+
+            <span class="n">out_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">eval_funcs</span><span class="o">.</span><span class="n">eval_final_results</span><span class="p">(</span>
+                <span class="n">result_dict</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">iou_thr</span><span class="p">,</span>
+                <span class="n">global_sort_detections</span><span class="o">=</span><span class="kc">False</span>
+            <span class="p">)</span>
+            <span class="n">fmt_str</span> <span class="o">+=</span> <span class="s2">&quot;OPV2V BEV Local sorted:</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="n">fmt_str</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">format_final_result</span><span class="p">(</span><span class="n">out_dict</span><span class="p">)</span>
+            <span class="n">fmt_str</span> <span class="o">+=</span> <span class="s2">&quot;----------------</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="k">if</span> <span class="s1">&#39;CoSense3D&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">metrics</span><span class="p">:</span>
+            <span class="n">out_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">eval_cosense3d_final</span><span class="p">()</span>
+            <span class="n">fmt_str</span> <span class="o">+=</span> <span class="s2">&quot;CoSense3D Global sorted:</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="n">fmt_str</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">format_final_result</span><span class="p">(</span><span class="n">out_dict</span><span class="p">)</span>
+            <span class="n">fmt_str</span> <span class="o">+=</span> <span class="s2">&quot;----------------</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">fmt_str</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">fmt_str</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="EvalDetectionHook.format_final_result"><a class="viewcode-back" href="../../../../cosense3d.agents.core.html#cosense3d.agents.core.hooks.EvalDetectionHook.format_final_result">[docs]</a>    <span class="k">def</span> <span class="nf">format_final_result</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">out_dict</span><span class="p">):</span>
+        <span class="n">fmt_str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">iou</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">iou_thr</span><span class="p">:</span>
+            <span class="n">iou_str</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">iou</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">100</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="n">fmt_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;AP@</span><span class="si">{</span><span class="n">iou_str</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">out_dict</span><span class="p">[</span><span class="sa">f</span><span class="s1">&#39;ap_</span><span class="si">{</span><span class="n">iou_str</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="c1"># fmt_str += f&quot;Precision@{iou_str}: {out_dict[f&#39;mpre_{iou_str}&#39;]:.3f}\n&quot;</span>
+            <span class="c1"># fmt_str += f&quot;Recall@{iou_str}: {out_dict[f&#39;mrec_{iou_str}&#39;]:.3f}\n&quot;</span>
+        <span class="k">return</span> <span class="n">fmt_str</span></div>
+
+<div class="viewcode-block" id="EvalDetectionHook.eval_cosense3d_final"><a class="viewcode-back" href="../../../../cosense3d.agents.core.html#cosense3d.agents.core.hooks.EvalDetectionHook.eval_cosense3d_final">[docs]</a>    <span class="k">def</span> <span class="nf">eval_cosense3d_final</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">out_dict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">result_dict</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;cosense3d_result&#39;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">iou</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">iou_thr</span><span class="p">:</span>
+            <span class="n">scores</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">result_dict</span><span class="p">[</span><span class="n">iou</span><span class="p">][</span><span class="s1">&#39;scr&#39;</span><span class="p">],</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">tps</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">result_dict</span><span class="p">[</span><span class="n">iou</span><span class="p">][</span><span class="s1">&#39;tp&#39;</span><span class="p">],</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">n_pred</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">scores</span><span class="p">)</span>
+            <span class="n">n_gt</span> <span class="o">=</span> <span class="n">result_dict</span><span class="p">[</span><span class="n">iou</span><span class="p">][</span><span class="s1">&#39;gt&#39;</span><span class="p">]</span>
+
+            <span class="n">ap</span><span class="p">,</span> <span class="n">mpre</span><span class="p">,</span> <span class="n">mrec</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">eval_funcs</span><span class="o">.</span><span class="n">cal_ap_all_point</span><span class="p">(</span><span class="n">scores</span><span class="p">,</span> <span class="n">tps</span><span class="p">,</span> <span class="n">n_pred</span><span class="p">,</span> <span class="n">n_gt</span><span class="p">)</span>
+            <span class="n">iou_str</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">iou</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">100</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="n">out_dict</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="sa">f</span><span class="s1">&#39;ap_</span><span class="si">{</span><span class="n">iou_str</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">:</span> <span class="n">ap</span><span class="p">,</span>
+                             <span class="sa">f</span><span class="s1">&#39;mpre_</span><span class="si">{</span><span class="n">iou_str</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">:</span> <span class="n">mpre</span><span class="p">,</span>
+                             <span class="sa">f</span><span class="s1">&#39;mrec_</span><span class="si">{</span><span class="n">iou_str</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">:</span> <span class="n">mrec</span><span class="p">})</span>
+        <span class="k">return</span> <span class="n">out_dict</span></div></div>
+
+
+<div class="viewcode-block" id="EvalBEVSemsegHook"><a class="viewcode-back" href="../../../../cosense3d.agents.core.html#cosense3d.agents.core.hooks.EvalBEVSemsegHook">[docs]</a><span class="k">class</span> <span class="nc">EvalBEVSemsegHook</span><span class="p">(</span><span class="n">BaseHook</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">test_range</span><span class="p">,</span>
+                 <span class="n">test_res</span><span class="o">=</span><span class="mf">0.4</span><span class="p">,</span>
+                 <span class="n">save_result</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                 <span class="n">eval_static</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                 <span class="n">bev_semseg_key</span><span class="o">=</span><span class="s1">&#39;bev_semseg&#39;</span><span class="p">,</span>
+                 <span class="n">gt_bev_key</span><span class="o">=</span><span class="s1">&#39;bevmap&#39;</span><span class="p">,</span>
+                 <span class="n">gt_boxes_key</span><span class="o">=</span><span class="s1">&#39;global_bboxes_3d&#39;</span><span class="p">,</span>
+                 <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">test_range</span> <span class="o">=</span> <span class="n">test_range</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">test_res</span> <span class="o">=</span> <span class="n">test_res</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">save_result</span> <span class="o">=</span> <span class="n">save_result</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">eval_static</span> <span class="o">=</span> <span class="n">eval_static</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bev_semseg_key</span> <span class="o">=</span> <span class="n">bev_semseg_key</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gt_bev_key</span> <span class="o">=</span> <span class="n">gt_bev_key</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gt_boxes_key</span> <span class="o">=</span> <span class="n">gt_boxes_key</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">thrs</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">1.1</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sx</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">test_range</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_range</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_res</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sy</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">test_range</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_range</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_res</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">res_dict</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;iou_dynamic_all&#39;</span><span class="p">:</span> <span class="p">[],</span>
+            <span class="s1">&#39;iou_dynamic_obs&#39;</span><span class="p">:</span> <span class="p">[],</span>
+            <span class="s1">&#39;iou_static_all&#39;</span><span class="p">:</span> <span class="p">[],</span>
+            <span class="s1">&#39;iou_static_obs&#39;</span><span class="p">:</span> <span class="p">[],</span>
+        <span class="p">}</span>
+
+<div class="viewcode-block" id="EvalBEVSemsegHook.set_logger"><a class="viewcode-back" href="../../../../cosense3d.agents.core.html#cosense3d.agents.core.hooks.EvalBEVSemsegHook.set_logger">[docs]</a>    <span class="k">def</span> <span class="nf">set_logger</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">set_logger</span><span class="p">(</span><span class="n">logger</span><span class="p">)</span>
+        <span class="n">logdir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">logger</span><span class="o">.</span><span class="n">logdir</span><span class="p">,</span> <span class="s1">&#39;bev_semseg_eval&#39;</span><span class="p">)</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">logdir</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logdir</span> <span class="o">=</span> <span class="n">logdir</span></div>
+
+<div class="viewcode-block" id="EvalBEVSemsegHook.post_iter"><a class="viewcode-back" href="../../../../cosense3d.agents.core.html#cosense3d.agents.core.hooks.EvalBEVSemsegHook.post_iter">[docs]</a>    <span class="k">def</span> <span class="nf">post_iter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">runner</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">scene_tokens</span> <span class="o">=</span> <span class="n">runner</span><span class="o">.</span><span class="n">controller</span><span class="o">.</span><span class="n">data_manager</span><span class="o">.</span><span class="n">gather_ego_data</span><span class="p">(</span><span class="s1">&#39;scene_tokens&#39;</span><span class="p">)</span>
+        <span class="n">frame</span> <span class="o">=</span> <span class="n">runner</span><span class="o">.</span><span class="n">controller</span><span class="o">.</span><span class="n">data_manager</span><span class="o">.</span><span class="n">gather_ego_data</span><span class="p">(</span><span class="s1">&#39;frame&#39;</span><span class="p">)</span>
+        <span class="n">semseg</span> <span class="o">=</span> <span class="n">runner</span><span class="o">.</span><span class="n">controller</span><span class="o">.</span><span class="n">data_manager</span><span class="o">.</span><span class="n">gather_ego_data</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bev_semseg_key</span><span class="p">)</span>
+        <span class="n">gt_bevmaps</span> <span class="o">=</span> <span class="n">runner</span><span class="o">.</span><span class="n">controller</span><span class="o">.</span><span class="n">data_manager</span><span class="o">.</span><span class="n">gather_ego_data</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gt_bev_key</span><span class="p">)</span>
+        <span class="n">gt_boxes</span> <span class="o">=</span> <span class="n">runner</span><span class="o">.</span><span class="n">controller</span><span class="o">.</span><span class="n">data_manager</span><span class="o">.</span><span class="n">gather_ego_data</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gt_boxes_key</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">cav_id</span><span class="p">,</span> <span class="n">preds</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">semseg</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
+            <span class="n">token</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">scene_tokens</span><span class="p">[</span><span class="n">cav_id</span><span class="p">]</span><span class="si">}</span><span class="s1">.</span><span class="si">{</span><span class="n">frame</span><span class="p">[</span><span class="n">cav_id</span><span class="p">]</span><span class="si">}</span><span class="s1">&#39;</span>
+            <span class="n">gt_dynamic_map</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gt_dynamic_map</span><span class="p">(</span><span class="n">gt_boxes</span><span class="p">[</span><span class="n">cav_id</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cal_ious</span><span class="p">(</span><span class="n">preds</span><span class="p">,</span> <span class="n">gt_dynamic_map</span><span class="p">,</span> <span class="s1">&#39;dynamic&#39;</span><span class="p">,</span> <span class="n">token</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">eval_static</span><span class="p">:</span>
+                <span class="n">gt_static_map</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gt_static_map</span><span class="p">(</span><span class="n">gt_bevmaps</span><span class="p">[</span><span class="n">cav_id</span><span class="p">])</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">cal_ious</span><span class="p">(</span><span class="n">preds</span><span class="p">,</span> <span class="n">gt_static_map</span><span class="p">,</span> <span class="s1">&#39;static&#39;</span><span class="p">,</span> <span class="n">token</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="EvalBEVSemsegHook.cal_ious"><a class="viewcode-back" href="../../../../cosense3d.agents.core.html#cosense3d.agents.core.hooks.EvalBEVSemsegHook.cal_ious">[docs]</a>    <span class="k">def</span> <span class="nf">cal_ious</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">preds</span><span class="p">,</span> <span class="n">gt_map</span><span class="p">,</span> <span class="n">tag</span><span class="p">,</span> <span class="n">token</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">conf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">crop_map</span><span class="p">(</span><span class="n">preds</span><span class="p">[</span><span class="sa">f</span><span class="s1">&#39;conf_map_</span><span class="si">{</span><span class="n">tag</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">])</span>
+        <span class="n">unc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">crop_map</span><span class="p">(</span><span class="n">preds</span><span class="p">[</span><span class="sa">f</span><span class="s1">&#39;unc_map_</span><span class="si">{</span><span class="n">tag</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">])</span>
+        <span class="n">obs_mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">crop_map</span><span class="p">(</span><span class="n">preds</span><span class="p">[</span><span class="sa">f</span><span class="s1">&#39;obs_mask_</span><span class="si">{</span><span class="n">tag</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">res_dict</span><span class="p">[</span><span class="sa">f</span><span class="s1">&#39;iou_</span><span class="si">{</span><span class="n">tag</span><span class="si">}</span><span class="s1">_all&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">iou</span><span class="p">(</span><span class="n">conf</span><span class="p">,</span> <span class="n">unc</span><span class="p">,</span> <span class="n">gt_map</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">res_dict</span><span class="p">[</span><span class="sa">f</span><span class="s1">&#39;iou_</span><span class="si">{</span><span class="n">tag</span><span class="si">}</span><span class="s1">_obs&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">iou</span><span class="p">(</span><span class="n">conf</span><span class="p">,</span> <span class="n">unc</span><span class="p">,</span> <span class="n">gt_map</span><span class="p">,</span> <span class="n">obs_mask</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">save_result</span><span class="p">:</span>
+            <span class="n">img</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">gt_map</span><span class="p">,</span> <span class="n">unc</span><span class="p">,</span> <span class="n">conf</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">]],</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+            <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">logdir</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">token</span><span class="si">}</span><span class="s1">.</span><span class="si">{</span><span class="n">tag</span><span class="si">}</span><span class="s1">.jpg&#39;</span><span class="p">))</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="EvalBEVSemsegHook.iou"><a class="viewcode-back" href="../../../../cosense3d.agents.core.html#cosense3d.agents.core.hooks.EvalBEVSemsegHook.iou">[docs]</a>    <span class="k">def</span> <span class="nf">iou</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">conf</span><span class="p">,</span> <span class="n">unc</span><span class="p">,</span> <span class="n">gt</span><span class="p">,</span> <span class="n">obs_mask</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">ious</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">thr</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">thrs</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">obs_mask</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">pos_mask</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">conf</span><span class="p">,</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">bool</span><span class="p">()</span>
+                <span class="n">pos_mask</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span><span class="n">pos_mask</span><span class="p">,</span> <span class="n">unc</span> <span class="o">&lt;=</span> <span class="n">thr</span><span class="p">)</span>
+                <span class="n">gt_</span> <span class="o">=</span> <span class="n">gt</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">pos_mask</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">conf</span><span class="p">[</span><span class="n">obs_mask</span><span class="p">],</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">bool</span><span class="p">()</span>
+                <span class="n">pos_mask</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span><span class="n">pos_mask</span><span class="p">,</span> <span class="n">unc</span><span class="p">[</span><span class="n">obs_mask</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">thr</span><span class="p">)</span>
+                <span class="n">gt_</span> <span class="o">=</span> <span class="n">gt</span><span class="p">[</span><span class="n">obs_mask</span><span class="p">]</span>
+            <span class="n">mi</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span><span class="n">pos_mask</span><span class="p">,</span> <span class="n">gt_</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+            <span class="n">mu</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">logical_or</span><span class="p">(</span><span class="n">pos_mask</span><span class="p">,</span> <span class="n">gt_</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+            <span class="n">ious</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mi</span> <span class="o">/</span> <span class="n">mu</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">ious</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="EvalBEVSemsegHook.gt_dynamic_map"><a class="viewcode-back" href="../../../../cosense3d.agents.core.html#cosense3d.agents.core.hooks.EvalBEVSemsegHook.gt_dynamic_map">[docs]</a>    <span class="k">def</span> <span class="nf">gt_dynamic_map</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">boxes</span><span class="p">):</span>
+        <span class="c1"># filter box range</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">boxes</span><span class="o">.</span><span class="n">new_ones</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">boxes</span><span class="p">),))</span><span class="o">.</span><span class="n">bool</span><span class="p">()</span>
+        <span class="n">dynamic_map</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">sx</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sy</span><span class="p">),</span> <span class="n">device</span><span class="o">=</span><span class="n">boxes</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+        <span class="n">centers</span> <span class="o">=</span> <span class="n">boxes</span><span class="p">[:,</span> <span class="p">:</span><span class="mi">3</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">):</span>
+            <span class="n">mask</span> <span class="o">=</span> <span class="n">mask</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">centers</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_range</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">centers</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_range</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">3</span><span class="p">])</span>
+        <span class="n">boxes</span> <span class="o">=</span> <span class="n">boxes</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">boxes</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">indices</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">dynamic_map</span><span class="p">),</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">xy</span> <span class="o">=</span> <span class="n">indices</span><span class="o">.</span><span class="n">float</span><span class="p">()</span>
+            <span class="n">xy</span> <span class="o">=</span> <span class="p">(</span><span class="n">xy</span> <span class="o">+</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_res</span>
+            <span class="n">xy</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_range</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">xy</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_range</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">xyz</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">pad</span><span class="p">(</span><span class="n">xy</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="s1">&#39;constant&#39;</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+            <span class="n">boxes</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">pad</span><span class="p">(</span><span class="n">boxes</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="s1">&#39;constant&#39;</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+            <span class="n">boxes</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">boxes_decomposed</span><span class="p">,</span> <span class="n">box_idx_of_pts</span> <span class="o">=</span> <span class="n">points_in_boxes_gpu</span><span class="p">(</span>
+                <span class="n">xyz</span><span class="p">,</span> <span class="n">boxes</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">1</span>
+            <span class="p">)</span>
+            <span class="n">inds</span> <span class="o">=</span> <span class="n">indices</span><span class="p">[</span><span class="n">box_idx_of_pts</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">T</span>
+            <span class="n">dynamic_map</span><span class="p">[</span><span class="n">inds</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">inds</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">dynamic_map</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">logical_not</span><span class="p">(</span><span class="n">dynamic_map</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">dynamic_map</span></div>
+
+<div class="viewcode-block" id="EvalBEVSemsegHook.gt_static_map"><a class="viewcode-back" href="../../../../cosense3d.agents.core.html#cosense3d.agents.core.hooks.EvalBEVSemsegHook.gt_static_map">[docs]</a>    <span class="k">def</span> <span class="nf">gt_static_map</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bevmap</span><span class="p">):</span>
+        <span class="c1"># map has higher resolution, downsample 2x</span>
+        <span class="c1"># bevmap = torch.flip(bevmap, [0])</span>
+        <span class="k">return</span> <span class="n">bevmap</span><span class="p">[::</span><span class="mi">2</span><span class="p">,</span> <span class="p">::</span><span class="mi">2</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="EvalBEVSemsegHook.crop_map"><a class="viewcode-back" href="../../../../cosense3d.agents.core.html#cosense3d.agents.core.hooks.EvalBEVSemsegHook.crop_map">[docs]</a>    <span class="k">def</span> <span class="nf">crop_map</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bevmap</span><span class="p">):</span>
+        <span class="n">sx</span><span class="p">,</span> <span class="n">sy</span> <span class="o">=</span> <span class="n">bevmap</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">sx_crop</span> <span class="o">=</span> <span class="p">(</span><span class="n">sx</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">sx</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span>
+        <span class="n">sy_crop</span> <span class="o">=</span> <span class="p">(</span><span class="n">sy</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">sy</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span>
+        <span class="k">return</span> <span class="n">bevmap</span><span class="p">[</span><span class="n">sx_crop</span><span class="p">:</span><span class="o">-</span><span class="n">sx_crop</span><span class="p">,</span> <span class="n">sy_crop</span><span class="p">:</span><span class="o">-</span><span class="n">sy_crop</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="EvalBEVSemsegHook.post_epoch"><a class="viewcode-back" href="../../../../cosense3d.agents.core.html#cosense3d.agents.core.hooks.EvalBEVSemsegHook.post_epoch">[docs]</a>    <span class="k">def</span> <span class="nf">post_epoch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">runner</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">fmt_str</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;#################</span><span class="se">\n</span><span class="s2">&quot;</span>
+                   <span class="s2">&quot;BEV SEMSEG RESULT</span><span class="se">\n</span><span class="s2">&quot;</span>
+                   <span class="s2">&quot;#################</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">fmt_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="s1">&#39;thr&#39;</span><span class="si">:</span><span class="s2">18s</span><span class="si">}</span><span class="s2"> |  &quot;</span> <span class="o">+</span> <span class="s2">&quot;  &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">v</span><span class="si">:</span><span class="s2">4.1f</span><span class="si">}</span><span class="s2"> &quot;</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">thrs</span><span class="p">])</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="n">fmt_str</span> <span class="o">+=</span> <span class="s2">&quot;-&quot;</span> <span class="o">*</span> <span class="p">(</span><span class="mi">23</span> <span class="o">+</span> <span class="mi">70</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">vs</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">res_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">vs</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">vs</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="o">*</span> <span class="mi">100</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">vs</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+                <span class="k">continue</span>
+            <span class="n">s1</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">k</span><span class="si">:</span><span class="s2">18s</span><span class="si">}</span><span class="s2"> |  &quot;</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">vs</span><span class="p">,</span> <span class="nb">float</span><span class="p">):</span>
+                <span class="n">s2</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">vs</span><span class="si">:</span><span class="s2">4.1f</span><span class="si">}</span><span class="s2"> </span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">s2</span> <span class="o">=</span> <span class="s2">&quot;  &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">v</span><span class="si">:</span><span class="s2">4.1f</span><span class="si">}</span><span class="s2"> &quot;</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">vs</span><span class="p">])</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="n">fmt_str</span> <span class="o">+=</span> <span class="n">s1</span> <span class="o">+</span> <span class="n">s2</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">fmt_str</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">fmt_str</span><span class="p">)</span></div></div>
+
+
+
+
+
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Anonymous Author.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

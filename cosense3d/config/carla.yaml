@@ -1,0 +1,8 @@
+scene_manager: 'MapGeneration'
+map:
+  lane_sample_resolution: 0.1
+
+
+
+
+

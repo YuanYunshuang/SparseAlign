@@ -1,0 +1,1158 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>cosense3d.modules.plugin.flash_attn_new &mdash; OpenCosense3D 1.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js?v=af2ce170"></script>
+        <script src="../../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            OpenCosense3D
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../md/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../md/prepare_data.html">Prepare Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../md/structure.html">The Structure of the framework</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules.html">CoSense3d</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">OpenCosense3D</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+          <li class="breadcrumb-item"><a href="../../modules.html">cosense3d.modules</a></li>
+          <li class="breadcrumb-item"><a href="../plugin.html">cosense3d.modules.plugin</a></li>
+      <li class="breadcrumb-item active">cosense3d.modules.plugin.flash_attn_new</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for cosense3d.modules.plugin.flash_attn_new</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (c) 2023, Tri Dao.</span>
+
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">partial</span>
+
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">import</span> <span class="nn">torch.nn</span> <span class="k">as</span> <span class="nn">nn</span>
+<span class="kn">from</span> <span class="nn">torch.nn.init</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">xavier_uniform_</span><span class="p">,</span>
+    <span class="n">constant_</span><span class="p">,</span>
+    <span class="n">xavier_normal_</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">torch.nn.functional</span> <span class="kn">import</span> <span class="n">linear</span>
+<span class="kn">from</span> <span class="nn">einops</span> <span class="kn">import</span> <span class="n">rearrange</span><span class="p">,</span> <span class="n">repeat</span>
+
+<span class="kn">from</span> <span class="nn">flash_attn.utils.distributed</span> <span class="kn">import</span> <span class="n">get_dim_for_local_rank</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">flash_attn</span> <span class="kn">import</span> <span class="p">(</span>
+        <span class="n">flash_attn_kvpacked_func</span><span class="p">,</span>
+        <span class="n">flash_attn_qkvpacked_func</span><span class="p">,</span>
+        <span class="n">flash_attn_varlen_kvpacked_func</span><span class="p">,</span>
+        <span class="n">flash_attn_varlen_qkvpacked_func</span><span class="p">,</span>
+        <span class="n">flash_attn_with_kvcache</span><span class="p">,</span>
+    <span class="p">)</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="n">flash_attn_varlen_qkvpacked_func</span><span class="p">,</span> <span class="n">flash_attn_varlen_kvpacked_func</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+    <span class="n">flash_attn_qkvpacked_func</span><span class="p">,</span> <span class="n">flash_attn_kvpacked_func</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+    <span class="n">flash_attn_with_kvcache</span> <span class="o">=</span> <span class="kc">None</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">flash_attn.ops.fused_dense</span> <span class="kn">import</span> <span class="n">ColumnParallelLinear</span><span class="p">,</span> <span class="n">FusedDense</span><span class="p">,</span> <span class="n">RowParallelLinear</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="n">FusedDense</span><span class="p">,</span> <span class="n">ColumnParallelLinear</span><span class="p">,</span> <span class="n">RowParallelLinear</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">flash_attn.layers.rotary</span> <span class="kn">import</span> <span class="n">RotaryEmbedding</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="n">RotaryEmbedding</span> <span class="o">=</span> <span class="kc">None</span>
+
+
+<span class="c1"># From https://github.com/ofirpress/attention_with_linear_biases/blob/4b92f28a005ead2567abe2359f633e73e08f3833/fairseq/models/transformer.py#L742</span>
+<div class="viewcode-block" id="get_alibi_slopes"><a class="viewcode-back" href="../../../../cosense3d.modules.plugin.html#cosense3d.modules.plugin.flash_attn_new.get_alibi_slopes">[docs]</a><span class="k">def</span> <span class="nf">get_alibi_slopes</span><span class="p">(</span><span class="n">nheads</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">get_slopes_power_of_2</span><span class="p">(</span><span class="n">nheads</span><span class="p">):</span>
+        <span class="n">start</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">**</span> <span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="mi">2</span> <span class="o">**</span> <span class="o">-</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">log2</span><span class="p">(</span><span class="n">nheads</span><span class="p">)</span> <span class="o">-</span> <span class="mi">3</span><span class="p">)))</span>
+        <span class="n">ratio</span> <span class="o">=</span> <span class="n">start</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">start</span> <span class="o">*</span> <span class="n">ratio</span><span class="o">**</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nheads</span><span class="p">)]</span>
+
+    <span class="k">if</span> <span class="n">math</span><span class="o">.</span><span class="n">log2</span><span class="p">(</span><span class="n">nheads</span><span class="p">)</span><span class="o">.</span><span class="n">is_integer</span><span class="p">():</span>
+        <span class="k">return</span> <span class="n">get_slopes_power_of_2</span><span class="p">(</span><span class="n">nheads</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">closest_power_of_2</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">**</span> <span class="n">math</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">log2</span><span class="p">(</span><span class="n">nheads</span><span class="p">))</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="n">get_slopes_power_of_2</span><span class="p">(</span><span class="n">closest_power_of_2</span><span class="p">)</span>
+            <span class="o">+</span> <span class="n">get_alibi_slopes</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">closest_power_of_2</span><span class="p">)[</span><span class="mi">0</span><span class="p">::</span><span class="mi">2</span><span class="p">][:</span> <span class="n">nheads</span> <span class="o">-</span> <span class="n">closest_power_of_2</span><span class="p">]</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="FlashSelfAttention"><a class="viewcode-back" href="../../../../cosense3d.modules.plugin.html#cosense3d.modules.plugin.flash_attn_new.FlashSelfAttention">[docs]</a><span class="k">class</span> <span class="nc">FlashSelfAttention</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Implement the scaled dot product attention with softmax.</span>
+<span class="sd">    Arguments</span>
+<span class="sd">    ---------</span>
+<span class="sd">        softmax_scale: The temperature to use for the softmax attention.</span>
+<span class="sd">                      (default: 1/sqrt(d_keys) where d_keys is computed at</span>
+<span class="sd">                      runtime)</span>
+<span class="sd">        attention_dropout: The dropout rate to apply to the attention</span>
+<span class="sd">                           (default: 0.0)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">causal</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">softmax_scale</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">attention_dropout</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">alibi_slopes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">deterministic</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="k">assert</span> <span class="n">flash_attn_varlen_qkvpacked_func</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;FlashAttention is not installed&quot;</span>
+        <span class="k">assert</span> <span class="n">flash_attn_qkvpacked_func</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;FlashAttention is not installed&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">causal</span> <span class="o">=</span> <span class="n">causal</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">softmax_scale</span> <span class="o">=</span> <span class="n">softmax_scale</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">drop</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Dropout</span><span class="p">(</span><span class="n">attention_dropout</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">register_buffer</span><span class="p">(</span><span class="s2">&quot;alibi_slopes&quot;</span><span class="p">,</span> <span class="n">alibi_slopes</span><span class="p">,</span> <span class="n">persistent</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">deterministic</span> <span class="o">=</span> <span class="n">deterministic</span>
+
+<div class="viewcode-block" id="FlashSelfAttention.forward"><a class="viewcode-back" href="../../../../cosense3d.modules.plugin.html#cosense3d.modules.plugin.flash_attn_new.FlashSelfAttention.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">qkv</span><span class="p">,</span> <span class="n">causal</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cu_seqlens</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">max_seqlen</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Implements the multihead softmax attention.</span>
+<span class="sd">        Arguments</span>
+<span class="sd">        ---------</span>
+<span class="sd">            qkv: The tensor containing the query, key, and value.</span>
+<span class="sd">                If cu_seqlens is None and max_seqlen is None, then qkv has shape (B, S, 3, H, D).</span>
+<span class="sd">                If cu_seqlens is not None and max_seqlen is not None, then qkv has shape</span>
+<span class="sd">                (total, 3, H, D), where total is the sum of the sequence lengths in the batch.</span>
+<span class="sd">            causal: if passed, will override self.causal</span>
+<span class="sd">            cu_seqlens: (batch_size + 1,), dtype torch.int32. The cumulative sequence lengths</span>
+<span class="sd">                of the sequences in the batch, used to index into qkv.</span>
+<span class="sd">            max_seqlen: int. Maximum sequence length in the batch.</span>
+<span class="sd">        Returns:</span>
+<span class="sd">        --------</span>
+<span class="sd">            out: (total, H, D) if cu_seqlens is not None and max_seqlen is not None,</span>
+<span class="sd">                else (B, S, H, D).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="n">qkv</span><span class="o">.</span><span class="n">dtype</span> <span class="ow">in</span> <span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">float16</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">bfloat16</span><span class="p">]</span>
+        <span class="k">assert</span> <span class="n">qkv</span><span class="o">.</span><span class="n">is_cuda</span>
+        <span class="n">causal</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">causal</span> <span class="k">if</span> <span class="n">causal</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">causal</span>
+        <span class="n">unpadded</span> <span class="o">=</span> <span class="n">cu_seqlens</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">unpadded</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="n">cu_seqlens</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="n">torch</span><span class="o">.</span><span class="n">int32</span>
+            <span class="k">assert</span> <span class="n">max_seqlen</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">max_seqlen</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">flash_attn_varlen_qkvpacked_func</span><span class="p">(</span>
+                <span class="n">qkv</span><span class="p">,</span>
+                <span class="n">cu_seqlens</span><span class="p">,</span>
+                <span class="n">max_seqlen</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">drop</span><span class="o">.</span><span class="n">p</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">training</span> <span class="k">else</span> <span class="mf">0.0</span><span class="p">,</span>
+                <span class="n">softmax_scale</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">softmax_scale</span><span class="p">,</span>
+                <span class="n">causal</span><span class="o">=</span><span class="n">causal</span><span class="p">,</span>
+                <span class="n">alibi_slopes</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">alibi_slopes</span><span class="p">,</span>
+                <span class="n">deterministic</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">deterministic</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">flash_attn_qkvpacked_func</span><span class="p">(</span>
+                <span class="n">qkv</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">drop</span><span class="o">.</span><span class="n">p</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">training</span> <span class="k">else</span> <span class="mf">0.0</span><span class="p">,</span>
+                <span class="n">softmax_scale</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">softmax_scale</span><span class="p">,</span>
+                <span class="n">causal</span><span class="o">=</span><span class="n">causal</span><span class="p">,</span>
+                <span class="n">alibi_slopes</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">alibi_slopes</span><span class="p">,</span>
+                <span class="n">deterministic</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">deterministic</span><span class="p">,</span>
+            <span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="FlashCrossAttention"><a class="viewcode-back" href="../../../../cosense3d.modules.plugin.html#cosense3d.modules.plugin.flash_attn_new.FlashCrossAttention">[docs]</a><span class="k">class</span> <span class="nc">FlashCrossAttention</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Implement the scaled dot product attention with softmax.</span>
+<span class="sd">    Arguments</span>
+<span class="sd">    ---------</span>
+<span class="sd">        softmax_scale: The temperature to use for the softmax attention.</span>
+<span class="sd">                      (default: 1/sqrt(d_keys) where d_keys is computed at</span>
+<span class="sd">                      runtime)</span>
+<span class="sd">        attention_dropout: The dropout rate to apply to the attention</span>
+<span class="sd">                           (default: 0.0)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">causal</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">softmax_scale</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">attention_dropout</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">alibi_slopes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">deterministic</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="k">assert</span> <span class="n">flash_attn_varlen_kvpacked_func</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;FlashAttention is not installed&quot;</span>
+        <span class="k">assert</span> <span class="n">flash_attn_kvpacked_func</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;FlashAttention is not installed&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">causal</span> <span class="o">=</span> <span class="n">causal</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">softmax_scale</span> <span class="o">=</span> <span class="n">softmax_scale</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">drop</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Dropout</span><span class="p">(</span><span class="n">attention_dropout</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">register_buffer</span><span class="p">(</span><span class="s2">&quot;alibi_slopes&quot;</span><span class="p">,</span> <span class="n">alibi_slopes</span><span class="p">,</span> <span class="n">persistent</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">deterministic</span> <span class="o">=</span> <span class="n">deterministic</span>
+
+<div class="viewcode-block" id="FlashCrossAttention.forward"><a class="viewcode-back" href="../../../../cosense3d.modules.plugin.html#cosense3d.modules.plugin.flash_attn_new.FlashCrossAttention.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">q</span><span class="p">,</span>
+        <span class="n">kv</span><span class="p">,</span>
+        <span class="n">causal</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">cu_seqlens</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">max_seqlen</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">cu_seqlens_k</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">max_seqlen_k</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Implements the multihead softmax attention.</span>
+<span class="sd">        Arguments</span>
+<span class="sd">        ---------</span>
+<span class="sd">            q: The tensor containing the query. (B, Sq, H, D)</span>
+<span class="sd">            kv: The tensor containing the key and value. (B, Sk, 2, H_k, D)</span>
+<span class="sd">            causal: if passed, will override self.causal</span>
+<span class="sd">            cu_seqlens: (batch_size + 1,), dtype torch.int32. The cumulative sequence lengths</span>
+<span class="sd">                of the sequences in the batch, used to index into q.</span>
+<span class="sd">            max_seqlen: int. Maximum sequence length in the batch of q.</span>
+<span class="sd">            cu_seqlens_k: (batch_size + 1,), dtype torch.int32. The cumulative sequence lengths</span>
+<span class="sd">                of the sequences in the batch, used to index into kv.</span>
+<span class="sd">            max_seqlen_k: int. Maximum sequence length in the batch of k and v.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="n">q</span><span class="o">.</span><span class="n">dtype</span> <span class="ow">in</span> <span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">float16</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">bfloat16</span><span class="p">]</span>
+        <span class="k">assert</span> <span class="n">q</span><span class="o">.</span><span class="n">is_cuda</span> <span class="ow">and</span> <span class="n">kv</span><span class="o">.</span><span class="n">is_cuda</span>
+        <span class="n">causal</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">causal</span> <span class="k">if</span> <span class="n">causal</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">causal</span>
+        <span class="n">unpadded</span> <span class="o">=</span> <span class="n">cu_seqlens</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">unpadded</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="n">cu_seqlens</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="n">torch</span><span class="o">.</span><span class="n">int32</span>
+            <span class="k">assert</span> <span class="n">max_seqlen</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">max_seqlen</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span>
+            <span class="k">assert</span> <span class="n">cu_seqlens_k</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="k">assert</span> <span class="n">cu_seqlens_k</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="n">torch</span><span class="o">.</span><span class="n">int32</span>
+            <span class="k">assert</span> <span class="n">max_seqlen_k</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">max_seqlen</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">flash_attn_varlen_kvpacked_func</span><span class="p">(</span>
+                <span class="n">q</span><span class="p">,</span>
+                <span class="n">kv</span><span class="p">,</span>
+                <span class="n">cu_seqlens</span><span class="p">,</span>
+                <span class="n">cu_seqlens_k</span><span class="p">,</span>
+                <span class="n">max_seqlen</span><span class="p">,</span>
+                <span class="n">max_seqlen_k</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">drop</span><span class="o">.</span><span class="n">p</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">training</span> <span class="k">else</span> <span class="mf">0.0</span><span class="p">,</span>
+                <span class="n">softmax_scale</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">softmax_scale</span><span class="p">,</span>
+                <span class="n">causal</span><span class="o">=</span><span class="n">causal</span><span class="p">,</span>
+                <span class="n">alibi_slopes</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">alibi_slopes</span><span class="p">,</span>
+                <span class="n">deterministic</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">deterministic</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">batch_size</span><span class="p">,</span> <span class="n">seqlen_q</span> <span class="o">=</span> <span class="n">q</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">q</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">seqlen_k</span> <span class="o">=</span> <span class="n">kv</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">assert</span> <span class="n">kv</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">batch_size</span> <span class="ow">and</span> <span class="n">kv</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">==</span> <span class="n">q</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+            <span class="k">return</span> <span class="n">flash_attn_kvpacked_func</span><span class="p">(</span>
+                <span class="n">q</span><span class="p">,</span>
+                <span class="n">kv</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">drop</span><span class="o">.</span><span class="n">p</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">training</span> <span class="k">else</span> <span class="mf">0.0</span><span class="p">,</span>
+                <span class="n">causal</span><span class="o">=</span><span class="n">causal</span><span class="p">,</span>
+                <span class="n">softmax_scale</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">softmax_scale</span><span class="p">,</span>
+                <span class="n">alibi_slopes</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">alibi_slopes</span><span class="p">,</span>
+                <span class="n">deterministic</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">deterministic</span><span class="p">,</span>
+            <span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="SelfAttention"><a class="viewcode-back" href="../../../../cosense3d.modules.plugin.html#cosense3d.modules.plugin.flash_attn_new.SelfAttention">[docs]</a><span class="k">class</span> <span class="nc">SelfAttention</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Implement the scaled dot product attention with softmax.</span>
+<span class="sd">    Arguments</span>
+<span class="sd">    ---------</span>
+<span class="sd">        softmax_scale: The temperature to use for the softmax attention.</span>
+<span class="sd">                      (default: 1/sqrt(d_keys) where d_keys is computed at</span>
+<span class="sd">                      runtime)</span>
+<span class="sd">        attention_dropout: The dropout rate to apply to the attention</span>
+<span class="sd">                           (default: 0.0)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">causal</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">softmax_scale</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">attention_dropout</span><span class="o">=</span><span class="mf">0.0</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">causal</span> <span class="o">=</span> <span class="n">causal</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">softmax_scale</span> <span class="o">=</span> <span class="n">softmax_scale</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">drop</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Dropout</span><span class="p">(</span><span class="n">attention_dropout</span><span class="p">)</span>
+
+<div class="viewcode-block" id="SelfAttention.forward"><a class="viewcode-back" href="../../../../cosense3d.modules.plugin.html#cosense3d.modules.plugin.flash_attn_new.SelfAttention.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">qkv</span><span class="p">,</span> <span class="n">causal</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">key_padding_mask</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Implements the multihead softmax attention.</span>
+<span class="sd">        Arguments</span>
+<span class="sd">        ---------</span>
+<span class="sd">            qkv: The tensor containing the query, key, and value. (B, S, 3, H, D)</span>
+<span class="sd">            causal: if passed, will override self.causal</span>
+<span class="sd">            key_padding_mask: boolean mask to apply to the attention weights. True means to keep,</span>
+<span class="sd">                False means to mask out. (B, S)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">batch_size</span><span class="p">,</span> <span class="n">seqlen</span> <span class="o">=</span> <span class="n">qkv</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">qkv</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">causal</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">causal</span> <span class="k">if</span> <span class="n">causal</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">causal</span>
+        <span class="n">q</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="n">qkv</span><span class="o">.</span><span class="n">unbind</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">softmax_scale</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">softmax_scale</span> <span class="ow">or</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">q</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">scores</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s2">&quot;bthd,bshd-&gt;bhts&quot;</span><span class="p">,</span> <span class="n">q</span><span class="p">,</span> <span class="n">k</span> <span class="o">*</span> <span class="n">softmax_scale</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">key_padding_mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">padding_mask</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">full</span><span class="p">(</span>
+                <span class="p">(</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">seqlen</span><span class="p">),</span> <span class="o">-</span><span class="mf">10000.0</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">scores</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">scores</span><span class="o">.</span><span class="n">device</span>
+            <span class="p">)</span>
+            <span class="n">padding_mask</span><span class="o">.</span><span class="n">masked_fill_</span><span class="p">(</span><span class="n">key_padding_mask</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+            <span class="c1"># TD [2022-09-30]: Adding is faster than masked_fill_ (idk why, just better kernel I guess)</span>
+            <span class="n">scores</span> <span class="o">=</span> <span class="n">scores</span> <span class="o">+</span> <span class="n">rearrange</span><span class="p">(</span><span class="n">padding_mask</span><span class="p">,</span> <span class="s2">&quot;b s -&gt; b 1 1 s&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">causal</span><span class="p">:</span>
+            <span class="c1"># &quot;triu_tril_cuda_template&quot; not implemented for &#39;BFloat16&#39;</span>
+            <span class="c1"># So we have to construct the mask in float</span>
+            <span class="n">causal_mask</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">triu</span><span class="p">(</span>
+                <span class="n">torch</span><span class="o">.</span><span class="n">full</span><span class="p">((</span><span class="n">seqlen</span><span class="p">,</span> <span class="n">seqlen</span><span class="p">),</span> <span class="o">-</span><span class="mf">10000.0</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">scores</span><span class="o">.</span><span class="n">device</span><span class="p">),</span> <span class="mi">1</span>
+            <span class="p">)</span>
+            <span class="c1"># TD [2022-09-30]: Adding is faster than masked_fill_ (idk why, just better kernel I guess)</span>
+            <span class="n">scores</span> <span class="o">=</span> <span class="n">scores</span> <span class="o">+</span> <span class="n">causal_mask</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">scores</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="n">attention</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">softmax</span><span class="p">(</span><span class="n">scores</span><span class="p">,</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">v</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="n">attention_drop</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">attention</span><span class="p">)</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s2">&quot;bhts,bshd-&gt;bthd&quot;</span><span class="p">,</span> <span class="n">attention_drop</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">output</span></div></div>
+
+
+<div class="viewcode-block" id="CrossAttention"><a class="viewcode-back" href="../../../../cosense3d.modules.plugin.html#cosense3d.modules.plugin.flash_attn_new.CrossAttention">[docs]</a><span class="k">class</span> <span class="nc">CrossAttention</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Implement the scaled dot product attention with softmax.</span>
+<span class="sd">    Arguments</span>
+<span class="sd">    ---------</span>
+<span class="sd">        softmax_scale: The temperature to use for the softmax attention.</span>
+<span class="sd">                      (default: 1/sqrt(d_keys) where d_keys is computed at</span>
+<span class="sd">                      runtime)</span>
+<span class="sd">        attention_dropout: The dropout rate to apply to the attention</span>
+<span class="sd">                           (default: 0.0)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">causal</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">softmax_scale</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">attention_dropout</span><span class="o">=</span><span class="mf">0.0</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">causal</span> <span class="o">=</span> <span class="n">causal</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">softmax_scale</span> <span class="o">=</span> <span class="n">softmax_scale</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">drop</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Dropout</span><span class="p">(</span><span class="n">attention_dropout</span><span class="p">)</span>
+
+<div class="viewcode-block" id="CrossAttention.forward"><a class="viewcode-back" href="../../../../cosense3d.modules.plugin.html#cosense3d.modules.plugin.flash_attn_new.CrossAttention.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">q</span><span class="p">,</span> <span class="n">kv</span><span class="p">,</span> <span class="n">causal</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">key_padding_mask</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Implements the multihead softmax attention.</span>
+<span class="sd">        Arguments</span>
+<span class="sd">        ---------</span>
+<span class="sd">            q: The tensor containing the query. (B, Sq, H, D)</span>
+<span class="sd">            kv: The tensor containing the key and value. (B, Sk, 2, H_k, D)</span>
+<span class="sd">            causal: if passed, will override self.causal</span>
+<span class="sd">            key_padding_mask: boolean mask to apply to the attention weights. True means to keep,</span>
+<span class="sd">                False means to mask out. (B, Sk)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">batch_size</span><span class="p">,</span> <span class="n">seqlen_q</span> <span class="o">=</span> <span class="n">q</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">q</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">causal</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">causal</span> <span class="k">if</span> <span class="n">causal</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">causal</span>
+        <span class="n">seqlen_k</span> <span class="o">=</span> <span class="n">kv</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">assert</span> <span class="n">kv</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">batch_size</span> <span class="ow">and</span> <span class="n">kv</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">==</span> <span class="n">q</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">kv</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">!=</span> <span class="n">q</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]:</span>  <span class="c1"># MQA/GQA</span>
+            <span class="n">kv</span> <span class="o">=</span> <span class="n">repeat</span><span class="p">(</span><span class="n">kv</span><span class="p">,</span> <span class="s2">&quot;... hkv d -&gt; ... (hkv g) d&quot;</span><span class="p">,</span> <span class="n">g</span><span class="o">=</span><span class="n">q</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">//</span> <span class="n">kv</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
+        <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="n">kv</span><span class="o">.</span><span class="n">unbind</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">softmax_scale</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">softmax_scale</span> <span class="ow">or</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">q</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">scores</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s2">&quot;bthd,bshd-&gt;bhts&quot;</span><span class="p">,</span> <span class="n">q</span><span class="p">,</span> <span class="n">k</span> <span class="o">*</span> <span class="n">softmax_scale</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">key_padding_mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">padding_mask</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">full</span><span class="p">(</span>
+                <span class="p">(</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">seqlen_k</span><span class="p">),</span> <span class="o">-</span><span class="mf">10000.0</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">scores</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">scores</span><span class="o">.</span><span class="n">device</span>
+            <span class="p">)</span>
+            <span class="n">padding_mask</span><span class="o">.</span><span class="n">masked_fill_</span><span class="p">(</span><span class="n">key_padding_mask</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+            <span class="c1"># TD [2022-09-30]: Adding is faster than masked_fill_ (idk why, just better kernel I guess)</span>
+            <span class="n">scores</span> <span class="o">=</span> <span class="n">scores</span> <span class="o">+</span> <span class="n">rearrange</span><span class="p">(</span><span class="n">padding_mask</span><span class="p">,</span> <span class="s2">&quot;b s -&gt; b 1 1 s&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">causal</span><span class="p">:</span>
+            <span class="c1"># causal mask needs to take into account the difference between seqlen_q and seqlen_k</span>
+            <span class="n">row_idx</span> <span class="o">=</span> <span class="n">rearrange</span><span class="p">(</span>
+                <span class="n">torch</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">seqlen_q</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">q</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">long</span><span class="p">),</span> <span class="s2">&quot;s -&gt; s 1&quot;</span>
+            <span class="p">)</span>
+            <span class="n">col_idx</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">seqlen_k</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">kv</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">long</span><span class="p">)</span>
+            <span class="n">sk</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">seqlen_k</span>
+                <span class="k">if</span> <span class="n">key_padding_mask</span> <span class="ow">is</span> <span class="kc">None</span>
+                <span class="k">else</span> <span class="n">rearrange</span><span class="p">(</span><span class="n">key_padding_mask</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="s2">&quot;b -&gt; b 1 1 1&quot;</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="n">causal_mask</span> <span class="o">=</span> <span class="n">col_idx</span> <span class="o">&gt;</span> <span class="n">row_idx</span> <span class="o">+</span> <span class="n">sk</span> <span class="o">-</span> <span class="n">seqlen_q</span>
+            <span class="n">scores</span> <span class="o">=</span> <span class="n">scores</span><span class="o">.</span><span class="n">masked_fill</span><span class="p">(</span><span class="n">causal_mask</span><span class="p">,</span> <span class="o">-</span><span class="mf">10000.0</span><span class="p">)</span>
+        <span class="n">attention</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">softmax</span><span class="p">(</span><span class="n">scores</span><span class="p">,</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">v</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="n">attention_drop</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">attention</span><span class="p">)</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s2">&quot;bhts,bshd-&gt;bthd&quot;</span><span class="p">,</span> <span class="n">attention_drop</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">output</span></div></div>
+
+
+<div class="viewcode-block" id="LinearResidual"><a class="viewcode-back" href="../../../../cosense3d.modules.plugin.html#cosense3d.modules.plugin.flash_attn_new.LinearResidual">[docs]</a><span class="k">class</span> <span class="nc">LinearResidual</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Wrap nn.Linear to return the residual as well. For compatibility with FusedDense.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="LinearResidual.forward"><a class="viewcode-back" href="../../../../cosense3d.modules.plugin.html#cosense3d.modules.plugin.flash_attn_new.LinearResidual.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">input</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="nb">input</span><span class="p">),</span> <span class="nb">input</span></div></div>
+
+
+<span class="k">def</span> <span class="nf">_update_kv_cache</span><span class="p">(</span><span class="n">kv</span><span class="p">,</span> <span class="n">inference_params</span><span class="p">,</span> <span class="n">layer_idx</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;kv: (batch_size, seqlen, 2, nheads, head_dim) or (batch_size, 1, 2, nheads, head_dim)&quot;&quot;&quot;</span>
+    <span class="c1"># Pre-allocate memory for key-values for inference.</span>
+    <span class="n">num_heads</span><span class="p">,</span> <span class="n">head_dim</span> <span class="o">=</span> <span class="n">kv</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">:]</span>
+    <span class="k">if</span> <span class="n">layer_idx</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">inference_params</span><span class="o">.</span><span class="n">key_value_memory_dict</span><span class="p">:</span>
+        <span class="n">kv_cache</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span>
+            <span class="n">inference_params</span><span class="o">.</span><span class="n">max_batch_size</span><span class="p">,</span>
+            <span class="n">inference_params</span><span class="o">.</span><span class="n">max_seqlen</span><span class="p">,</span>
+            <span class="mi">2</span><span class="p">,</span>
+            <span class="n">num_heads</span><span class="p">,</span>
+            <span class="n">head_dim</span><span class="p">,</span>
+            <span class="n">dtype</span><span class="o">=</span><span class="n">kv</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span>
+            <span class="n">device</span><span class="o">=</span><span class="n">kv</span><span class="o">.</span><span class="n">device</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">inference_params</span><span class="o">.</span><span class="n">key_value_memory_dict</span><span class="p">[</span><span class="n">layer_idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">kv_cache</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">kv_cache</span> <span class="o">=</span> <span class="n">inference_params</span><span class="o">.</span><span class="n">key_value_memory_dict</span><span class="p">[</span><span class="n">layer_idx</span><span class="p">]</span>
+    <span class="c1"># Adjust key and value for inference</span>
+    <span class="n">batch_start</span> <span class="o">=</span> <span class="n">inference_params</span><span class="o">.</span><span class="n">batch_size_offset</span>
+    <span class="n">batch_end</span> <span class="o">=</span> <span class="n">batch_start</span> <span class="o">+</span> <span class="n">kv</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">sequence_start</span> <span class="o">=</span> <span class="n">inference_params</span><span class="o">.</span><span class="n">seqlen_offset</span>
+    <span class="n">sequence_end</span> <span class="o">=</span> <span class="n">sequence_start</span> <span class="o">+</span> <span class="n">kv</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">assert</span> <span class="n">batch_end</span> <span class="o">&lt;=</span> <span class="n">kv_cache</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">assert</span> <span class="n">sequence_end</span> <span class="o">&lt;=</span> <span class="n">kv_cache</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">assert</span> <span class="n">kv_cache</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+    <span class="n">kv_cache</span><span class="p">[</span><span class="n">batch_start</span><span class="p">:</span><span class="n">batch_end</span><span class="p">,</span> <span class="n">sequence_start</span><span class="p">:</span><span class="n">sequence_end</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="n">kv</span>
+    <span class="k">return</span> <span class="n">kv_cache</span><span class="p">[</span><span class="n">batch_start</span><span class="p">:</span><span class="n">batch_end</span><span class="p">,</span> <span class="p">:</span><span class="n">sequence_end</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="MHA"><a class="viewcode-back" href="../../../../cosense3d.modules.plugin.html#cosense3d.modules.plugin.flash_attn_new.MHA">[docs]</a><span class="k">class</span> <span class="nc">MHA</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Multi-head self-attention and cross-attention&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">embed_dim</span><span class="p">,</span>
+        <span class="n">num_heads</span><span class="p">,</span>
+        <span class="n">num_heads_kv</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">cross_attn</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">qkv_proj_bias</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">out_proj_bias</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">dropout</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+        <span class="n">softmax_scale</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">causal</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">layer_idx</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">dwconv</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">rotary_emb_dim</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="n">rotary_emb_base</span><span class="o">=</span><span class="mf">10000.0</span><span class="p">,</span>
+        <span class="n">rotary_emb_scale_base</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">rotary_emb_interleaved</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">use_alibi</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">fused_bias_fc</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">use_flash_attn</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">return_residual</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">checkpointing</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">device</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        num_heads_kv: can be used to toggle MQA / GQA. If None, use num_heads.</span>
+<span class="sd">        return_residual: whether to return the input x along with the output. This is for</span>
+<span class="sd">            performance reason: for post-norm architecture, returning the input allows us</span>
+<span class="sd">            to fuse the backward of nn.Linear with the residual connection.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">factory_kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;device&quot;</span><span class="p">:</span> <span class="n">device</span><span class="p">,</span> <span class="s2">&quot;dtype&quot;</span><span class="p">:</span> <span class="n">dtype</span><span class="p">}</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">embed_dim</span> <span class="o">=</span> <span class="n">embed_dim</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cross_attn</span> <span class="o">=</span> <span class="n">cross_attn</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">causal</span> <span class="o">=</span> <span class="n">causal</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">layer_idx</span> <span class="o">=</span> <span class="n">layer_idx</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dwconv</span> <span class="o">=</span> <span class="n">dwconv</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rotary_emb_dim</span> <span class="o">=</span> <span class="n">rotary_emb_dim</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">use_flash_attn</span> <span class="o">=</span> <span class="n">use_flash_attn</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">return_residual</span> <span class="o">=</span> <span class="n">return_residual</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">checkpointing</span> <span class="o">=</span> <span class="n">checkpointing</span>
+        <span class="k">if</span> <span class="n">use_alibi</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="n">use_flash_attn</span><span class="p">,</span> <span class="s2">&quot;ALiBi code path requires flash_attn&quot;</span>
+            <span class="n">alibi_slopes</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">get_alibi_slopes</span><span class="p">(</span><span class="n">num_heads</span><span class="p">),</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">alibi_slopes</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_heads</span> <span class="o">=</span> <span class="n">num_heads</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_heads_kv</span> <span class="o">=</span> <span class="n">num_heads_kv</span> <span class="k">if</span> <span class="n">num_heads_kv</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">num_heads</span>
+        <span class="k">assert</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">num_heads</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_heads_kv</span> <span class="o">==</span> <span class="mi">0</span>
+        <span class="p">),</span> <span class="s2">&quot;num_heads must be divisible by num_heads_kv&quot;</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">embed_dim</span> <span class="o">%</span> <span class="n">num_heads</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;embed_dim must be divisible by num_heads&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">head_dim</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">embed_dim</span> <span class="o">//</span> <span class="n">num_heads</span>
+        <span class="n">qkv_dim</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">head_dim</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_heads</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_heads_kv</span><span class="p">)</span>
+        <span class="n">kv_dim</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">head_dim</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_heads_kv</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">rotary_emb_dim</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="ow">not</span> <span class="n">cross_attn</span><span class="p">,</span> <span class="s2">&quot;MHA with rotary embedding does not support cross-attention yet&quot;</span>
+            <span class="k">assert</span> <span class="n">RotaryEmbedding</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;rotary_emb is not installed&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">rotary_emb</span> <span class="o">=</span> <span class="n">RotaryEmbedding</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">rotary_emb_dim</span><span class="p">,</span>
+                <span class="n">base</span><span class="o">=</span><span class="n">rotary_emb_base</span><span class="p">,</span>
+                <span class="n">scale_base</span><span class="o">=</span><span class="n">rotary_emb_scale_base</span><span class="p">,</span>
+                <span class="n">interleaved</span><span class="o">=</span><span class="n">rotary_emb_interleaved</span><span class="p">,</span>
+                <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">fused_bias_fc</span> <span class="ow">and</span> <span class="n">FusedDense</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s2">&quot;fused_dense is not installed&quot;</span><span class="p">)</span>
+        <span class="n">linear_cls</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">fused_bias_fc</span> <span class="k">else</span> <span class="n">FusedDense</span>
+        <span class="n">linear_resid_cls</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">LinearResidual</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">fused_bias_fc</span> <span class="k">else</span> <span class="n">partial</span><span class="p">(</span><span class="n">FusedDense</span><span class="p">,</span> <span class="n">return_residual</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">wqkv_cls</span> <span class="o">=</span> <span class="n">linear_cls</span> <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">return_residual</span> <span class="k">else</span> <span class="n">linear_resid_cls</span>
+        <span class="n">inner_attn_cls</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">partial</span><span class="p">(</span><span class="n">FlashSelfAttention</span><span class="p">,</span> <span class="n">alibi_slopes</span><span class="o">=</span><span class="n">alibi_slopes</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">use_flash_attn</span>
+            <span class="k">else</span> <span class="n">SelfAttention</span>
+        <span class="p">)</span>
+        <span class="n">inner_cross_attn_cls</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">partial</span><span class="p">(</span><span class="n">FlashCrossAttention</span><span class="p">,</span> <span class="n">alibi_slopes</span><span class="o">=</span><span class="n">alibi_slopes</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">use_flash_attn</span>
+            <span class="k">else</span> <span class="n">CrossAttention</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">cross_attn</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">Wqkv</span> <span class="o">=</span> <span class="n">wqkv_cls</span><span class="p">(</span><span class="n">embed_dim</span><span class="p">,</span> <span class="n">qkv_dim</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="n">qkv_proj_bias</span><span class="p">,</span> <span class="o">**</span><span class="n">factory_kwargs</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">Wq</span> <span class="o">=</span> <span class="n">linear_cls</span><span class="p">(</span><span class="n">embed_dim</span><span class="p">,</span> <span class="n">embed_dim</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="n">qkv_proj_bias</span><span class="p">,</span> <span class="o">**</span><span class="n">factory_kwargs</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">Wkv</span> <span class="o">=</span> <span class="n">wqkv_cls</span><span class="p">(</span><span class="n">embed_dim</span><span class="p">,</span> <span class="n">kv_dim</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="n">qkv_proj_bias</span><span class="p">,</span> <span class="o">**</span><span class="n">factory_kwargs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dwconv</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_heads_kv</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_heads</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">dwconv_qkv</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Conv1d</span><span class="p">(</span>
+                    <span class="n">qkv_dim</span><span class="p">,</span> <span class="n">qkv_dim</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">groups</span><span class="o">=</span><span class="n">qkv_dim</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">dwconv_q</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Conv1d</span><span class="p">(</span>
+                    <span class="n">embed_dim</span><span class="p">,</span> <span class="n">embed_dim</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">groups</span><span class="o">=</span><span class="n">embed_dim</span>
+                <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">dwconv_kv</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Conv1d</span><span class="p">(</span><span class="n">kv_dim</span><span class="p">,</span> <span class="n">kv_dim</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">groups</span><span class="o">=</span><span class="n">kv_dim</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inner_attn</span> <span class="o">=</span> <span class="n">inner_attn_cls</span><span class="p">(</span>
+            <span class="n">causal</span><span class="o">=</span><span class="n">causal</span><span class="p">,</span>
+            <span class="n">softmax_scale</span><span class="o">=</span><span class="n">softmax_scale</span><span class="p">,</span>
+            <span class="n">attention_dropout</span><span class="o">=</span><span class="n">dropout</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inner_cross_attn</span> <span class="o">=</span> <span class="n">inner_cross_attn_cls</span><span class="p">(</span>
+            <span class="n">causal</span><span class="o">=</span><span class="n">causal</span><span class="p">,</span> <span class="n">softmax_scale</span><span class="o">=</span><span class="n">softmax_scale</span><span class="p">,</span> <span class="n">attention_dropout</span><span class="o">=</span><span class="n">dropout</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">out_proj</span> <span class="o">=</span> <span class="n">linear_cls</span><span class="p">(</span><span class="n">embed_dim</span><span class="p">,</span> <span class="n">embed_dim</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="n">out_proj_bias</span><span class="p">,</span> <span class="o">**</span><span class="n">factory_kwargs</span><span class="p">)</span>
+
+<div class="viewcode-block" id="MHA.allocate_inference_cache"><a class="viewcode-back" href="../../../../cosense3d.modules.plugin.html#cosense3d.modules.plugin.flash_attn_new.MHA.allocate_inference_cache">[docs]</a>    <span class="k">def</span> <span class="nf">allocate_inference_cache</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">,</span> <span class="n">max_seqlen</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">dtype</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">out_proj</span><span class="o">.</span><span class="n">weight</span><span class="o">.</span><span class="n">dtype</span> <span class="k">if</span> <span class="n">dtype</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">dtype</span>
+        <span class="n">device</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">out_proj</span><span class="o">.</span><span class="n">weight</span><span class="o">.</span><span class="n">device</span>
+        <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span>
+            <span class="n">batch_size</span><span class="p">,</span>
+            <span class="n">max_seqlen</span><span class="p">,</span>
+            <span class="mi">2</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">num_heads_kv</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">head_dim</span><span class="p">,</span>
+            <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span>
+            <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_update_kv_cache</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kv</span><span class="p">,</span> <span class="n">inference_params</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;kv: (batch_size, seqlen, 2, nheads, head_dim) or (batch_size, 1, 2, nheads, head_dim)&quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">dwconv</span><span class="p">,</span> <span class="s2">&quot;Generation does not support dwconv yet&quot;</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">layer_idx</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;Generation requires layer_idx in the constructor&quot;</span>
+        <span class="k">return</span> <span class="n">_update_kv_cache</span><span class="p">(</span><span class="n">kv</span><span class="p">,</span> <span class="n">inference_params</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">layer_idx</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_apply_rotary_update_kvcache_attention</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">q</span><span class="p">,</span> <span class="n">kv</span><span class="p">,</span> <span class="n">inference_params</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Fast path that combine 3 steps: apply rotary to Q and K, update kv cache, and apply attention.</span>
+<span class="sd">        q: (batch_size, seqlen_q, nheads, head_dim)</span>
+<span class="sd">        kv: (batch_size, seqlen_k, 2, nheads_kv, head_dim)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="n">inference_params</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">inference_params</span><span class="o">.</span><span class="n">seqlen_offset</span> <span class="o">&gt;</span> <span class="mi">0</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_flash_attn</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">rotary_emb_dim</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">rotary_emb</span><span class="o">.</span><span class="n">scale</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;This code path does not support xPos&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">rotary_emb</span><span class="o">.</span><span class="n">_update_cos_sin_cache</span><span class="p">(</span>
+                <span class="n">inference_params</span><span class="o">.</span><span class="n">max_seqlen</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">q</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">q</span><span class="o">.</span><span class="n">dtype</span>
+            <span class="p">)</span>
+            <span class="n">rotary_cos</span><span class="p">,</span> <span class="n">rotary_sin</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rotary_emb</span><span class="o">.</span><span class="n">_cos_cached</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rotary_emb</span><span class="o">.</span><span class="n">_sin_cached</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">rotary_cos</span><span class="p">,</span> <span class="n">rotary_sin</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+        <span class="n">batch</span> <span class="o">=</span> <span class="n">q</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">kv_cache</span> <span class="o">=</span> <span class="n">inference_params</span><span class="o">.</span><span class="n">key_value_memory_dict</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">layer_idx</span><span class="p">][:</span><span class="n">batch</span><span class="p">]</span>
+        <span class="n">cache_seqlens</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">inference_params</span><span class="o">.</span><span class="n">lengths_per_sample</span><span class="p">[:</span><span class="n">batch</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">inference_params</span><span class="o">.</span><span class="n">lengths_per_sample</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="k">else</span> <span class="n">inference_params</span><span class="o">.</span><span class="n">seqlen_offset</span>
+        <span class="p">)</span>
+        <span class="n">alibi_slopes</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inner_cross_attn</span><span class="p">,</span> <span class="s2">&quot;alibi_slopes&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">context</span> <span class="o">=</span> <span class="n">flash_attn_with_kvcache</span><span class="p">(</span>
+            <span class="n">q</span><span class="p">,</span>
+            <span class="n">kv_cache</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">],</span>
+            <span class="n">kv_cache</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">1</span><span class="p">],</span>
+            <span class="n">kv</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">],</span>
+            <span class="n">kv</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">1</span><span class="p">],</span>
+            <span class="n">rotary_cos</span><span class="o">=</span><span class="n">rotary_cos</span><span class="p">,</span>
+            <span class="n">rotary_sin</span><span class="o">=</span><span class="n">rotary_sin</span><span class="p">,</span>
+            <span class="n">cache_seqlens</span><span class="o">=</span><span class="n">cache_seqlens</span><span class="p">,</span>
+            <span class="n">softmax_scale</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">inner_cross_attn</span><span class="o">.</span><span class="n">softmax_scale</span><span class="p">,</span>
+            <span class="n">causal</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">inner_cross_attn</span><span class="o">.</span><span class="n">causal</span><span class="p">,</span>
+            <span class="n">rotary_interleaved</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rotary_emb</span><span class="o">.</span><span class="n">interleaved</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">rotary_emb_dim</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="n">alibi_slopes</span><span class="o">=</span><span class="n">alibi_slopes</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">context</span>
+
+    <span class="k">def</span> <span class="nf">_update_kvcache_attention</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">q</span><span class="p">,</span> <span class="n">kv</span><span class="p">,</span> <span class="n">inference_params</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Write kv to inference_params, then do attention&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="n">inference_params</span><span class="o">.</span><span class="n">seqlen_offset</span> <span class="o">==</span> <span class="mi">0</span>
+            <span class="ow">or</span> <span class="n">flash_attn_with_kvcache</span> <span class="ow">is</span> <span class="kc">None</span>
+            <span class="ow">or</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_flash_attn</span>
+        <span class="p">):</span>
+            <span class="c1"># TODO: this only uses seqlen_offset and not lengths_per_sample.</span>
+            <span class="n">kv</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_update_kv_cache</span><span class="p">(</span><span class="n">kv</span><span class="p">,</span> <span class="n">inference_params</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">inner_cross_attn</span><span class="p">(</span><span class="n">q</span><span class="p">,</span> <span class="n">kv</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">batch</span> <span class="o">=</span> <span class="n">q</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">kv_cache</span> <span class="o">=</span> <span class="n">inference_params</span><span class="o">.</span><span class="n">key_value_memory_dict</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">layer_idx</span><span class="p">][:</span><span class="n">batch</span><span class="p">]</span>
+            <span class="n">cache_seqlens</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">inference_params</span><span class="o">.</span><span class="n">lengths_per_sample</span><span class="p">[:</span><span class="n">batch</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">inference_params</span><span class="o">.</span><span class="n">lengths_per_sample</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                <span class="k">else</span> <span class="n">inference_params</span><span class="o">.</span><span class="n">seqlen_offset</span>
+            <span class="p">)</span>
+            <span class="n">alibi_slopes</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inner_cross_attn</span><span class="p">,</span> <span class="s2">&quot;alibi_slopes&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">flash_attn_with_kvcache</span><span class="p">(</span>
+                <span class="n">q</span><span class="p">,</span>
+                <span class="n">kv_cache</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">],</span>
+                <span class="n">kv_cache</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">1</span><span class="p">],</span>
+                <span class="n">kv</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">],</span>
+                <span class="n">kv</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">1</span><span class="p">],</span>
+                <span class="n">cache_seqlens</span><span class="o">=</span><span class="n">cache_seqlens</span><span class="p">,</span>
+                <span class="n">softmax_scale</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">inner_cross_attn</span><span class="o">.</span><span class="n">softmax_scale</span><span class="p">,</span>
+                <span class="n">causal</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">inner_cross_attn</span><span class="o">.</span><span class="n">causal</span><span class="p">,</span>
+                <span class="n">alibi_slopes</span><span class="o">=</span><span class="n">alibi_slopes</span><span class="p">,</span>
+            <span class="p">)</span>
+
+<div class="viewcode-block" id="MHA.forward"><a class="viewcode-back" href="../../../../cosense3d.modules.plugin.html#cosense3d.modules.plugin.flash_attn_new.MHA.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">x</span><span class="p">,</span>
+        <span class="n">x_kv</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">key_padding_mask</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">cu_seqlens</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">max_seqlen</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">mixer_subset</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">inference_params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Arguments:</span>
+<span class="sd">            x: (batch, seqlen, hidden_dim) (where hidden_dim = num heads * head dim) if</span>
+<span class="sd">                cu_seqlens is None and max_seqlen is None, else (total, hidden_dim) where total</span>
+<span class="sd">                is the is the sum of the sequence lengths in the batch.</span>
+<span class="sd">            x_kv: (batch, seqlen, hidden_dim), only applicable for cross-attention. If None, use x.</span>
+<span class="sd">            cu_seqlens: (batch_size + 1,), dtype torch.int32. The cumulative sequence lengths</span>
+<span class="sd">                of the sequences in the batch, used to index into x. Only applicable when using</span>
+<span class="sd">                FlashAttention.</span>
+<span class="sd">            max_seqlen: int. Maximum sequence length in the batch.</span>
+<span class="sd">            key_padding_mask: boolean mask, True means to keep, False means to mask out.</span>
+<span class="sd">                (batch, seqlen). Only applicable when not using FlashAttention.</span>
+<span class="sd">            mixer_subset: for cross-attention only. If not None, will take a subset of x</span>
+<span class="sd">                before applying the query projection. Useful for e.g., ViT where we only care</span>
+<span class="sd">                about the CLS token in the last layer.</span>
+<span class="sd">            inference_params: for generation. Adapted from Megatron-LM (and Apex)</span>
+<span class="sd">            https://github.com/NVIDIA/apex/blob/3ff1a10f72ec07067c4e44759442329804ac5162/apex/transformer/testing/standalone_transformer_lm.py#L470</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">cu_seqlens</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="n">max_seqlen</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="k">assert</span> <span class="n">key_padding_mask</span> <span class="ow">is</span> <span class="kc">None</span>
+            <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_flash_attn</span>
+            <span class="k">assert</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">dwconv</span>
+            <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">rotary_emb_dim</span> <span class="o">==</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="n">key_padding_mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="n">cu_seqlens</span> <span class="ow">is</span> <span class="kc">None</span>
+            <span class="k">assert</span> <span class="n">max_seqlen</span> <span class="ow">is</span> <span class="kc">None</span>
+            <span class="k">assert</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_flash_attn</span>
+        <span class="k">if</span> <span class="n">inference_params</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="n">key_padding_mask</span> <span class="ow">is</span> <span class="kc">None</span>
+            <span class="k">assert</span> <span class="n">cu_seqlens</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">max_seqlen</span> <span class="ow">is</span> <span class="kc">None</span>
+            <span class="k">assert</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">dwconv</span>
+
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="p">{</span><span class="s2">&quot;cu_seqlens&quot;</span><span class="p">:</span> <span class="n">cu_seqlens</span><span class="p">,</span> <span class="s2">&quot;max_seqlen&quot;</span><span class="p">:</span> <span class="n">max_seqlen</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">}</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_flash_attn</span>
+            <span class="k">else</span> <span class="p">{</span><span class="s2">&quot;key_padding_mask&quot;</span><span class="p">:</span> <span class="n">key_padding_mask</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">}</span>
+        <span class="p">)</span>
+        <span class="n">seqlen_offset</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="mi">0</span>
+            <span class="k">if</span> <span class="n">inference_params</span> <span class="ow">is</span> <span class="kc">None</span>
+            <span class="k">else</span> <span class="p">(</span>
+                <span class="n">inference_params</span><span class="o">.</span><span class="n">lengths_per_sample</span>
+                <span class="k">if</span> <span class="n">inference_params</span><span class="o">.</span><span class="n">lengths_per_sample</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                <span class="k">else</span> <span class="n">inference_params</span><span class="o">.</span><span class="n">seqlen_offset</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">rotary_max_seqlen</span> <span class="o">=</span> <span class="n">inference_params</span><span class="o">.</span><span class="n">max_seqlen</span> <span class="k">if</span> <span class="n">inference_params</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="n">batch</span><span class="p">,</span> <span class="n">seqlen</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">cross_attn</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_heads_kv</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_heads</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="n">x_kv</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">mixer_subset</span> <span class="ow">is</span> <span class="kc">None</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">return_residual</span><span class="p">:</span>
+                <span class="n">qkv</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Wqkv</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">qkv</span><span class="p">,</span> <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Wqkv</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dwconv</span><span class="p">:</span>
+                <span class="n">qkv</span> <span class="o">=</span> <span class="n">rearrange</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">dwconv_qkv</span><span class="p">(</span><span class="n">rearrange</span><span class="p">(</span><span class="n">qkv</span><span class="p">,</span> <span class="s2">&quot;b s d -&gt; b d s&quot;</span><span class="p">))[</span><span class="o">...</span><span class="p">,</span> <span class="p">:</span><span class="o">-</span><span class="mi">2</span><span class="p">],</span> <span class="s2">&quot;b d s -&gt; b s d&quot;</span>
+                <span class="p">)</span><span class="o">.</span><span class="n">contiguous</span><span class="p">()</span>
+            <span class="n">qkv</span> <span class="o">=</span> <span class="n">rearrange</span><span class="p">(</span><span class="n">qkv</span><span class="p">,</span> <span class="s2">&quot;... (three h d) -&gt; ... three h d&quot;</span><span class="p">,</span> <span class="n">three</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">d</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">head_dim</span><span class="p">)</span>
+            <span class="k">if</span> <span class="p">(</span>
+                <span class="n">inference_params</span> <span class="ow">is</span> <span class="kc">None</span>
+                <span class="ow">or</span> <span class="n">inference_params</span><span class="o">.</span><span class="n">seqlen_offset</span> <span class="o">==</span> <span class="mi">0</span>
+                <span class="ow">or</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rotary_emb_dim</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">rotary_emb_dim</span> <span class="o">%</span> <span class="mi">16</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span>
+                <span class="ow">or</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_flash_attn</span>
+            <span class="p">):</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">rotary_emb_dim</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">qkv</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rotary_emb</span><span class="p">(</span>
+                        <span class="n">qkv</span><span class="p">,</span> <span class="n">seqlen_offset</span><span class="o">=</span><span class="n">seqlen_offset</span><span class="p">,</span> <span class="n">max_seqlen</span><span class="o">=</span><span class="n">rotary_max_seqlen</span>
+                    <span class="p">)</span>
+                <span class="k">if</span> <span class="n">inference_params</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">checkpointing</span><span class="p">:</span>
+                        <span class="n">context</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inner_attn</span><span class="p">(</span><span class="n">qkv</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">context</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">checkpoint</span><span class="o">.</span><span class="n">checkpoint</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inner_attn</span><span class="p">,</span> <span class="n">qkv</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">context</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_update_kvcache_attention</span><span class="p">(</span>
+                        <span class="n">qkv</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">qkv</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">1</span><span class="p">:],</span> <span class="n">inference_params</span>
+                    <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">context</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_apply_rotary_update_kvcache_attention</span><span class="p">(</span>
+                    <span class="n">qkv</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">qkv</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">1</span><span class="p">:],</span> <span class="n">inference_params</span>
+                <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cross_attn</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">return_residual</span><span class="p">:</span>
+                    <span class="n">q</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Wq</span><span class="p">(</span><span class="n">x</span> <span class="k">if</span> <span class="n">mixer_subset</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">x</span><span class="p">[:,</span> <span class="n">mixer_subset</span><span class="p">])</span>
+                    <span class="n">kv</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Wkv</span><span class="p">(</span><span class="n">x_kv</span> <span class="k">if</span> <span class="n">x_kv</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">x</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">x_kv</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="n">kv</span><span class="p">,</span> <span class="n">x_kv</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Wkv</span><span class="p">(</span><span class="n">x_kv</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">kv</span><span class="p">,</span> <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Wkv</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+                    <span class="n">q</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Wq</span><span class="p">(</span><span class="n">x</span> <span class="k">if</span> <span class="n">mixer_subset</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">x</span><span class="p">[:,</span> <span class="n">mixer_subset</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_heads_kv</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_heads</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">return_residual</span><span class="p">:</span>
+                    <span class="n">qkv</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Wqkv</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">qkv</span><span class="p">,</span> <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Wqkv</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+                <span class="n">q</span> <span class="o">=</span> <span class="n">qkv</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_heads</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">head_dim</span><span class="p">]</span>
+                <span class="n">kv</span> <span class="o">=</span> <span class="n">qkv</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_heads</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">head_dim</span> <span class="p">:]</span>
+            <span class="n">q</span> <span class="o">=</span> <span class="n">rearrange</span><span class="p">(</span><span class="n">q</span><span class="p">,</span> <span class="s2">&quot;... (h d) -&gt; ... h d&quot;</span><span class="p">,</span> <span class="n">d</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">head_dim</span><span class="p">)</span>
+            <span class="n">kv</span> <span class="o">=</span> <span class="n">rearrange</span><span class="p">(</span><span class="n">kv</span><span class="p">,</span> <span class="s2">&quot;... (two hkv d) -&gt; ... two hkv d&quot;</span><span class="p">,</span> <span class="n">two</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">d</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">head_dim</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dwconv</span><span class="p">:</span>
+                <span class="n">q</span> <span class="o">=</span> <span class="n">rearrange</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">dwconv_q</span><span class="p">(</span><span class="n">rearrange</span><span class="p">(</span><span class="n">q</span><span class="p">,</span> <span class="s2">&quot;b s d -&gt; b d s&quot;</span><span class="p">))[</span><span class="o">...</span><span class="p">,</span> <span class="p">:</span><span class="o">-</span><span class="mi">2</span><span class="p">],</span> <span class="s2">&quot;b d s -&gt; b s d&quot;</span>
+                <span class="p">)</span><span class="o">.</span><span class="n">contiguous</span><span class="p">()</span>
+                <span class="n">kv</span> <span class="o">=</span> <span class="n">rearrange</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">dwconv_kv</span><span class="p">(</span><span class="n">rearrange</span><span class="p">(</span><span class="n">kv</span><span class="p">,</span> <span class="s2">&quot;b s d -&gt; b d s&quot;</span><span class="p">))[</span><span class="o">...</span><span class="p">,</span> <span class="p">:</span><span class="o">-</span><span class="mi">2</span><span class="p">],</span> <span class="s2">&quot;b d s -&gt; b s d&quot;</span>
+                <span class="p">)</span><span class="o">.</span><span class="n">contiguous</span><span class="p">()</span>
+            <span class="k">if</span> <span class="p">(</span>
+                <span class="n">inference_params</span> <span class="ow">is</span> <span class="kc">None</span>
+                <span class="ow">or</span> <span class="n">inference_params</span><span class="o">.</span><span class="n">seqlen_offset</span> <span class="o">==</span> <span class="mi">0</span>
+                <span class="ow">or</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rotary_emb_dim</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">rotary_emb_dim</span> <span class="o">%</span> <span class="mi">16</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span>
+                <span class="ow">or</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_flash_attn</span>
+            <span class="p">):</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">rotary_emb_dim</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">q</span><span class="p">,</span> <span class="n">kv</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rotary_emb</span><span class="p">(</span>
+                        <span class="n">q</span><span class="p">,</span> <span class="n">kv</span><span class="p">,</span> <span class="n">seqlen_offset</span><span class="o">=</span><span class="n">seqlen_offset</span><span class="p">,</span> <span class="n">max_seqlen</span><span class="o">=</span><span class="n">rotary_max_seqlen</span>
+                    <span class="p">)</span>
+                <span class="k">if</span> <span class="n">inference_params</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">checkpointing</span><span class="p">:</span>
+                        <span class="n">context</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inner_cross_attn</span><span class="p">(</span><span class="n">q</span><span class="p">,</span> <span class="n">kv</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">context</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">checkpoint</span><span class="o">.</span><span class="n">checkpoint</span><span class="p">(</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">inner_cross_attn</span><span class="p">,</span> <span class="n">q</span><span class="p">,</span> <span class="n">kv</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+                        <span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">context</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_update_kvcache_attention</span><span class="p">(</span><span class="n">q</span><span class="p">,</span> <span class="n">kv</span><span class="p">,</span> <span class="n">inference_params</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">context</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_apply_rotary_update_kvcache_attention</span><span class="p">(</span><span class="n">q</span><span class="p">,</span> <span class="n">kv</span><span class="p">,</span> <span class="n">inference_params</span><span class="p">)</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">out_proj</span><span class="p">(</span><span class="n">rearrange</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="s2">&quot;... h d -&gt; ... (h d)&quot;</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">out</span> <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">return_residual</span> <span class="k">else</span> <span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="ParallelMHA"><a class="viewcode-back" href="../../../../cosense3d.modules.plugin.html#cosense3d.modules.plugin.flash_attn_new.ParallelMHA">[docs]</a><span class="k">class</span> <span class="nc">ParallelMHA</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Multi-head self-attention and cross-attention&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">embed_dim</span><span class="p">,</span>
+        <span class="n">num_heads</span><span class="p">,</span>
+        <span class="n">process_group</span><span class="p">,</span>
+        <span class="n">num_heads_kv</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">qkv_proj_bias</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">out_proj_bias</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">dropout</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+        <span class="n">softmax_scale</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">causal</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">layer_idx</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">rotary_emb_dim</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="n">rotary_emb_base</span><span class="o">=</span><span class="mf">10000.0</span><span class="p">,</span>
+        <span class="n">rotary_emb_scale_base</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">rotary_emb_interleaved</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">use_alibi</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">use_flash_attn</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">checkpointing</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">sequence_parallel</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">device</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">factory_kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;device&quot;</span><span class="p">:</span> <span class="n">device</span><span class="p">,</span> <span class="s2">&quot;dtype&quot;</span><span class="p">:</span> <span class="n">dtype</span><span class="p">}</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">embed_dim</span> <span class="o">=</span> <span class="n">embed_dim</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">causal</span> <span class="o">=</span> <span class="n">causal</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">layer_idx</span> <span class="o">=</span> <span class="n">layer_idx</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rotary_emb_dim</span> <span class="o">=</span> <span class="n">rotary_emb_dim</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">use_flash_attn</span> <span class="o">=</span> <span class="n">use_flash_attn</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">checkpointing</span> <span class="o">=</span> <span class="n">checkpointing</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">process_group</span> <span class="o">=</span> <span class="n">process_group</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">world_size</span> <span class="o">=</span> <span class="n">process_group</span><span class="o">.</span><span class="n">size</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">local_rank</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">distributed</span><span class="o">.</span><span class="n">get_rank</span><span class="p">(</span><span class="n">process_group</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_heads</span> <span class="o">=</span> <span class="n">num_heads</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">embed_dim</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_heads</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;embed_dim must be divisible by num_heads&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_heads_kv</span> <span class="o">=</span> <span class="n">num_heads_kv</span> <span class="k">if</span> <span class="n">num_heads_kv</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">num_heads</span>
+        <span class="k">assert</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">num_heads</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_heads_kv</span> <span class="o">==</span> <span class="mi">0</span>
+        <span class="p">),</span> <span class="s2">&quot;num_heads must be divisible by num_heads_kv&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_heads_per_rank</span> <span class="o">=</span> <span class="n">get_dim_for_local_rank</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">num_heads</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">world_size</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">local_rank</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_heads_kv_per_rank</span> <span class="o">=</span> <span class="n">get_dim_for_local_rank</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">num_heads_kv</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">world_size</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">local_rank</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">head_dim</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">embed_dim</span> <span class="o">//</span> <span class="n">num_heads</span>
+        <span class="n">qkv_dim</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">head_dim</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_heads</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_heads_kv</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">use_alibi</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="n">use_flash_attn</span><span class="p">,</span> <span class="s2">&quot;ALiBi code path requires flash_attn&quot;</span>
+            <span class="n">num_heads_local</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_heads</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">world_size</span><span class="p">)</span>
+            <span class="n">alibi_slopes</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span>
+                <span class="n">get_alibi_slopes</span><span class="p">(</span><span class="n">num_heads</span><span class="p">)[</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">local_rank</span> <span class="o">*</span> <span class="n">num_heads_local</span> <span class="p">:</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">local_rank</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">num_heads_local</span>
+                <span class="p">],</span>
+                <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">alibi_slopes</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">rotary_emb_dim</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="n">RotaryEmbedding</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;rotary_emb is not installed&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">rotary_emb</span> <span class="o">=</span> <span class="n">RotaryEmbedding</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">rotary_emb_dim</span><span class="p">,</span>
+                <span class="n">base</span><span class="o">=</span><span class="n">rotary_emb_base</span><span class="p">,</span>
+                <span class="n">scale_base</span><span class="o">=</span><span class="n">rotary_emb_scale_base</span><span class="p">,</span>
+                <span class="n">interleaved</span><span class="o">=</span><span class="n">rotary_emb_interleaved</span><span class="p">,</span>
+                <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">ColumnParallelLinear</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">RowParallelLinear</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s2">&quot;fused_dense is not installed&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Wqkv</span> <span class="o">=</span> <span class="n">ColumnParallelLinear</span><span class="p">(</span>
+            <span class="n">embed_dim</span><span class="p">,</span>
+            <span class="n">qkv_dim</span><span class="p">,</span>
+            <span class="n">process_group</span><span class="p">,</span>
+            <span class="n">bias</span><span class="o">=</span><span class="n">qkv_proj_bias</span><span class="p">,</span>
+            <span class="n">sequence_parallel</span><span class="o">=</span><span class="n">sequence_parallel</span><span class="p">,</span>
+            <span class="n">multiple_of</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">head_dim</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_heads</span> <span class="o">//</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_heads_kv</span> <span class="o">+</span> <span class="mi">2</span><span class="p">),</span>
+            <span class="o">**</span><span class="n">factory_kwargs</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">inner_attn_cls</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">partial</span><span class="p">(</span><span class="n">FlashSelfAttention</span><span class="p">,</span> <span class="n">alibi_slopes</span><span class="o">=</span><span class="n">alibi_slopes</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">use_flash_attn</span>
+            <span class="k">else</span> <span class="n">SelfAttention</span>
+        <span class="p">)</span>
+        <span class="n">inner_cross_attn_cls</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">partial</span><span class="p">(</span><span class="n">FlashCrossAttention</span><span class="p">,</span> <span class="n">alibi_slopes</span><span class="o">=</span><span class="n">alibi_slopes</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">use_flash_attn</span>
+            <span class="k">else</span> <span class="n">CrossAttention</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inner_attn</span> <span class="o">=</span> <span class="n">inner_attn_cls</span><span class="p">(</span>
+            <span class="n">causal</span><span class="o">=</span><span class="n">causal</span><span class="p">,</span> <span class="n">softmax_scale</span><span class="o">=</span><span class="n">softmax_scale</span><span class="p">,</span> <span class="n">attention_dropout</span><span class="o">=</span><span class="n">dropout</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inner_cross_attn</span> <span class="o">=</span> <span class="n">inner_cross_attn_cls</span><span class="p">(</span>
+            <span class="n">causal</span><span class="o">=</span><span class="n">causal</span><span class="p">,</span> <span class="n">softmax_scale</span><span class="o">=</span><span class="n">softmax_scale</span><span class="p">,</span> <span class="n">attention_dropout</span><span class="o">=</span><span class="n">dropout</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">out_proj</span> <span class="o">=</span> <span class="n">RowParallelLinear</span><span class="p">(</span>
+            <span class="n">embed_dim</span><span class="p">,</span>
+            <span class="n">embed_dim</span><span class="p">,</span>
+            <span class="n">process_group</span><span class="p">,</span>
+            <span class="n">bias</span><span class="o">=</span><span class="n">out_proj_bias</span><span class="p">,</span>
+            <span class="n">sequence_parallel</span><span class="o">=</span><span class="n">sequence_parallel</span><span class="p">,</span>
+            <span class="n">multiple_of</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">head_dim</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">factory_kwargs</span><span class="p">,</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="ParallelMHA.allocate_inference_cache"><a class="viewcode-back" href="../../../../cosense3d.modules.plugin.html#cosense3d.modules.plugin.flash_attn_new.ParallelMHA.allocate_inference_cache">[docs]</a>    <span class="k">def</span> <span class="nf">allocate_inference_cache</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">,</span> <span class="n">max_seqlen</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">dtype</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">out_proj</span><span class="o">.</span><span class="n">weight</span><span class="o">.</span><span class="n">dtype</span> <span class="k">if</span> <span class="n">dtype</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">dtype</span>
+        <span class="n">device</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">out_proj</span><span class="o">.</span><span class="n">weight</span><span class="o">.</span><span class="n">device</span>
+        <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span>
+            <span class="n">batch_size</span><span class="p">,</span>
+            <span class="n">max_seqlen</span><span class="p">,</span>
+            <span class="mi">2</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">num_heads_kv_per_rank</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">head_dim</span><span class="p">,</span>
+            <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span>
+            <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_update_kv_cache</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kv</span><span class="p">,</span> <span class="n">inference_params</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;kv: (batch_size, seqlen, 2, nheads, head_dim) or (batch_size, 1, 2, nheads, head_dim)&quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">layer_idx</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;Generation requires layer_idx in the constructor&quot;</span>
+        <span class="k">return</span> <span class="n">_update_kv_cache</span><span class="p">(</span><span class="n">kv</span><span class="p">,</span> <span class="n">inference_params</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">layer_idx</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_apply_rotary_update_kvcache_attention</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">q</span><span class="p">,</span> <span class="n">kv</span><span class="p">,</span> <span class="n">inference_params</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Fast path that combine 3 steps: apply rotary to Q and K, update kv cache, and apply attention.</span>
+<span class="sd">        q: (batch_size, seqlen_q, nheads, head_dim)</span>
+<span class="sd">        kv: (batch_size, seqlen_k, 2, nheads_kv, head_dim)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="n">inference_params</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">inference_params</span><span class="o">.</span><span class="n">seqlen_offset</span> <span class="o">&gt;</span> <span class="mi">0</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_flash_attn</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">rotary_emb_dim</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">rotary_emb</span><span class="o">.</span><span class="n">scale</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;This code path does not support xPos&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">rotary_emb</span><span class="o">.</span><span class="n">_update_cos_sin_cache</span><span class="p">(</span>
+                <span class="n">inference_params</span><span class="o">.</span><span class="n">max_seqlen</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">q</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">q</span><span class="o">.</span><span class="n">dtype</span>
+            <span class="p">)</span>
+            <span class="n">rotary_cos</span><span class="p">,</span> <span class="n">rotary_sin</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rotary_emb</span><span class="o">.</span><span class="n">_cos_cached</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rotary_emb</span><span class="o">.</span><span class="n">_sin_cached</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">rotary_cos</span><span class="p">,</span> <span class="n">rotary_sin</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+        <span class="n">batch</span> <span class="o">=</span> <span class="n">q</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">kv_cache</span> <span class="o">=</span> <span class="n">inference_params</span><span class="o">.</span><span class="n">key_value_memory_dict</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">layer_idx</span><span class="p">][:</span><span class="n">batch</span><span class="p">]</span>
+        <span class="n">cache_seqlens</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">inference_params</span><span class="o">.</span><span class="n">lengths_per_sample</span><span class="p">[:</span><span class="n">batch</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">inference_params</span><span class="o">.</span><span class="n">lengths_per_sample</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="k">else</span> <span class="n">inference_params</span><span class="o">.</span><span class="n">seqlen_offset</span>
+        <span class="p">)</span>
+        <span class="n">alibi_slopes</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inner_cross_attn</span><span class="p">,</span> <span class="s2">&quot;alibi_slopes&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">context</span> <span class="o">=</span> <span class="n">flash_attn_with_kvcache</span><span class="p">(</span>
+            <span class="n">q</span><span class="p">,</span>
+            <span class="n">kv_cache</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">],</span>
+            <span class="n">kv_cache</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">1</span><span class="p">],</span>
+            <span class="n">kv</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">],</span>
+            <span class="n">kv</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">1</span><span class="p">],</span>
+            <span class="n">rotary_cos</span><span class="o">=</span><span class="n">rotary_cos</span><span class="p">,</span>
+            <span class="n">rotary_sin</span><span class="o">=</span><span class="n">rotary_sin</span><span class="p">,</span>
+            <span class="n">cache_seqlens</span><span class="o">=</span><span class="n">cache_seqlens</span><span class="p">,</span>
+            <span class="n">softmax_scale</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">inner_cross_attn</span><span class="o">.</span><span class="n">softmax_scale</span><span class="p">,</span>
+            <span class="n">causal</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">inner_cross_attn</span><span class="o">.</span><span class="n">causal</span><span class="p">,</span>
+            <span class="n">rotary_interleaved</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rotary_emb</span><span class="o">.</span><span class="n">interleaved</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">rotary_emb_dim</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="n">alibi_slopes</span><span class="o">=</span><span class="n">alibi_slopes</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">context</span>
+
+    <span class="k">def</span> <span class="nf">_update_kvcache_attention</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">q</span><span class="p">,</span> <span class="n">kv</span><span class="p">,</span> <span class="n">inference_params</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Write kv to inference_params, then do attention&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">inference_params</span><span class="o">.</span><span class="n">seqlen_offset</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_flash_attn</span><span class="p">:</span>
+            <span class="c1"># TODO: this only uses seqlen_offset and not lengths_per_sample.</span>
+            <span class="n">kv</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_update_kv_cache</span><span class="p">(</span><span class="n">kv</span><span class="p">,</span> <span class="n">inference_params</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">inner_cross_attn</span><span class="p">(</span><span class="n">q</span><span class="p">,</span> <span class="n">kv</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">batch</span> <span class="o">=</span> <span class="n">q</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">kv_cache</span> <span class="o">=</span> <span class="n">inference_params</span><span class="o">.</span><span class="n">key_value_memory_dict</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">layer_idx</span><span class="p">][:</span><span class="n">batch</span><span class="p">]</span>
+            <span class="n">cache_seqlens</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">inference_params</span><span class="o">.</span><span class="n">lengths_per_sample</span><span class="p">[:</span><span class="n">batch</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">inference_params</span><span class="o">.</span><span class="n">lengths_per_sample</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                <span class="k">else</span> <span class="n">inference_params</span><span class="o">.</span><span class="n">seqlen_offset</span>
+            <span class="p">)</span>
+            <span class="n">alibi_slopes</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inner_cross_attn</span><span class="p">,</span> <span class="s2">&quot;alibi_slopes&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="n">context</span> <span class="o">=</span> <span class="n">flash_attn_with_kvcache</span><span class="p">(</span>
+                <span class="n">q</span><span class="p">,</span>
+                <span class="n">kv_cache</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">],</span>
+                <span class="n">kv_cache</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">1</span><span class="p">],</span>
+                <span class="n">kv</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">],</span>
+                <span class="n">kv</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">1</span><span class="p">],</span>
+                <span class="n">cache_seqlens</span><span class="o">=</span><span class="n">cache_seqlens</span><span class="p">,</span>
+                <span class="n">softmax_scale</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">inner_cross_attn</span><span class="o">.</span><span class="n">softmax_scale</span><span class="p">,</span>
+                <span class="n">causal</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">inner_cross_attn</span><span class="o">.</span><span class="n">causal</span><span class="p">,</span>
+                <span class="n">alibi_slopes</span><span class="o">=</span><span class="n">alibi_slopes</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="n">context</span>
+
+<div class="viewcode-block" id="ParallelMHA.forward"><a class="viewcode-back" href="../../../../cosense3d.modules.plugin.html#cosense3d.modules.plugin.flash_attn_new.ParallelMHA.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">seqlen</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">inference_params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Arguments:</span>
+<span class="sd">            x: (batch, seqlen, hidden_dim) (where hidden_dim = num heads * head dim) if seqlen=None.</span>
+<span class="sd">                If seqlen is not None, x is (batch * seqlen, hidden_dim). This is so that when we</span>
+<span class="sd">                split x during sequence parallel, we split the batch * seqlen dimension</span>
+<span class="sd">                (in case batch is small).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">qkv</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Wqkv</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">seqlen</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">qkv</span> <span class="o">=</span> <span class="n">rearrange</span><span class="p">(</span><span class="n">qkv</span><span class="p">,</span> <span class="s2">&quot;(b s) ... -&gt; b s ...&quot;</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="n">seqlen</span><span class="p">)</span>
+        <span class="n">seqlen_offset</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="mi">0</span>
+            <span class="k">if</span> <span class="n">inference_params</span> <span class="ow">is</span> <span class="kc">None</span>
+            <span class="k">else</span> <span class="p">(</span>
+                <span class="n">inference_params</span><span class="o">.</span><span class="n">lengths_per_sample</span>
+                <span class="k">if</span> <span class="n">inference_params</span><span class="o">.</span><span class="n">lengths_per_sample</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                <span class="k">else</span> <span class="n">inference_params</span><span class="o">.</span><span class="n">seqlen_offset</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">rotary_max_seqlen</span> <span class="o">=</span> <span class="n">inference_params</span><span class="o">.</span><span class="n">max_seqlen</span> <span class="k">if</span> <span class="n">inference_params</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_heads_kv</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_heads</span><span class="p">:</span>
+            <span class="n">qkv</span> <span class="o">=</span> <span class="n">rearrange</span><span class="p">(</span><span class="n">qkv</span><span class="p">,</span> <span class="s2">&quot;b s (three h d) -&gt; b s three h d&quot;</span><span class="p">,</span> <span class="n">three</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">d</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">head_dim</span><span class="p">)</span>
+            <span class="k">if</span> <span class="p">(</span>
+                <span class="n">inference_params</span> <span class="ow">is</span> <span class="kc">None</span>
+                <span class="ow">or</span> <span class="n">inference_params</span><span class="o">.</span><span class="n">seqlen_offset</span> <span class="o">==</span> <span class="mi">0</span>
+                <span class="ow">or</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rotary_emb_dim</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">rotary_emb_dim</span> <span class="o">%</span> <span class="mi">16</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span>
+                <span class="ow">or</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_flash_attn</span>
+            <span class="p">):</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">rotary_emb_dim</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">qkv</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rotary_emb</span><span class="p">(</span>
+                        <span class="n">qkv</span><span class="p">,</span> <span class="n">seqlen_offset</span><span class="o">=</span><span class="n">seqlen_offset</span><span class="p">,</span> <span class="n">max_seqlen</span><span class="o">=</span><span class="n">rotary_max_seqlen</span>
+                    <span class="p">)</span>
+                <span class="k">if</span> <span class="n">inference_params</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">checkpointing</span><span class="p">:</span>
+                        <span class="n">context</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inner_attn</span><span class="p">(</span><span class="n">qkv</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">context</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">checkpoint</span><span class="o">.</span><span class="n">checkpoint</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inner_attn</span><span class="p">,</span> <span class="n">qkv</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">context</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_update_kvcache_attention</span><span class="p">(</span>
+                        <span class="n">qkv</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">qkv</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">1</span><span class="p">:],</span> <span class="n">inference_params</span>
+                    <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">context</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_apply_rotary_update_kvcache_attention</span><span class="p">(</span>
+                    <span class="n">qkv</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">qkv</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">1</span><span class="p">:],</span> <span class="n">inference_params</span>
+                <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">q</span> <span class="o">=</span> <span class="n">rearrange</span><span class="p">(</span>
+                <span class="n">qkv</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_heads_per_rank</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">head_dim</span><span class="p">],</span>
+                <span class="s2">&quot;... (h d) -&gt; ... h d&quot;</span><span class="p">,</span>
+                <span class="n">d</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">head_dim</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">kv</span> <span class="o">=</span> <span class="n">rearrange</span><span class="p">(</span>
+                <span class="n">qkv</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_heads_per_rank</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">head_dim</span> <span class="p">:],</span>
+                <span class="s2">&quot;... (two hkv d) -&gt; ... two hkv d&quot;</span><span class="p">,</span>
+                <span class="n">two</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                <span class="n">d</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">head_dim</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="p">(</span>
+                <span class="n">inference_params</span> <span class="ow">is</span> <span class="kc">None</span>
+                <span class="ow">or</span> <span class="n">inference_params</span><span class="o">.</span><span class="n">seqlen_offset</span> <span class="o">==</span> <span class="mi">0</span>
+                <span class="ow">or</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rotary_emb_dim</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">rotary_emb_dim</span> <span class="o">%</span> <span class="mi">16</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span>
+                <span class="ow">or</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_flash_attn</span>
+            <span class="p">):</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">rotary_emb_dim</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">q</span><span class="p">,</span> <span class="n">kv</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rotary_emb</span><span class="p">(</span>
+                        <span class="n">q</span><span class="p">,</span> <span class="n">kv</span><span class="p">,</span> <span class="n">seqlen_offset</span><span class="o">=</span><span class="n">seqlen_offset</span><span class="p">,</span> <span class="n">max_seqlen</span><span class="o">=</span><span class="n">rotary_max_seqlen</span>
+                    <span class="p">)</span>
+                <span class="k">if</span> <span class="n">inference_params</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">checkpointing</span><span class="p">:</span>
+                        <span class="n">context</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inner_cross_attn</span><span class="p">(</span><span class="n">q</span><span class="p">,</span> <span class="n">kv</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">context</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">checkpoint</span><span class="o">.</span><span class="n">checkpoint</span><span class="p">(</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">inner_cross_attn</span><span class="p">,</span> <span class="n">q</span><span class="p">,</span> <span class="n">kv</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+                        <span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">context</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_update_kvcache_attention</span><span class="p">(</span><span class="n">q</span><span class="p">,</span> <span class="n">kv</span><span class="p">,</span> <span class="n">inference_params</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">context</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_apply_rotary_update_kvcache_attention</span><span class="p">(</span><span class="n">q</span><span class="p">,</span> <span class="n">kv</span><span class="p">,</span> <span class="n">inference_params</span><span class="p">)</span>
+        <span class="n">context</span> <span class="o">=</span> <span class="n">rearrange</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="s2">&quot;b s h d -&gt; b s (h d)&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">seqlen</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">context</span> <span class="o">=</span> <span class="n">rearrange</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="s2">&quot;b s d -&gt; (b s) d&quot;</span><span class="p">)</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">out_proj</span><span class="p">(</span><span class="n">context</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">out</span></div></div>
+
+
+<span class="k">def</span> <span class="nf">_in_projection_packed</span><span class="p">(</span><span class="n">q</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="n">w_q</span><span class="p">,</span> <span class="n">w_k</span><span class="p">,</span> <span class="n">w_v</span> <span class="o">=</span> <span class="n">w</span><span class="o">.</span><span class="n">chunk</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">b</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">b_q</span> <span class="o">=</span> <span class="n">b_k</span> <span class="o">=</span> <span class="n">b_v</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">b_q</span><span class="p">,</span> <span class="n">b_k</span><span class="p">,</span> <span class="n">b_v</span> <span class="o">=</span> <span class="n">b</span><span class="o">.</span><span class="n">chunk</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">linear</span><span class="p">(</span><span class="n">q</span><span class="p">,</span> <span class="n">w_q</span><span class="p">,</span> <span class="n">b_q</span><span class="p">),</span> <span class="n">linear</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">w_k</span><span class="p">,</span> <span class="n">b_k</span><span class="p">),</span> <span class="n">linear</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">w_v</span><span class="p">,</span> <span class="n">b_v</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="FlashMHA"><a class="viewcode-back" href="../../../../cosense3d.modules.plugin.html#cosense3d.modules.plugin.flash_attn_new.FlashMHA">[docs]</a><span class="k">class</span> <span class="nc">FlashMHA</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">embed_dim</span><span class="p">,</span> <span class="n">num_heads</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">batch_first</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">attention_dropout</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+                 <span class="n">causal</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="n">batch_first</span>
+        <span class="n">factory_kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;device&#39;</span><span class="p">:</span> <span class="n">device</span><span class="p">,</span> <span class="s1">&#39;dtype&#39;</span><span class="p">:</span> <span class="n">dtype</span><span class="p">}</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">embed_dim</span> <span class="o">=</span> <span class="n">embed_dim</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">causal</span> <span class="o">=</span> <span class="n">causal</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bias</span> <span class="o">=</span> <span class="n">bias</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_heads</span> <span class="o">=</span> <span class="n">num_heads</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">embed_dim</span> <span class="o">%</span> <span class="n">num_heads</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;self.kdim must be divisible by num_heads&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">head_dim</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">embed_dim</span> <span class="o">//</span> <span class="n">num_heads</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">head_dim</span> <span class="o">%</span> <span class="mi">8</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">head_dim</span> <span class="o">&lt;=</span> <span class="mi">128</span><span class="p">,</span> <span class="s2">&quot;Only support head_dim &lt;= 128 and divisible by 8&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">in_proj_weight</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Parameter</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="mi">3</span> <span class="o">*</span> <span class="n">embed_dim</span><span class="p">,</span> <span class="n">embed_dim</span><span class="p">)))</span>
+        <span class="k">if</span> <span class="n">bias</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">in_proj_bias</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Parameter</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="mi">3</span> <span class="o">*</span> <span class="n">embed_dim</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">register_parameter</span><span class="p">(</span><span class="s1">&#39;in_proj_bias&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inner_attn</span> <span class="o">=</span> <span class="n">FlashCrossAttention</span><span class="p">(</span>
+            <span class="n">causal</span><span class="o">=</span><span class="n">causal</span><span class="p">,</span>
+            <span class="n">attention_dropout</span><span class="o">=</span><span class="n">attention_dropout</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">out_proj</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">embed_dim</span><span class="p">,</span> <span class="n">embed_dim</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="n">bias</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_reset_parameters</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_reset_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">xavier_uniform_</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">in_proj_weight</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">in_proj_bias</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">constant_</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">in_proj_bias</span><span class="p">,</span> <span class="mf">0.</span><span class="p">)</span>
+            <span class="n">constant_</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">out_proj</span><span class="o">.</span><span class="n">bias</span><span class="p">,</span> <span class="mf">0.</span><span class="p">)</span>
+
+<div class="viewcode-block" id="FlashMHA.forward"><a class="viewcode-back" href="../../../../cosense3d.modules.plugin.html#cosense3d.modules.plugin.flash_attn_new.FlashMHA.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">q</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">key_padding_mask</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;x: (batch, seqlen, hidden_dim) (where hidden_dim = num heads * head dim)</span>
+<span class="sd">        key_padding_mask: bool tensor of shape (batch, seqlen)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># q, k, v = self.Wq(q), self.Wk(k), self.Wv(v)</span>
+        <span class="n">q</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="n">_in_projection_packed</span><span class="p">(</span><span class="n">q</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">in_proj_weight</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">in_proj_bias</span><span class="p">)</span>
+        <span class="n">q</span> <span class="o">=</span> <span class="n">rearrange</span><span class="p">(</span><span class="n">q</span><span class="p">,</span> <span class="s1">&#39;b s (h d) -&gt; b s h d&#39;</span><span class="p">,</span> <span class="n">h</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">num_heads</span><span class="p">)</span>
+        <span class="n">k</span> <span class="o">=</span> <span class="n">rearrange</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="s1">&#39;b s (h d) -&gt; b s h d&#39;</span><span class="p">,</span> <span class="n">h</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">num_heads</span><span class="p">)</span>
+        <span class="n">v</span> <span class="o">=</span> <span class="n">rearrange</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="s1">&#39;b s (h d) -&gt; b s h d&#39;</span><span class="p">,</span> <span class="n">h</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">num_heads</span><span class="p">)</span>
+        <span class="n">kv</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">],</span> <span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">context</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inner_attn</span><span class="p">(</span><span class="n">q</span><span class="p">,</span> <span class="n">kv</span><span class="p">,</span> <span class="n">causal</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">causal</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">out_proj</span><span class="p">(</span><span class="n">rearrange</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="s1">&#39;b s h d -&gt; b s (h d)&#39;</span><span class="p">)),</span> <span class="kc">None</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Anonymous Author.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

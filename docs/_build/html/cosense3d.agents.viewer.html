@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>cosense3d.agents.viewer package &mdash; Cosense3D 1.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=af2ce170"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="cosense3d.agents.viewer.items package" href="cosense3d.agents.viewer.items.html" />
+    <link rel="prev" title="cosense3d.agents.utils package" href="cosense3d.agents.utils.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Cosense3D
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="md/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="md/prepare_data.html">Prepare Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="md/structure.html">The Structure of the framework</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">CoSense3D</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="cosense3d.agents.html">cosense3d.agents package</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="cosense3d.agents.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="cosense3d.agents.cav_prototype.html">cosense3d.agents.cav_prototype package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="cosense3d.agents.core.html">cosense3d.agents.core package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="cosense3d.agents.utils.html">cosense3d.agents.utils package</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">cosense3d.agents.viewer package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="cosense3d.agents.html#submodules">Submodules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cosense3d.agents.html#module-cosense3d.agents.center_controller">cosense3d.agents.center_controller module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cosense3d.agents.html#module-cosense3d.agents">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="cosense3d.dataset.html">cosense3d.dataset package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cosense3d.modules.html">cosense3d.modules package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cosense3d.utils.html">cosense3d.utils package</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Cosense3D</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">CoSense3D</a></li>
+          <li class="breadcrumb-item"><a href="cosense3d.agents.html">cosense3d.agents package</a></li>
+      <li class="breadcrumb-item active">cosense3d.agents.viewer package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/cosense3d.agents.viewer.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="cosense3d-agents-viewer-package">
+<h1>cosense3d.agents.viewer package<a class="headerlink" href="#cosense3d-agents-viewer-package" title="Permalink to this heading"></a></h1>
+<section id="subpackages">
+<h2>Subpackages<a class="headerlink" href="#subpackages" title="Permalink to this heading"></a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="cosense3d.agents.viewer.items.html">cosense3d.agents.viewer.items package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="cosense3d.agents.viewer.items.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cosense3d.agents.viewer.items.html#module-cosense3d.agents.viewer.items.graph_items">cosense3d.agents.viewer.items.graph_items module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="cosense3d.agents.viewer.items.html#cosense3d.agents.viewer.items.graph_items.LineBoxItem"><code class="docutils literal notranslate"><span class="pre">LineBoxItem</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="cosense3d.agents.viewer.items.html#cosense3d.agents.viewer.items.graph_items.LineBoxItem.activate"><code class="docutils literal notranslate"><span class="pre">LineBoxItem.activate()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cosense3d.agents.viewer.items.html#cosense3d.agents.viewer.items.graph_items.LineBoxItem.color"><code class="docutils literal notranslate"><span class="pre">LineBoxItem.color()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cosense3d.agents.viewer.items.html#cosense3d.agents.viewer.items.graph_items.LineBoxItem.deactivate"><code class="docutils literal notranslate"><span class="pre">LineBoxItem.deactivate()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cosense3d.agents.viewer.items.html#cosense3d.agents.viewer.items.graph_items.LineBoxItem.highlight"><code class="docutils literal notranslate"><span class="pre">LineBoxItem.highlight()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cosense3d.agents.viewer.items.html#cosense3d.agents.viewer.items.graph_items.LineBoxItem.id_ptr"><code class="docutils literal notranslate"><span class="pre">LineBoxItem.id_ptr</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cosense3d.agents.viewer.items.html#cosense3d.agents.viewer.items.graph_items.LineBoxItem.ids"><code class="docutils literal notranslate"><span class="pre">LineBoxItem.ids</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cosense3d.agents.viewer.items.html#cosense3d.agents.viewer.items.graph_items.LineBoxItem.isActive"><code class="docutils literal notranslate"><span class="pre">LineBoxItem.isActive</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cosense3d.agents.viewer.items.html#cosense3d.agents.viewer.items.graph_items.LineBoxItem.to_center"><code class="docutils literal notranslate"><span class="pre">LineBoxItem.to_center()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="cosense3d.agents.viewer.items.html#cosense3d.agents.viewer.items.graph_items.LineItem"><code class="docutils literal notranslate"><span class="pre">LineItem</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="cosense3d.agents.viewer.items.html#cosense3d.agents.viewer.items.graph_items.LineItem.hoverEvent"><code class="docutils literal notranslate"><span class="pre">LineItem.hoverEvent()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="cosense3d.agents.viewer.items.html#cosense3d.agents.viewer.items.graph_items.MeshBoxItem"><code class="docutils literal notranslate"><span class="pre">MeshBoxItem</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="cosense3d.agents.viewer.items.html#cosense3d.agents.viewer.items.graph_items.RectangleItem"><code class="docutils literal notranslate"><span class="pre">RectangleItem</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="cosense3d.agents.viewer.items.html#cosense3d.agents.viewer.items.graph_items.RectangleItem.hoverEvent"><code class="docutils literal notranslate"><span class="pre">RectangleItem.hoverEvent()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="cosense3d.agents.viewer.items.html#module-cosense3d.agents.viewer.items">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this heading"></a></h2>
+</section>
+<section id="module-cosense3d.agents.viewer.gl_viewer">
+<span id="cosense3d-agents-viewer-gl-viewer-module"></span><h2>cosense3d.agents.viewer.gl_viewer module<a class="headerlink" href="#module-cosense3d.agents.viewer.gl_viewer" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="cosense3d.agents.viewer.gl_viewer.GLViewer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cosense3d.agents.viewer.gl_viewer.</span></span><span class="sig-name descname"><span class="pre">GLViewer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/viewer/gl_viewer.html#GLViewer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.viewer.gl_viewer.GLViewer" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">GLViewWidget</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.viewer.gl_viewer.GLViewer.addBox">
+<span class="sig-name descname"><span class="pre">addBox</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/viewer/gl_viewer.html#GLViewer.addBox"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.viewer.gl_viewer.GLViewer.addBox" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.viewer.gl_viewer.GLViewer.box">
+<span class="sig-name descname"><span class="pre">box</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/viewer/gl_viewer.html#GLViewer.box"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.viewer.gl_viewer.GLViewer.box" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.viewer.gl_viewer.GLViewer.change_visibility">
+<span class="sig-name descname"><span class="pre">change_visibility</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">visible</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/viewer/gl_viewer.html#GLViewer.change_visibility"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.viewer.gl_viewer.GLViewer.change_visibility" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.viewer.gl_viewer.GLViewer.drawRectangle">
+<span class="sig-name descname"><span class="pre">drawRectangle</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/viewer/gl_viewer.html#GLViewer.drawRectangle"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.viewer.gl_viewer.GLViewer.drawRectangle" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.viewer.gl_viewer.GLViewer.draw_axes">
+<span class="sig-name descname"><span class="pre">draw_axes</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/viewer/gl_viewer.html#GLViewer.draw_axes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.viewer.gl_viewer.GLViewer.draw_axes" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.viewer.gl_viewer.GLViewer.draw_depth_buffer">
+<span class="sig-name descname"><span class="pre">draw_depth_buffer</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/viewer/gl_viewer.html#GLViewer.draw_depth_buffer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.viewer.gl_viewer.GLViewer.draw_depth_buffer" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.viewer.gl_viewer.GLViewer.evt_pos_to_world">
+<span class="sig-name descname"><span class="pre">evt_pos_to_world</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pos1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pos2</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/viewer/gl_viewer.html#GLViewer.evt_pos_to_world"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.viewer.gl_viewer.GLViewer.evt_pos_to_world" title="Permalink to this definition"></a></dt>
+<dd><dl class="simple">
+<dt>Args:</dt><dd><p>pos1: center pos if pos2 is None else start post of a region
+pos2: end pos of a region</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.viewer.gl_viewer.GLViewer.get_point_depth">
+<span class="sig-name descname"><span class="pre">get_point_depth</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/viewer/gl_viewer.html#GLViewer.get_point_depth"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.viewer.gl_viewer.GLViewer.get_point_depth" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.viewer.gl_viewer.GLViewer.get_region_depth">
+<span class="sig-name descname"><span class="pre">get_region_depth</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p1</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">QPoint</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p2</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">QPoint</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="reference internal" href="_modules/cosense3d/agents/viewer/gl_viewer.html#GLViewer.get_region_depth"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.viewer.gl_viewer.GLViewer.get_region_depth" title="Permalink to this definition"></a></dt>
+<dd><dl class="simple">
+<dt>Args:</dt><dd><p>p1: start point of region.
+p2: end point of region</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.viewer.gl_viewer.GLViewer.highlightBox">
+<span class="sig-name descname"><span class="pre">highlightBox</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pos</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/viewer/gl_viewer.html#GLViewer.highlightBox"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.viewer.gl_viewer.GLViewer.highlightBox" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.viewer.gl_viewer.GLViewer.initializeGL">
+<span class="sig-name descname"><span class="pre">initializeGL</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/viewer/gl_viewer.html#GLViewer.initializeGL"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.viewer.gl_viewer.GLViewer.initializeGL" title="Permalink to this definition"></a></dt>
+<dd><p>Initialize items that were not initialized during addItem().</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.viewer.gl_viewer.GLViewer.keyPressEvent">
+<span class="sig-name descname"><span class="pre">keyPressEvent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a0</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">QKeyEvent</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/viewer/gl_viewer.html#GLViewer.keyPressEvent"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.viewer.gl_viewer.GLViewer.keyPressEvent" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.viewer.gl_viewer.GLViewer.keyReleaseEvent">
+<span class="sig-name descname"><span class="pre">keyReleaseEvent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a0</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">QKeyEvent</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/viewer/gl_viewer.html#GLViewer.keyReleaseEvent"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.viewer.gl_viewer.GLViewer.keyReleaseEvent" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.viewer.gl_viewer.GLViewer.model_pose_to_world">
+<span class="sig-name descname"><span class="pre">model_pose_to_world</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/viewer/gl_viewer.html#GLViewer.model_pose_to_world"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.viewer.gl_viewer.GLViewer.model_pose_to_world" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.viewer.gl_viewer.GLViewer.mouseDoubleClickEvent">
+<span class="sig-name descname"><span class="pre">mouseDoubleClickEvent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a0</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">QMouseEvent</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/viewer/gl_viewer.html#GLViewer.mouseDoubleClickEvent"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.viewer.gl_viewer.GLViewer.mouseDoubleClickEvent" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.viewer.gl_viewer.GLViewer.mouseMoveEvent">
+<span class="sig-name descname"><span class="pre">mouseMoveEvent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a0</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">QMouseEvent</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/viewer/gl_viewer.html#GLViewer.mouseMoveEvent"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.viewer.gl_viewer.GLViewer.mouseMoveEvent" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.viewer.gl_viewer.GLViewer.mousePressEvent">
+<span class="sig-name descname"><span class="pre">mousePressEvent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a0</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">QMouseEvent</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/viewer/gl_viewer.html#GLViewer.mousePressEvent"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.viewer.gl_viewer.GLViewer.mousePressEvent" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.viewer.gl_viewer.GLViewer.mouseReleaseEvent">
+<span class="sig-name descname"><span class="pre">mouseReleaseEvent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a0</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">QMouseEvent</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/viewer/gl_viewer.html#GLViewer.mouseReleaseEvent"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.viewer.gl_viewer.GLViewer.mouseReleaseEvent" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.viewer.gl_viewer.GLViewer.paintGL">
+<span class="sig-name descname"><span class="pre">paintGL</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">region</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">viewport</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">useItemNames</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/viewer/gl_viewer.html#GLViewer.paintGL"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.viewer.gl_viewer.GLViewer.paintGL" title="Permalink to this definition"></a></dt>
+<dd><p>viewport specifies the arguments to glViewport. If None, then we use self.opts[‘viewport’]
+region specifies the sub-region of self.opts[‘viewport’] that should be rendered.
+Note that we may use viewport != self.opts[‘viewport’] when exporting.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.viewer.gl_viewer.GLViewer.paintRect">
+<span class="sig-name descname"><span class="pre">paintRect</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/viewer/gl_viewer.html#GLViewer.paintRect"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.viewer.gl_viewer.GLViewer.paintRect" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.viewer.gl_viewer.GLViewer.refresh">
+<span class="sig-name descname"><span class="pre">refresh</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">visible_keys</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">['globalGT']</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'united'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/viewer/gl_viewer.html#GLViewer.refresh"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.viewer.gl_viewer.GLViewer.refresh" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.viewer.gl_viewer.GLViewer.removeActivate">
+<span class="sig-name descname"><span class="pre">removeActivate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/viewer/gl_viewer.html#GLViewer.removeActivate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.viewer.gl_viewer.GLViewer.removeActivate" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.viewer.gl_viewer.GLViewer.removeHeilight">
+<span class="sig-name descname"><span class="pre">removeHeilight</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/viewer/gl_viewer.html#GLViewer.removeHeilight"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.viewer.gl_viewer.GLViewer.removeHeilight" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.viewer.gl_viewer.GLViewer.removeRectangle">
+<span class="sig-name descname"><span class="pre">removeRectangle</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/viewer/gl_viewer.html#GLViewer.removeRectangle"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.viewer.gl_viewer.GLViewer.removeRectangle" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.viewer.gl_viewer.GLViewer.selectHeilight">
+<span class="sig-name descname"><span class="pre">selectHeilight</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/viewer/gl_viewer.html#GLViewer.selectHeilight"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.viewer.gl_viewer.GLViewer.selectHeilight" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.viewer.gl_viewer.GLViewer.updateFrameData">
+<span class="sig-name descname"><span class="pre">updateFrameData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pcds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">local_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">global_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">local_det</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">global_det</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">predecessor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">successor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">successor_gt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pcd_color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'united'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/viewer/gl_viewer.html#GLViewer.updateFrameData"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.viewer.gl_viewer.GLViewer.updateFrameData" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.viewer.gl_viewer.GLViewer.updateLabel">
+<span class="sig-name descname"><span class="pre">updateLabel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">local_labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">global_labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">local_det</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">global_det</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">successor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">successor_gt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">predecessor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/viewer/gl_viewer.html#GLViewer.updateLabel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.viewer.gl_viewer.GLViewer.updateLabel" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.viewer.gl_viewer.GLViewer.updatePCDs">
+<span class="sig-name descname"><span class="pre">updatePCDs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pcds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'united'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/viewer/gl_viewer.html#GLViewer.updatePCDs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.viewer.gl_viewer.GLViewer.updatePCDs" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-cosense3d.agents.viewer.img_anno3d_viewer">
+<span id="cosense3d-agents-viewer-img-anno3d-viewer-module"></span><h2>cosense3d.agents.viewer.img_anno3d_viewer module<a class="headerlink" href="#module-cosense3d.agents.viewer.img_anno3d_viewer" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="cosense3d.agents.viewer.img_anno3d_viewer.ImgAnno3DViewer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cosense3d.agents.viewer.img_anno3d_viewer.</span></span><span class="sig-name descname"><span class="pre">ImgAnno3DViewer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dpi</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/viewer/img_anno3d_viewer.html#ImgAnno3DViewer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.viewer.img_anno3d_viewer.ImgAnno3DViewer" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">FigureCanvasQTAgg</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.viewer.img_anno3d_viewer.ImgAnno3DViewer.refresh">
+<span class="sig-name descname"><span class="pre">refresh</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/viewer/img_anno3d_viewer.html#ImgAnno3DViewer.refresh"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.viewer.img_anno3d_viewer.ImgAnno3DViewer.refresh" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-cosense3d.agents.viewer.img_viewer">
+<span id="cosense3d-agents-viewer-img-viewer-module"></span><h2>cosense3d.agents.viewer.img_viewer module<a class="headerlink" href="#module-cosense3d.agents.viewer.img_viewer" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="cosense3d.agents.viewer.img_viewer.ImgViewer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cosense3d.agents.viewer.img_viewer.</span></span><span class="sig-name descname"><span class="pre">ImgViewer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dpi</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mean</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">std</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/viewer/img_viewer.html#ImgViewer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.viewer.img_viewer.ImgViewer" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">FigureCanvasQTAgg</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.viewer.img_viewer.ImgViewer.refresh">
+<span class="sig-name descname"><span class="pre">refresh</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/viewer/img_viewer.html#ImgViewer.refresh"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.viewer.img_viewer.ImgViewer.refresh" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-cosense3d.agents.viewer.output_viewer">
+<span id="cosense3d-agents-viewer-output-viewer-module"></span><h2>cosense3d.agents.viewer.output_viewer module<a class="headerlink" href="#module-cosense3d.agents.viewer.output_viewer" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="cosense3d.agents.viewer.output_viewer.BEVDenseCanvas">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cosense3d.agents.viewer.output_viewer.</span></span><span class="sig-name descname"><span class="pre">BEVDenseCanvas</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lidar_range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/viewer/output_viewer.html#BEVDenseCanvas"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.viewer.output_viewer.BEVDenseCanvas" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#cosense3d.agents.viewer.output_viewer.MplCanvas" title="cosense3d.agents.viewer.output_viewer.MplCanvas"><code class="xref py py-class docutils literal notranslate"><span class="pre">MplCanvas</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.viewer.output_viewer.BEVDenseCanvas.refresh">
+<span class="sig-name descname"><span class="pre">refresh</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/viewer/output_viewer.html#BEVDenseCanvas.refresh"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.viewer.output_viewer.BEVDenseCanvas.refresh" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="cosense3d.agents.viewer.output_viewer.BEVSparseCanvas">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cosense3d.agents.viewer.output_viewer.</span></span><span class="sig-name descname"><span class="pre">BEVSparseCanvas</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lidar_range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">s</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/viewer/output_viewer.html#BEVSparseCanvas"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.viewer.output_viewer.BEVSparseCanvas" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#cosense3d.agents.viewer.output_viewer.MplCanvas" title="cosense3d.agents.viewer.output_viewer.MplCanvas"><code class="xref py py-class docutils literal notranslate"><span class="pre">MplCanvas</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.viewer.output_viewer.BEVSparseCanvas.refresh">
+<span class="sig-name descname"><span class="pre">refresh</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/viewer/output_viewer.html#BEVSparseCanvas.refresh"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.viewer.output_viewer.BEVSparseCanvas.refresh" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="cosense3d.agents.viewer.output_viewer.DetectionCanvas">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cosense3d.agents.viewer.output_viewer.</span></span><span class="sig-name descname"><span class="pre">DetectionCanvas</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lidar_range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">topk_ctr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/viewer/output_viewer.html#DetectionCanvas"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.viewer.output_viewer.DetectionCanvas" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#cosense3d.agents.viewer.output_viewer.MplCanvas" title="cosense3d.agents.viewer.output_viewer.MplCanvas"><code class="xref py py-class docutils literal notranslate"><span class="pre">MplCanvas</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.viewer.output_viewer.DetectionCanvas.refresh">
+<span class="sig-name descname"><span class="pre">refresh</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/viewer/output_viewer.html#DetectionCanvas.refresh"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.viewer.output_viewer.DetectionCanvas.refresh" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="cosense3d.agents.viewer.output_viewer.DetectionScoreMap">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cosense3d.agents.viewer.output_viewer.</span></span><span class="sig-name descname"><span class="pre">DetectionScoreMap</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lidar_range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">s</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/viewer/output_viewer.html#DetectionScoreMap"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.viewer.output_viewer.DetectionScoreMap" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#cosense3d.agents.viewer.output_viewer.MplCanvas" title="cosense3d.agents.viewer.output_viewer.MplCanvas"><code class="xref py py-class docutils literal notranslate"><span class="pre">MplCanvas</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.viewer.output_viewer.DetectionScoreMap.refresh">
+<span class="sig-name descname"><span class="pre">refresh</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/viewer/output_viewer.html#DetectionScoreMap.refresh"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.viewer.output_viewer.DetectionScoreMap.refresh" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="cosense3d.agents.viewer.output_viewer.MplCanvas">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cosense3d.agents.viewer.output_viewer.</span></span><span class="sig-name descname"><span class="pre">MplCanvas</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_keys</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">height</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dpi</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'plot'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nrows</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ncols</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/viewer/output_viewer.html#MplCanvas"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.viewer.output_viewer.MplCanvas" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">FigureCanvasQTAgg</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.viewer.output_viewer.MplCanvas.update_title">
+<span class="sig-name descname"><span class="pre">update_title</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scenario</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cav_id</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/viewer/output_viewer.html#MplCanvas.update_title"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.viewer.output_viewer.MplCanvas.update_title" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="cosense3d.agents.viewer.output_viewer.OutputViewer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cosense3d.agents.viewer.output_viewer.</span></span><span class="sig-name descname"><span class="pre">OutputViewer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">plots</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/viewer/output_viewer.html#OutputViewer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.viewer.output_viewer.OutputViewer" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">QWidget</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.viewer.output_viewer.OutputViewer.refresh">
+<span class="sig-name descname"><span class="pre">refresh</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/viewer/output_viewer.html#OutputViewer.refresh"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.viewer.output_viewer.OutputViewer.refresh" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="cosense3d.agents.viewer.output_viewer.SparseDetectionCanvas">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cosense3d.agents.viewer.output_viewer.</span></span><span class="sig-name descname"><span class="pre">SparseDetectionCanvas</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lidar_range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">topk_ctr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/viewer/output_viewer.html#SparseDetectionCanvas"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.viewer.output_viewer.SparseDetectionCanvas" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#cosense3d.agents.viewer.output_viewer.MplCanvas" title="cosense3d.agents.viewer.output_viewer.MplCanvas"><code class="xref py py-class docutils literal notranslate"><span class="pre">MplCanvas</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.agents.viewer.output_viewer.SparseDetectionCanvas.refresh">
+<span class="sig-name descname"><span class="pre">refresh</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/viewer/output_viewer.html#SparseDetectionCanvas.refresh"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.viewer.output_viewer.SparseDetectionCanvas.refresh" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-cosense3d.agents.viewer.utils">
+<span id="cosense3d-agents-viewer-utils-module"></span><h2>cosense3d.agents.viewer.utils module<a class="headerlink" href="#module-cosense3d.agents.viewer.utils" title="Permalink to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.agents.viewer.utils.circular_mask">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.agents.viewer.utils.</span></span><span class="sig-name descname"><span class="pre">circular_mask</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arr_length</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">center</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">radius</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/agents/viewer/utils.html#circular_mask"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.viewer.utils.circular_mask" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.agents.viewer.utils.depth_min">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.agents.viewer.utils.</span></span><span class="sig-name descname"><span class="pre">depth_min</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">depths</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">center</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="reference internal" href="_modules/cosense3d/agents/viewer/utils.html#depth_min"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.agents.viewer.utils.depth_min" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="module-cosense3d.agents.viewer">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-cosense3d.agents.viewer" title="Permalink to this heading"></a></h2>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="cosense3d.agents.utils.html" class="btn btn-neutral float-left" title="cosense3d.agents.utils package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="cosense3d.agents.viewer.items.html" class="btn btn-neutral float-right" title="cosense3d.agents.viewer.items package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Anonymous Author.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

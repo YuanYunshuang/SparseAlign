@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>cosense3d.modules.utils.amp &mdash; OpenCosense3D 1.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js?v=af2ce170"></script>
+        <script src="../../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            OpenCosense3D
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../md/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../md/prepare_data.html">Prepare Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../md/structure.html">The Structure of the framework</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules.html">CoSense3d</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">OpenCosense3D</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+          <li class="breadcrumb-item"><a href="../../modules.html">cosense3d.modules</a></li>
+          <li class="breadcrumb-item"><a href="../utils.html">cosense3d.modules.utils</a></li>
+      <li class="breadcrumb-item active">cosense3d.modules.utils.amp</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for cosense3d.modules.utils.amp</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (c) OpenMMLab. All rights reserved. Modified by Yunshuang Yuan</span>
+<span class="kn">import</span> <span class="nn">functools</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">abc</span>
+<span class="kn">from</span> <span class="nn">inspect</span> <span class="kn">import</span> <span class="n">getfullargspec</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">import</span> <span class="nn">torch.nn</span> <span class="k">as</span> <span class="nn">nn</span>
+<span class="kn">from</span> <span class="nn">torch.nn.parameter</span> <span class="kn">import</span> <span class="n">Parameter</span>
+
+
+<span class="kn">from</span> <span class="nn">torch.cuda.amp</span> <span class="kn">import</span> <span class="n">autocast</span>
+
+
+<div class="viewcode-block" id="cast_tensor_type"><a class="viewcode-back" href="../../../../cosense3d.modules.utils.html#cosense3d.modules.utils.amp.cast_tensor_type">[docs]</a><span class="k">def</span> <span class="nf">cast_tensor_type</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">src_type</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">dst_type</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">dtype</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Recursively convert Tensor in inputs from src_type to dst_type.</span>
+
+<span class="sd">    Note:</span>
+<span class="sd">        In v1.4.4 and later, ``cast_tersor_type`` will only convert the</span>
+<span class="sd">        torch.Tensor which is consistent with ``src_type`` to the ``dst_type``.</span>
+<span class="sd">        Before v1.4.4, it ignores the ``src_type`` argument, leading to some</span>
+<span class="sd">        potential problems. For example,</span>
+<span class="sd">        ``cast_tensor_type(inputs, torch.float, torch.half)`` will convert all</span>
+<span class="sd">        tensors in inputs to ``torch.half`` including those originally in</span>
+<span class="sd">        ``torch.Int`` or other types, which is not expected.</span>
+
+<span class="sd">    :param inputs: Inputs that to be casted.</span>
+<span class="sd">    :param src_type: Source type.</span>
+<span class="sd">    :param dst_type: Destination type.</span>
+<span class="sd">    :return: The same type with inputs, but all contained Tensors have been cast.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">inputs</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">):</span>
+        <span class="c1"># we need to ensure that the type of inputs to be casted are the same</span>
+        <span class="c1"># as the argument `src_type`.</span>
+        <span class="k">return</span> <span class="n">inputs</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">dst_type</span><span class="p">)</span> <span class="k">if</span> <span class="n">inputs</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="n">src_type</span> <span class="k">else</span> <span class="n">inputs</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">inputs</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">inputs</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">abc</span><span class="o">.</span><span class="n">Mapping</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="n">inputs</span><span class="p">)({</span>  <span class="c1"># type: ignore</span>
+            <span class="n">k</span><span class="p">:</span> <span class="n">cast_tensor_type</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">src_type</span><span class="p">,</span> <span class="n">dst_type</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">inputs</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="p">})</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">abc</span><span class="o">.</span><span class="n">Iterable</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="n">inputs</span><span class="p">)(</span>  <span class="c1"># type: ignore</span>
+            <span class="n">cast_tensor_type</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">src_type</span><span class="p">,</span> <span class="n">dst_type</span><span class="p">)</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">inputs</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">inputs</span></div>
+
+
+<div class="viewcode-block" id="auto_fp16"><a class="viewcode-back" href="../../../../cosense3d.modules.utils.html#cosense3d.modules.utils.amp.auto_fp16">[docs]</a><span class="k">def</span> <span class="nf">auto_fp16</span><span class="p">(</span>
+        <span class="n">apply_to</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">out_fp32</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">supported_types</span><span class="p">:</span> <span class="nb">tuple</span> <span class="o">=</span> <span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="p">),</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Decorator to enable fp16 training automatically.</span>
+
+<span class="sd">    This decorator is useful when you write custom modules and want to support</span>
+<span class="sd">    mixed precision training. If inputs arguments are fp32 tensors, they will</span>
+<span class="sd">    be converted to fp16 automatically. Arguments other than fp32 tensors are</span>
+<span class="sd">    ignored. If you are using PyTorch &gt;= 1.6, torch.cuda.amp is used as the</span>
+<span class="sd">    backend, otherwise, original mmcv implementation will be adopted.</span>
+
+<span class="sd">    :param apply_to: The argument names to be converted.</span>
+<span class="sd">            `None` indicates all arguments.</span>
+<span class="sd">    :param out_fp32: Whether to convert the output back to fp32.</span>
+<span class="sd">    :param supported_types: Classes can be decorated by ``auto_fp16``.</span>
+<span class="sd">            `New in version 1.5.0.`</span>
+<span class="sd">    :return:</span>
+<span class="sd">    Example:</span>
+
+<span class="sd">        &gt;&gt;&gt; import torch.nn as nn</span>
+<span class="sd">        &gt;&gt;&gt; class MyModule1(nn.Module):</span>
+<span class="sd">        &gt;&gt;&gt;</span>
+<span class="sd">        &gt;&gt;&gt;     # Convert x and y to fp16</span>
+<span class="sd">        &gt;&gt;&gt;     @auto_fp16()</span>
+<span class="sd">        &gt;&gt;&gt;     def forward(self, x, y):</span>
+<span class="sd">        &gt;&gt;&gt;         pass</span>
+
+<span class="sd">        &gt;&gt;&gt; import torch.nn as nn</span>
+<span class="sd">        &gt;&gt;&gt; class MyModule2(nn.Module):</span>
+<span class="sd">        &gt;&gt;&gt;</span>
+<span class="sd">        &gt;&gt;&gt;     # convert pred to fp16</span>
+<span class="sd">        &gt;&gt;&gt;     @auto_fp16(apply_to=(&#39;pred&#39;, ))</span>
+<span class="sd">        &gt;&gt;&gt;     def do_something(self, pred, others):</span>
+<span class="sd">        &gt;&gt;&gt;         pass</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">auto_fp16_wrapper</span><span class="p">(</span><span class="n">old_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>
+
+        <span class="nd">@functools</span><span class="o">.</span><span class="n">wraps</span><span class="p">(</span><span class="n">old_func</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">new_func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>
+            <span class="c1"># check if the module has set the attribute `fp16_enabled`, if not,</span>
+            <span class="c1"># just fallback to the original method.</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">supported_types</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;@auto_fp16 can only be used to decorate the &#39;</span>
+                                <span class="sa">f</span><span class="s1">&#39;method of those classes </span><span class="si">{</span><span class="n">supported_types</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">hasattr</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s1">&#39;fp16_enabled&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">fp16_enabled</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">old_func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+            <span class="c1"># get the arg spec of the decorated method</span>
+            <span class="n">args_info</span> <span class="o">=</span> <span class="n">getfullargspec</span><span class="p">(</span><span class="n">old_func</span><span class="p">)</span>
+            <span class="c1"># get the argument names to be casted</span>
+            <span class="n">args_to_cast</span> <span class="o">=</span> <span class="n">args_info</span><span class="o">.</span><span class="n">args</span> <span class="k">if</span> <span class="n">apply_to</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">apply_to</span>
+            <span class="c1"># convert the args that need to be processed</span>
+            <span class="n">new_args</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="c1"># NOTE: default args are not taken into consideration</span>
+            <span class="k">if</span> <span class="n">args</span><span class="p">:</span>
+                <span class="n">arg_names</span> <span class="o">=</span> <span class="n">args_info</span><span class="o">.</span><span class="n">args</span><span class="p">[:</span><span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)]</span>
+                <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">arg_name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">arg_names</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">arg_name</span> <span class="ow">in</span> <span class="n">args_to_cast</span><span class="p">:</span>
+                        <span class="n">new_args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                            <span class="n">cast_tensor_type</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">torch</span><span class="o">.</span><span class="n">float</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">half</span><span class="p">))</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">new_args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+            <span class="c1"># convert the kwargs that need to be processed</span>
+            <span class="n">new_kwargs</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">if</span> <span class="n">kwargs</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">arg_name</span><span class="p">,</span> <span class="n">arg_value</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="k">if</span> <span class="n">arg_name</span> <span class="ow">in</span> <span class="n">args_to_cast</span><span class="p">:</span>
+                        <span class="n">new_kwargs</span><span class="p">[</span><span class="n">arg_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">cast_tensor_type</span><span class="p">(</span>
+                            <span class="n">arg_value</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">float</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">half</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">new_kwargs</span><span class="p">[</span><span class="n">arg_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">arg_value</span>
+            <span class="c1"># apply converted arguments to the decorated method</span>
+            <span class="k">with</span> <span class="n">autocast</span><span class="p">(</span><span class="n">enabled</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+                <span class="n">output</span> <span class="o">=</span> <span class="n">old_func</span><span class="p">(</span><span class="o">*</span><span class="n">new_args</span><span class="p">,</span> <span class="o">**</span><span class="n">new_kwargs</span><span class="p">)</span>
+            <span class="c1"># cast the results back to fp32 if necessary</span>
+            <span class="k">if</span> <span class="n">out_fp32</span><span class="p">:</span>
+                <span class="n">output</span> <span class="o">=</span> <span class="n">cast_tensor_type</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">half</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">float</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">output</span>
+
+        <span class="k">return</span> <span class="n">new_func</span>
+
+    <span class="k">return</span> <span class="n">auto_fp16_wrapper</span></div>
+
+
+<div class="viewcode-block" id="force_fp32"><a class="viewcode-back" href="../../../../cosense3d.modules.utils.html#cosense3d.modules.utils.amp.force_fp32">[docs]</a><span class="k">def</span> <span class="nf">force_fp32</span><span class="p">(</span><span class="n">apply_to</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+               <span class="n">out_fp16</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Decorator to convert input arguments to fp32 in force.</span>
+
+<span class="sd">    This decorator is useful when you write custom modules and want to support</span>
+<span class="sd">    mixed precision training. If there are some inputs that must be processed</span>
+<span class="sd">    in fp32 mode, then this decorator can handle it. If inputs arguments are</span>
+<span class="sd">    fp16 tensors, they will be converted to fp32 automatically. Arguments other</span>
+<span class="sd">    than fp16 tensors are ignored. If you are using PyTorch &gt;= 1.6,</span>
+<span class="sd">    torch.cuda.amp is used as the backend, otherwise, original mmcv</span>
+<span class="sd">    implementation will be adopted.</span>
+
+<span class="sd">    :param apply_to: (Iterable, optional) The argument names to be converted.</span>
+<span class="sd">        `None` indicates all arguments.</span>
+<span class="sd">    :param out_fp16: (bool) Whether to convert the output back to fp16.</span>
+
+<span class="sd">    Example:</span>
+
+<span class="sd">        &gt;&gt;&gt; import torch.nn as nn</span>
+<span class="sd">        &gt;&gt;&gt; class MyModule1(nn.Module):</span>
+<span class="sd">        &gt;&gt;&gt;</span>
+<span class="sd">        &gt;&gt;&gt;     # Convert x and y to fp32</span>
+<span class="sd">        &gt;&gt;&gt;     @force_fp32()</span>
+<span class="sd">        &gt;&gt;&gt;     def loss(self, x, y):</span>
+<span class="sd">        &gt;&gt;&gt;         pass</span>
+
+<span class="sd">        &gt;&gt;&gt; import torch.nn as nn</span>
+<span class="sd">        &gt;&gt;&gt; class MyModule2(nn.Module):</span>
+<span class="sd">        &gt;&gt;&gt;</span>
+<span class="sd">        &gt;&gt;&gt;     # convert pred to fp32</span>
+<span class="sd">        &gt;&gt;&gt;     @force_fp32(apply_to=(&#39;pred&#39;, ))</span>
+<span class="sd">        &gt;&gt;&gt;     def post_process(self, pred, others):</span>
+<span class="sd">        &gt;&gt;&gt;         pass</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">force_fp32_wrapper</span><span class="p">(</span><span class="n">old_func</span><span class="p">):</span>
+
+        <span class="nd">@functools</span><span class="o">.</span><span class="n">wraps</span><span class="p">(</span><span class="n">old_func</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">new_func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>
+            <span class="c1"># check if the module has set the attribute `fp16_enabled`, if not,</span>
+            <span class="c1"># just fallback to the original method.</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;@force_fp32 can only be used to decorate the &#39;</span>
+                                <span class="s1">&#39;method of nn.Module&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">hasattr</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s1">&#39;fp16_enabled&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">fp16_enabled</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">old_func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="c1"># get the arg spec of the decorated method</span>
+            <span class="n">args_info</span> <span class="o">=</span> <span class="n">getfullargspec</span><span class="p">(</span><span class="n">old_func</span><span class="p">)</span>
+            <span class="c1"># get the argument names to be casted</span>
+            <span class="n">args_to_cast</span> <span class="o">=</span> <span class="n">args_info</span><span class="o">.</span><span class="n">args</span> <span class="k">if</span> <span class="n">apply_to</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">apply_to</span>
+            <span class="c1"># convert the args that need to be processed</span>
+            <span class="n">new_args</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">if</span> <span class="n">args</span><span class="p">:</span>
+                <span class="n">arg_names</span> <span class="o">=</span> <span class="n">args_info</span><span class="o">.</span><span class="n">args</span><span class="p">[:</span><span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)]</span>
+                <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">arg_name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">arg_names</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">arg_name</span> <span class="ow">in</span> <span class="n">args_to_cast</span><span class="p">:</span>
+                        <span class="n">new_args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                            <span class="n">cast_tensor_type</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">torch</span><span class="o">.</span><span class="n">half</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">float</span><span class="p">))</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">new_args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+            <span class="c1"># convert the kwargs that need to be processed</span>
+            <span class="n">new_kwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">kwargs</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">arg_name</span><span class="p">,</span> <span class="n">arg_value</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="k">if</span> <span class="n">arg_name</span> <span class="ow">in</span> <span class="n">args_to_cast</span><span class="p">:</span>
+                        <span class="n">new_kwargs</span><span class="p">[</span><span class="n">arg_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">cast_tensor_type</span><span class="p">(</span>
+                            <span class="n">arg_value</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">half</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">float</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">new_kwargs</span><span class="p">[</span><span class="n">arg_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">arg_value</span>
+            <span class="c1"># apply converted arguments to the decorated method</span>
+            <span class="k">with</span> <span class="n">autocast</span><span class="p">(</span><span class="n">enabled</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+                <span class="n">output</span> <span class="o">=</span> <span class="n">old_func</span><span class="p">(</span><span class="o">*</span><span class="n">new_args</span><span class="p">,</span> <span class="o">**</span><span class="n">new_kwargs</span><span class="p">)</span>
+
+            <span class="c1"># cast the results back to fp32 if necessary</span>
+            <span class="k">if</span> <span class="n">out_fp16</span><span class="p">:</span>
+                <span class="n">output</span> <span class="o">=</span> <span class="n">cast_tensor_type</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">float</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">half</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">output</span>
+
+        <span class="k">return</span> <span class="n">new_func</span>
+
+    <span class="k">return</span> <span class="n">force_fp32_wrapper</span></div>
+
+
+<div class="viewcode-block" id="wrap_fp16_model"><a class="viewcode-back" href="../../../../cosense3d.modules.utils.html#cosense3d.modules.utils.amp.wrap_fp16_model">[docs]</a><span class="k">def</span> <span class="nf">wrap_fp16_model</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Wrap the FP32 model to FP16.</span>
+
+<span class="sd">    If you are using PyTorch &gt;= 1.6, torch.cuda.amp is used as the</span>
+<span class="sd">    backend, otherwise, original mmcv implementation will be adopted.</span>
+
+<span class="sd">    For PyTorch &gt;= 1.6, this function will</span>
+<span class="sd">    1. Set fp16 flag inside the model to True.</span>
+
+<span class="sd">    Otherwise:</span>
+<span class="sd">    1. Convert FP32 model to FP16.</span>
+<span class="sd">    2. Remain some necessary layers to be FP32, e.g., normalization layers.</span>
+<span class="sd">    3. Set `fp16_enabled` flag inside the model to True.</span>
+
+<span class="sd">    :param model: (nn.Module) Model in FP32.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># convert model to fp16</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">half</span><span class="p">()</span>
+    <span class="c1"># patch the normalization layers to make it work in fp32 mode</span>
+    <span class="n">patch_norm_fp32</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+    <span class="c1"># set `fp16_enabled` flag</span>
+    <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">modules</span><span class="p">():</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="s1">&#39;fp16_enabled&#39;</span><span class="p">):</span>
+            <span class="n">m</span><span class="o">.</span><span class="n">fp16_enabled</span> <span class="o">=</span> <span class="kc">True</span></div>
+
+
+<div class="viewcode-block" id="patch_norm_fp32"><a class="viewcode-back" href="../../../../cosense3d.modules.utils.html#cosense3d.modules.utils.amp.patch_norm_fp32">[docs]</a><span class="k">def</span> <span class="nf">patch_norm_fp32</span><span class="p">(</span><span class="n">module</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Recursively convert normalization layers from FP16 to FP32.</span>
+
+<span class="sd">    :param module: (nn.Module) The modules to be converted in FP16.</span>
+
+<span class="sd">    Returns: nn.Module: The converted module, the normalization layers have been</span>
+<span class="sd">            converted to FP32.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">modules</span><span class="o">.</span><span class="n">batchnorm</span><span class="o">.</span><span class="n">_BatchNorm</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">GroupNorm</span><span class="p">)):</span>
+        <span class="n">module</span><span class="o">.</span><span class="n">float</span><span class="p">()</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">GroupNorm</span><span class="p">)</span> <span class="ow">or</span> <span class="n">torch</span><span class="o">.</span><span class="n">__version__</span> <span class="o">&lt;</span> <span class="s1">&#39;1.3&#39;</span><span class="p">:</span>
+            <span class="n">module</span><span class="o">.</span><span class="n">forward</span> <span class="o">=</span> <span class="n">patch_forward_method</span><span class="p">(</span><span class="n">module</span><span class="o">.</span><span class="n">forward</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">half</span><span class="p">,</span>
+                                                  <span class="n">torch</span><span class="o">.</span><span class="n">float</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="n">module</span><span class="o">.</span><span class="n">children</span><span class="p">():</span>
+        <span class="n">patch_norm_fp32</span><span class="p">(</span><span class="n">child</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">module</span></div>
+
+
+<div class="viewcode-block" id="patch_forward_method"><a class="viewcode-back" href="../../../../cosense3d.modules.utils.html#cosense3d.modules.utils.amp.patch_forward_method">[docs]</a><span class="k">def</span> <span class="nf">patch_forward_method</span><span class="p">(</span><span class="n">func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
+                         <span class="n">src_type</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span>
+                         <span class="n">dst_type</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span>
+                         <span class="n">convert_output</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Patch the forward method of a module.</span>
+
+<span class="sd">    :param func: (callable) The original forward method.</span>
+<span class="sd">    :param src_type: (torch.dtype) Type of input arguments to be converted from.</span>
+<span class="sd">    :param dst_type: (torch.dtype) Type of input arguments to be converted to.</span>
+<span class="sd">    :param convert_output: (bool) Whether to convert the output back to src_type.</span>
+
+<span class="sd">    :returns: callable: The patched forward method.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">new_forward</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">cast_tensor_type</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="n">src_type</span><span class="p">,</span> <span class="n">dst_type</span><span class="p">),</span>
+                      <span class="o">**</span><span class="n">cast_tensor_type</span><span class="p">(</span><span class="n">kwargs</span><span class="p">,</span> <span class="n">src_type</span><span class="p">,</span> <span class="n">dst_type</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">convert_output</span><span class="p">:</span>
+            <span class="n">output</span> <span class="o">=</span> <span class="n">cast_tensor_type</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="n">dst_type</span><span class="p">,</span> <span class="n">src_type</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">output</span>
+
+    <span class="k">return</span> <span class="n">new_forward</span></div>
+
+
+<div class="viewcode-block" id="LossScaler"><a class="viewcode-back" href="../../../../cosense3d.modules.utils.html#cosense3d.modules.utils.amp.LossScaler">[docs]</a><span class="k">class</span> <span class="nc">LossScaler</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Class that manages loss scaling in mixed precision training which</span>
+<span class="sd">    supports both dynamic or static mode.</span>
+
+<span class="sd">    The implementation refers to</span>
+<span class="sd">    https://github.com/NVIDIA/apex/blob/master/apex/fp16_utils/loss_scaler.py.</span>
+<span class="sd">    Indirectly, by supplying ``mode=&#39;dynamic&#39;`` for dynamic loss scaling.</span>
+<span class="sd">    It&#39;s important to understand how :class:`LossScaler` operates.</span>
+<span class="sd">    Loss scaling is designed to combat the problem of underflowing</span>
+<span class="sd">    gradients encountered at long times when training fp16 networks.</span>
+<span class="sd">    Dynamic loss scaling begins by attempting a very high loss</span>
+<span class="sd">    scale.  Ironically, this may result in OVERflowing gradients.</span>
+<span class="sd">    If overflowing gradients are encountered, :class:`FP16_Optimizer` then</span>
+<span class="sd">    skips the update step for this particular iteration/minibatch,</span>
+<span class="sd">    and :class:`LossScaler` adjusts the loss scale to a lower value.</span>
+<span class="sd">    If a certain number of iterations occur without overflowing gradients</span>
+<span class="sd">    detected,:class:`LossScaler` increases the loss scale once more.</span>
+<span class="sd">    In this way :class:`LossScaler` attempts to &quot;ride the edge&quot; of always</span>
+<span class="sd">    using the highest loss scale possible without incurring overflow.</span>
+
+<span class="sd">    :param init_scale: (float) Initial loss scale value, default: 2**32.</span>
+<span class="sd">    :param scale_factor: (float) Factor used when adjusting the loss scale.</span>
+<span class="sd">    :param     Default: 2.</span>
+<span class="sd">    :param mode: (str) Loss scaling mode. &#39;dynamic&#39; or &#39;static&#39;</span>
+<span class="sd">    :param scale_window: (int) Number of consecutive iterations without an</span>
+<span class="sd">        overflow to wait before increasing the loss scale. Default: 1000.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">init_scale</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">2</span><span class="o">**</span><span class="mi">32</span><span class="p">,</span>
+                 <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;dynamic&#39;</span><span class="p">,</span>
+                 <span class="n">scale_factor</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">2.</span><span class="p">,</span>
+                 <span class="n">scale_window</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cur_scale</span> <span class="o">=</span> <span class="n">init_scale</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cur_iter</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">assert</span> <span class="n">mode</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;dynamic&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;static&#39;</span><span class="p">),</span> <span class="s1">&#39;mode can only be dynamic or static&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">=</span> <span class="n">mode</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">last_overflow_iter</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scale_factor</span> <span class="o">=</span> <span class="n">scale_factor</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scale_window</span> <span class="o">=</span> <span class="n">scale_window</span>
+
+<div class="viewcode-block" id="LossScaler.has_overflow"><a class="viewcode-back" href="../../../../cosense3d.modules.utils.html#cosense3d.modules.utils.amp.LossScaler.has_overflow">[docs]</a>    <span class="k">def</span> <span class="nf">has_overflow</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Parameter</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check if params contain overflow.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">!=</span> <span class="s1">&#39;dynamic&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">params</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">grad</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">LossScaler</span><span class="o">.</span><span class="n">_has_inf_or_nan</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">grad</span><span class="o">.</span><span class="n">data</span><span class="p">):</span>
+                <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+    <span class="k">def</span> <span class="nf">_has_inf_or_nan</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check if params contain NaN.&quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">cpu_sum</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">float</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span>
+        <span class="k">except</span> <span class="ne">RuntimeError</span> <span class="k">as</span> <span class="n">instance</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s1">&#39;value cannot be converted&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">instance</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+                <span class="k">raise</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">cpu_sum</span> <span class="o">==</span> <span class="nb">float</span><span class="p">(</span><span class="s1">&#39;inf&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">cpu_sum</span> <span class="o">==</span> <span class="o">-</span><span class="nb">float</span><span class="p">(</span><span class="s1">&#39;inf&#39;</span><span class="p">)</span> \
+                    <span class="ow">or</span> <span class="n">cpu_sum</span> <span class="o">!=</span> <span class="n">cpu_sum</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">True</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+<div class="viewcode-block" id="LossScaler.update_scale"><a class="viewcode-back" href="../../../../cosense3d.modules.utils.html#cosense3d.modules.utils.amp.LossScaler.update_scale">[docs]</a>    <span class="k">def</span> <span class="nf">update_scale</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">overflow</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;update the current loss scale value when overflow happens.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">!=</span> <span class="s1">&#39;dynamic&#39;</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="k">if</span> <span class="n">overflow</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cur_scale</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cur_scale</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale_factor</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">last_overflow_iter</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cur_iter</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cur_iter</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">last_overflow_iter</span><span class="p">)</span> <span class="o">%</span> \
+                    <span class="bp">self</span><span class="o">.</span><span class="n">scale_window</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">cur_scale</span> <span class="o">*=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale_factor</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cur_iter</span> <span class="o">+=</span> <span class="mi">1</span></div>
+
+<div class="viewcode-block" id="LossScaler.state_dict"><a class="viewcode-back" href="../../../../cosense3d.modules.utils.html#cosense3d.modules.utils.amp.LossScaler.state_dict">[docs]</a>    <span class="k">def</span> <span class="nf">state_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the state of the scaler as a :class:`dict`.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span>
+            <span class="n">cur_scale</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cur_scale</span><span class="p">,</span>
+            <span class="n">cur_iter</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cur_iter</span><span class="p">,</span>
+            <span class="n">mode</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mode</span><span class="p">,</span>
+            <span class="n">last_overflow_iter</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">last_overflow_iter</span><span class="p">,</span>
+            <span class="n">scale_factor</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">scale_factor</span><span class="p">,</span>
+            <span class="n">scale_window</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">scale_window</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="LossScaler.load_state_dict"><a class="viewcode-back" href="../../../../cosense3d.modules.utils.html#cosense3d.modules.utils.amp.LossScaler.load_state_dict">[docs]</a>    <span class="k">def</span> <span class="nf">load_state_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Loads the loss_scaler state dict.</span>
+
+<span class="sd">        :param state_dict: (dict) scaler state.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cur_scale</span> <span class="o">=</span> <span class="n">state_dict</span><span class="p">[</span><span class="s1">&#39;cur_scale&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cur_iter</span> <span class="o">=</span> <span class="n">state_dict</span><span class="p">[</span><span class="s1">&#39;cur_iter&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">=</span> <span class="n">state_dict</span><span class="p">[</span><span class="s1">&#39;mode&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">last_overflow_iter</span> <span class="o">=</span> <span class="n">state_dict</span><span class="p">[</span><span class="s1">&#39;last_overflow_iter&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scale_factor</span> <span class="o">=</span> <span class="n">state_dict</span><span class="p">[</span><span class="s1">&#39;scale_factor&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scale_window</span> <span class="o">=</span> <span class="n">state_dict</span><span class="p">[</span><span class="s1">&#39;scale_window&#39;</span><span class="p">]</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">loss_scale</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">cur_scale</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Anonymous Author.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

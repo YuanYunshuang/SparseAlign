@@ -1,0 +1,4 @@
+PyQt5
+pyopengl
+pyqtgraph
+PyOpenGL-accelerate

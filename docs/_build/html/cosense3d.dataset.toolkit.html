@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>cosense3d.dataset.toolkit package &mdash; Cosense3D 1.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=af2ce170"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="cosense3d.modules package" href="cosense3d.modules.html" />
+    <link rel="prev" title="cosense3d.dataset.pipeline package" href="cosense3d.dataset.pipeline.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Cosense3D
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="md/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="md/prepare_data.html">Prepare Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="md/structure.html">The Structure of the framework</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">CoSense3D</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="cosense3d.agents.html">cosense3d.agents package</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="cosense3d.dataset.html">cosense3d.dataset package</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="cosense3d.dataset.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="cosense3d.dataset.pipeline.html">cosense3d.dataset.pipeline package</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">cosense3d.dataset.toolkit package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="cosense3d.dataset.html#submodules">Submodules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cosense3d.dataset.html#module-cosense3d.dataset.const">cosense3d.dataset.const module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cosense3d.dataset.html#module-cosense3d.dataset.cosense_dataset">cosense3d.dataset.cosense_dataset module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cosense3d.dataset.html#module-cosense3d.dataset.temporal_cosense_dataset">cosense3d.dataset.temporal_cosense_dataset module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cosense3d.dataset.html#module-cosense3d.dataset">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="cosense3d.modules.html">cosense3d.modules package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cosense3d.utils.html">cosense3d.utils package</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Cosense3D</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">CoSense3D</a></li>
+          <li class="breadcrumb-item"><a href="cosense3d.dataset.html">cosense3d.dataset package</a></li>
+      <li class="breadcrumb-item active">cosense3d.dataset.toolkit package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/cosense3d.dataset.toolkit.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="cosense3d-dataset-toolkit-package">
+<h1>cosense3d.dataset.toolkit package<a class="headerlink" href="#cosense3d-dataset-toolkit-package" title="Permalink to this heading"></a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this heading"></a></h2>
+</section>
+<section id="module-cosense3d.dataset.toolkit.cosense">
+<span id="cosense3d-dataset-toolkit-cosense-module"></span><h2>cosense3d.dataset.toolkit.cosense module<a class="headerlink" href="#module-cosense3d.dataset.toolkit.cosense" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="cosense3d.dataset.toolkit.cosense.CoSenseDataConverter">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cosense3d.dataset.toolkit.cosense.</span></span><span class="sig-name descname"><span class="pre">CoSenseDataConverter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'all'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/dataset/toolkit/cosense.html#CoSenseDataConverter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.dataset.toolkit.cosense.CoSenseDataConverter" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cosense3d.dataset.toolkit.cosense.CoSenseDataConverter.OBJ_ID2NAME">
+<span class="sig-name descname"><span class="pre">OBJ_ID2NAME</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{0:</span> <span class="pre">'vehicle.car',</span> <span class="pre">1:</span> <span class="pre">'vehicle.van',</span> <span class="pre">2:</span> <span class="pre">'vehicle.truck',</span> <span class="pre">3:</span> <span class="pre">'vehicle.bus',</span> <span class="pre">4:</span> <span class="pre">'vehicle.tram',</span> <span class="pre">5:</span> <span class="pre">'vehicle.motorcycle',</span> <span class="pre">6:</span> <span class="pre">'vehicle.cyclist',</span> <span class="pre">7:</span> <span class="pre">'vehicle.scooter',</span> <span class="pre">8:</span> <span class="pre">'vehicle.other',</span> <span class="pre">9:</span> <span class="pre">'human.pedestrian',</span> <span class="pre">10:</span> <span class="pre">'human.wheelchair',</span> <span class="pre">11:</span> <span class="pre">'human.sitting',</span> <span class="pre">12:</span> <span class="pre">'static.trafficcone',</span> <span class="pre">13:</span> <span class="pre">'static.barrowlist',</span> <span class="pre">14:</span> <span class="pre">'vehicle.tricyclist',</span> <span class="pre">15:</span> <span class="pre">'unknown'}</span></em><a class="headerlink" href="#cosense3d.dataset.toolkit.cosense.CoSenseDataConverter.OBJ_ID2NAME" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cosense3d.dataset.toolkit.cosense.CoSenseDataConverter.OBJ_LIST">
+<span class="sig-name descname"><span class="pre">OBJ_LIST</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">['vehicle.car',</span> <span class="pre">'vehicle.van',</span> <span class="pre">'vehicle.truck',</span> <span class="pre">'vehicle.bus',</span> <span class="pre">'vehicle.tram',</span> <span class="pre">'vehicle.motorcycle',</span> <span class="pre">'vehicle.cyclist',</span> <span class="pre">'vehicle.scooter',</span> <span class="pre">'vehicle.other',</span> <span class="pre">'human.pedestrian',</span> <span class="pre">'human.wheelchair',</span> <span class="pre">'human.sitting',</span> <span class="pre">'static.trafficcone',</span> <span class="pre">'static.barrowlist',</span> <span class="pre">'vehicle.tricyclist',</span> <span class="pre">'unknown']</span></em><a class="headerlink" href="#cosense3d.dataset.toolkit.cosense.CoSenseDataConverter.OBJ_LIST" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cosense3d.dataset.toolkit.cosense.CoSenseDataConverter.OBJ_NAME2ID">
+<span class="sig-name descname"><span class="pre">OBJ_NAME2ID</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'human.pedestrian':</span> <span class="pre">9,</span> <span class="pre">'human.sitting':</span> <span class="pre">11,</span> <span class="pre">'human.wheelchair':</span> <span class="pre">10,</span> <span class="pre">'static.barrowlist':</span> <span class="pre">13,</span> <span class="pre">'static.trafficcone':</span> <span class="pre">12,</span> <span class="pre">'unknown':</span> <span class="pre">15,</span> <span class="pre">'vehicle.bus':</span> <span class="pre">3,</span> <span class="pre">'vehicle.car':</span> <span class="pre">0,</span> <span class="pre">'vehicle.cyclist':</span> <span class="pre">6,</span> <span class="pre">'vehicle.motorcycle':</span> <span class="pre">5,</span> <span class="pre">'vehicle.other':</span> <span class="pre">8,</span> <span class="pre">'vehicle.scooter':</span> <span class="pre">7,</span> <span class="pre">'vehicle.tram':</span> <span class="pre">4,</span> <span class="pre">'vehicle.tricyclist':</span> <span class="pre">14,</span> <span class="pre">'vehicle.truck':</span> <span class="pre">2,</span> <span class="pre">'vehicle.van':</span> <span class="pre">1}</span></em><a class="headerlink" href="#cosense3d.dataset.toolkit.cosense.CoSenseDataConverter.OBJ_NAME2ID" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.dataset.toolkit.cosense.CoSenseDataConverter.add_cam_to_fdict">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">add_cam_to_fdict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fdict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">agent_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cam_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filenames</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">intrinsic</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extrinsic</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/dataset/toolkit/cosense.html#CoSenseDataConverter.add_cam_to_fdict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.dataset.toolkit.cosense.CoSenseDataConverter.add_cam_to_fdict" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.dataset.toolkit.cosense.CoSenseDataConverter.cal_vbbx_mean_dim">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cal_vbbx_mean_dim</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">meta</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/dataset/toolkit/cosense.html#CoSenseDataConverter.cal_vbbx_mean_dim"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.dataset.toolkit.cosense.CoSenseDataConverter.cal_vbbx_mean_dim" title="Permalink to this definition"></a></dt>
+<dd><p>Calculate mean dimensions of four-wheel vehicles</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.dataset.toolkit.cosense.CoSenseDataConverter.draw_sample_distributions">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">draw_sample_distributions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">meta_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/dataset/toolkit/cosense.html#CoSenseDataConverter.draw_sample_distributions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.dataset.toolkit.cosense.CoSenseDataConverter.draw_sample_distributions" title="Permalink to this definition"></a></dt>
+<dd><p>Draw distribution of the number of observation points for each sample category.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>meta_path</strong> – path contains pickle files of object samples</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.dataset.toolkit.cosense.CoSenseDataConverter.fdict_template">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">fdict_template</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/dataset/toolkit/cosense.html#CoSenseDataConverter.fdict_template"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.dataset.toolkit.cosense.CoSenseDataConverter.fdict_template" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.dataset.toolkit.cosense.CoSenseDataConverter.global_boxes_to_local">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">global_boxes_to_local</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">meta_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/dataset/toolkit/cosense.html#CoSenseDataConverter.global_boxes_to_local"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.dataset.toolkit.cosense.CoSenseDataConverter.global_boxes_to_local" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.dataset.toolkit.cosense.CoSenseDataConverter.load_meta">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load_meta</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">meta_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/dataset/toolkit/cosense.html#CoSenseDataConverter.load_meta"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.dataset.toolkit.cosense.CoSenseDataConverter.load_meta" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.dataset.toolkit.cosense.CoSenseDataConverter.obj_from_sustech">
+<span class="sig-name descname"><span class="pre">obj_from_sustech</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">label_file</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/dataset/toolkit/cosense.html#CoSenseDataConverter.obj_from_sustech"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.dataset.toolkit.cosense.CoSenseDataConverter.obj_from_sustech" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.dataset.toolkit.cosense.CoSenseDataConverter.obj_to_opv2v">
+<span class="sig-name descname"><span class="pre">obj_to_opv2v</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bbxs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pose</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timestamp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/dataset/toolkit/cosense.html#CoSenseDataConverter.obj_to_opv2v"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.dataset.toolkit.cosense.CoSenseDataConverter.obj_to_opv2v" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.dataset.toolkit.cosense.CoSenseDataConverter.obj_to_sustech">
+<span class="sig-name descname"><span class="pre">obj_to_sustech</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cosense_objs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sustech_file</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/dataset/toolkit/cosense.html#CoSenseDataConverter.obj_to_sustech"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.dataset.toolkit.cosense.CoSenseDataConverter.obj_to_sustech" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.dataset.toolkit.cosense.CoSenseDataConverter.parse_global_bbox_velo">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">parse_global_bbox_velo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">meta_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/dataset/toolkit/cosense.html#CoSenseDataConverter.parse_global_bbox_velo"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.dataset.toolkit.cosense.CoSenseDataConverter.parse_global_bbox_velo" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.dataset.toolkit.cosense.CoSenseDataConverter.remove_lidar_info">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">remove_lidar_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fdict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">agent_id</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/dataset/toolkit/cosense.html#CoSenseDataConverter.remove_lidar_info"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.dataset.toolkit.cosense.CoSenseDataConverter.remove_lidar_info" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.dataset.toolkit.cosense.CoSenseDataConverter.supervison_full_to_sparse">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">supervison_full_to_sparse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">meta_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lidar_range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">det_r</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_box_per_frame</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_box_total</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_ratio</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/dataset/toolkit/cosense.html#CoSenseDataConverter.supervison_full_to_sparse"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.dataset.toolkit.cosense.CoSenseDataConverter.supervison_full_to_sparse" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.dataset.toolkit.cosense.CoSenseDataConverter.to_kitti">
+<span class="sig-name descname"><span class="pre">to_kitti</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">out_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/dataset/toolkit/cosense.html#CoSenseDataConverter.to_kitti"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.dataset.toolkit.cosense.CoSenseDataConverter.to_kitti" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.dataset.toolkit.cosense.CoSenseDataConverter.to_opv2v">
+<span class="sig-name descname"><span class="pre">to_opv2v</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">out_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/dataset/toolkit/cosense.html#CoSenseDataConverter.to_opv2v"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.dataset.toolkit.cosense.CoSenseDataConverter.to_opv2v" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.dataset.toolkit.cosense.CoSenseDataConverter.to_sustech">
+<span class="sig-name descname"><span class="pre">to_sustech</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">out_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/dataset/toolkit/cosense.html#CoSenseDataConverter.to_sustech"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.dataset.toolkit.cosense.CoSenseDataConverter.to_sustech" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.dataset.toolkit.cosense.CoSenseDataConverter.update_agent">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">update_agent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fdict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">agent_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">agent_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">agent_pose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">agent_time</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/dataset/toolkit/cosense.html#CoSenseDataConverter.update_agent"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.dataset.toolkit.cosense.CoSenseDataConverter.update_agent" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.dataset.toolkit.cosense.CoSenseDataConverter.update_agent_gt_boxes">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">update_agent_gt_boxes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fdict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">agent_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gt_boxes</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/dataset/toolkit/cosense.html#CoSenseDataConverter.update_agent_gt_boxes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.dataset.toolkit.cosense.CoSenseDataConverter.update_agent_gt_boxes" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.dataset.toolkit.cosense.CoSenseDataConverter.update_agent_lidar">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">update_agent_lidar</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fdict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">agent_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lidar_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lidar_pose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lidar_time</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lidar_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/dataset/toolkit/cosense.html#CoSenseDataConverter.update_agent_lidar"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.dataset.toolkit.cosense.CoSenseDataConverter.update_agent_lidar" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.dataset.toolkit.cosense.CoSenseDataConverter.update_frame_bbx">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">update_frame_bbx</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fdict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bbx</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/dataset/toolkit/cosense.html#CoSenseDataConverter.update_frame_bbx"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.dataset.toolkit.cosense.CoSenseDataConverter.update_frame_bbx" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.dataset.toolkit.cosense.CoSenseDataConverter.update_from_sustech">
+<span class="sig-name descname"><span class="pre">update_from_sustech</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sustech_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/dataset/toolkit/cosense.html#CoSenseDataConverter.update_from_sustech"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.dataset.toolkit.cosense.CoSenseDataConverter.update_from_sustech" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-cosense3d.dataset.toolkit.dairv2x">
+<span id="cosense3d-dataset-toolkit-dairv2x-module"></span><h2>cosense3d.dataset.toolkit.dairv2x module<a class="headerlink" href="#module-cosense3d.dataset.toolkit.dairv2x" title="Permalink to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.dataset.toolkit.dairv2x.calib_to_tf_matrix">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.dataset.toolkit.dairv2x.</span></span><span class="sig-name descname"><span class="pre">calib_to_tf_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">calib_file</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/dataset/toolkit/dairv2x.html#calib_to_tf_matrix"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.dataset.toolkit.dairv2x.calib_to_tf_matrix" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.dataset.toolkit.dairv2x.convert_v2x_c">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.dataset.toolkit.dairv2x.</span></span><span class="sig-name descname"><span class="pre">convert_v2x_c</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">root_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta_out_dir</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/dataset/toolkit/dairv2x.html#convert_v2x_c"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.dataset.toolkit.dairv2x.convert_v2x_c" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.dataset.toolkit.dairv2x.convert_v2x_seq">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.dataset.toolkit.dairv2x.</span></span><span class="sig-name descname"><span class="pre">convert_v2x_seq</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">root_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta_out_dir</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/dataset/toolkit/dairv2x.html#convert_v2x_seq"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.dataset.toolkit.dairv2x.convert_v2x_seq" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.dataset.toolkit.dairv2x.load_info_to_dict">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.dataset.toolkit.dairv2x.</span></span><span class="sig-name descname"><span class="pre">load_info_to_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">info_file</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/dataset/toolkit/dairv2x.html#load_info_to_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.dataset.toolkit.dairv2x.load_info_to_dict" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.dataset.toolkit.dairv2x.load_label">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.dataset.toolkit.dairv2x.</span></span><span class="sig-name descname"><span class="pre">load_label</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">label_file</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/dataset/toolkit/dairv2x.html#load_label"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.dataset.toolkit.dairv2x.load_label" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.dataset.toolkit.dairv2x.optimize_poses">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.dataset.toolkit.dairv2x.</span></span><span class="sig-name descname"><span class="pre">optimize_poses</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">meta_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/dataset/toolkit/dairv2x.html#optimize_poses"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.dataset.toolkit.dairv2x.optimize_poses" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.dataset.toolkit.dairv2x.optimize_trajectory">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.dataset.toolkit.dairv2x.</span></span><span class="sig-name descname"><span class="pre">optimize_trajectory</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seq</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sdict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">root_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_meta_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ego_agent_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">idx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sub_idx</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/dataset/toolkit/dairv2x.html#optimize_trajectory"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.dataset.toolkit.dairv2x.optimize_trajectory" title="Permalink to this definition"></a></dt>
+<dd><p>This function iterates over scenarios, for each scenario it does the following steps:
+1. register point clouds sequentially for each agent to get accurate trajectory of agents.
+Before registration, the points belonging to the labeled objets with high dynamics are removed.
+After registration of each sequence pair, the merged point cloud is down-sampled to save space.
+2. match the registered point clouds of different agents to get optimized relative poses.
+3. recover the relative pose to the world pose.</p>
+<section id="parameters">
+<h3>Parameters<a class="headerlink" href="#parameters" title="Permalink to this heading"></a></h3>
+<p>meta_path: directory of meta files
+root_dir: root dir of data</p>
+</section>
+<section id="returns">
+<h3>Returns<a class="headerlink" href="#returns" title="Permalink to this heading"></a></h3>
+<p>meta: meta information with updated poses of agents</p>
+</section>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.dataset.toolkit.dairv2x.parse_global_bboxes">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.dataset.toolkit.dairv2x.</span></span><span class="sig-name descname"><span class="pre">parse_global_bboxes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sdict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frames</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">root_dir</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/dataset/toolkit/dairv2x.html#parse_global_bboxes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.dataset.toolkit.dairv2x.parse_global_bboxes" title="Permalink to this definition"></a></dt>
+<dd><p>Step three</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.dataset.toolkit.dairv2x.parse_static_pcd">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.dataset.toolkit.dairv2x.</span></span><span class="sig-name descname"><span class="pre">parse_static_pcd</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">adict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">root_dir</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/dataset/toolkit/dairv2x.html#parse_static_pcd"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.dataset.toolkit.dairv2x.parse_static_pcd" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.dataset.toolkit.dairv2x.parse_timestamped_boxes">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.dataset.toolkit.dairv2x.</span></span><span class="sig-name descname"><span class="pre">parse_timestamped_boxes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">adict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">root_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">four_wheel_only</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/dataset/toolkit/dairv2x.html#parse_timestamped_boxes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.dataset.toolkit.dairv2x.parse_timestamped_boxes" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.dataset.toolkit.dairv2x.register_pcds_to_blocks">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.dataset.toolkit.dairv2x.</span></span><span class="sig-name descname"><span class="pre">register_pcds_to_blocks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seq</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sdict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">root_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">idx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/dataset/toolkit/dairv2x.html#register_pcds_to_blocks"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.dataset.toolkit.dairv2x.register_pcds_to_blocks" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.dataset.toolkit.dairv2x.register_sequence">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.dataset.toolkit.dairv2x.</span></span><span class="sig-name descname"><span class="pre">register_sequence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sdict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frames</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">root_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore_ids</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/dataset/toolkit/dairv2x.html#register_sequence"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.dataset.toolkit.dairv2x.register_sequence" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.dataset.toolkit.dairv2x.register_step_one">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.dataset.toolkit.dairv2x.</span></span><span class="sig-name descname"><span class="pre">register_step_one</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mf</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/dataset/toolkit/dairv2x.html#register_step_one"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.dataset.toolkit.dairv2x.register_step_one" title="Permalink to this definition"></a></dt>
+<dd><p>Find vehicle that is most close to infra</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.dataset.toolkit.dairv2x.register_step_two">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.dataset.toolkit.dairv2x.</span></span><span class="sig-name descname"><span class="pre">register_step_two</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start_frame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta_out_dir</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/dataset/toolkit/dairv2x.html#register_step_two"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.dataset.toolkit.dairv2x.register_step_two" title="Permalink to this definition"></a></dt>
+<dd><p>Register point clouds</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.dataset.toolkit.dairv2x.remove_ego_boxes">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.dataset.toolkit.dairv2x.</span></span><span class="sig-name descname"><span class="pre">remove_ego_boxes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">meta_in</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/dataset/toolkit/dairv2x.html#remove_ego_boxes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.dataset.toolkit.dairv2x.remove_ego_boxes" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.dataset.toolkit.dairv2x.select_sub_scenes">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.dataset.toolkit.dairv2x.</span></span><span class="sig-name descname"><span class="pre">select_sub_scenes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">meta_in</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">root_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta_out</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">split</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/dataset/toolkit/dairv2x.html#select_sub_scenes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.dataset.toolkit.dairv2x.select_sub_scenes" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="module-cosense3d.dataset.toolkit.opv2v">
+<span id="cosense3d-dataset-toolkit-opv2v-module"></span><h2>cosense3d.dataset.toolkit.opv2v module<a class="headerlink" href="#module-cosense3d.dataset.toolkit.opv2v" title="Permalink to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.dataset.toolkit.opv2v.boxes_3d_to_2d">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.dataset.toolkit.opv2v.</span></span><span class="sig-name descname"><span class="pre">boxes_3d_to_2d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">boxes3d</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_pts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lidar2cam</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">I</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">img_size</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/dataset/toolkit/opv2v.html#boxes_3d_to_2d"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.dataset.toolkit.opv2v.boxes_3d_to_2d" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.dataset.toolkit.opv2v.convert_bev_semantic_map_to_road_height_map">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.dataset.toolkit.opv2v.</span></span><span class="sig-name descname"><span class="pre">convert_bev_semantic_map_to_road_height_map</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">map_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">map_bounds_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scenario_town_map_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta_dir</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/dataset/toolkit/opv2v.html#convert_bev_semantic_map_to_road_height_map"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.dataset.toolkit.opv2v.convert_bev_semantic_map_to_road_height_map" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.dataset.toolkit.opv2v.corner_to_center">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.dataset.toolkit.opv2v.</span></span><span class="sig-name descname"><span class="pre">corner_to_center</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">corner3d</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'lwh'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/dataset/toolkit/opv2v.html#corner_to_center"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.dataset.toolkit.opv2v.corner_to_center" title="Permalink to this definition"></a></dt>
+<dd><p>Convert 8 corners to x, y, z, dx, dy, dz, yaw.</p>
+<section id="id1">
+<h3>Parameters<a class="headerlink" href="#id1" title="Permalink to this heading"></a></h3>
+<dl class="simple">
+<dt>corner3d<span class="classifier">np.ndarray</span></dt><dd><p>(N, 8, 3)</p>
+</dd>
+<dt>order<span class="classifier">str</span></dt><dd><p>‘lwh’ or ‘hwl’</p>
+</dd>
+</dl>
+</section>
+<section id="id2">
+<h3>Returns<a class="headerlink" href="#id2" title="Permalink to this heading"></a></h3>
+<dl class="simple">
+<dt>box3d<span class="classifier">np.ndarray</span></dt><dd><p>(N, 7)</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.dataset.toolkit.opv2v.create_bbx">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.dataset.toolkit.opv2v.</span></span><span class="sig-name descname"><span class="pre">create_bbx</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">extent</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/dataset/toolkit/opv2v.html#create_bbx"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.dataset.toolkit.opv2v.create_bbx" title="Permalink to this definition"></a></dt>
+<dd><p>Create bounding box with 8 corners under obstacle vehicle reference.</p>
+<section id="id3">
+<h3>Parameters<a class="headerlink" href="#id3" title="Permalink to this heading"></a></h3>
+<dl class="simple">
+<dt>extent<span class="classifier">list</span></dt><dd><p>Width, height, length of the bbx.</p>
+</dd>
+</dl>
+</section>
+<section id="id4">
+<h3>Returns<a class="headerlink" href="#id4" title="Permalink to this heading"></a></h3>
+<dl class="simple">
+<dt>bbx<span class="classifier">np.array</span></dt><dd><p>The bounding box with 8 corners, shape: (8, 3)</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.dataset.toolkit.opv2v.generate_bevmaps">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.dataset.toolkit.opv2v.</span></span><span class="sig-name descname"><span class="pre">generate_bevmaps</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/dataset/toolkit/opv2v.html#generate_bevmaps"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.dataset.toolkit.opv2v.generate_bevmaps" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.dataset.toolkit.opv2v.generate_roadline">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.dataset.toolkit.opv2v.</span></span><span class="sig-name descname"><span class="pre">generate_roadline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">map_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">map_bounds_file</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/dataset/toolkit/opv2v.html#generate_roadline"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.dataset.toolkit.opv2v.generate_roadline" title="Permalink to this definition"></a></dt>
+<dd><p>Convert global BEV semantic maps to 2d road line points.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>map_dir</strong> – directory for images of BEV semantic maps</p></li>
+<li><p><strong>map_bounds_file</strong> – json file that describe the world coordinates of the BEV map origin (image[0, 0])</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Nx2 array, 2d world coordinates of road line points in meters.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.dataset.toolkit.opv2v.opv2v_pose_to_cosense">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.dataset.toolkit.opv2v.</span></span><span class="sig-name descname"><span class="pre">opv2v_pose_to_cosense</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pose</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/dataset/toolkit/opv2v.html#opv2v_pose_to_cosense"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.dataset.toolkit.opv2v.opv2v_pose_to_cosense" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.dataset.toolkit.opv2v.opv2v_to_cosense">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.dataset.toolkit.opv2v.</span></span><span class="sig-name descname"><span class="pre">opv2v_to_cosense</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path_in</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path_out</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">isSim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">correct_transf</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pcd_ext</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'pcd'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/dataset/toolkit/opv2v.html#opv2v_to_cosense"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.dataset.toolkit.opv2v.opv2v_to_cosense" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.dataset.toolkit.opv2v.pose_to_transformation">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.dataset.toolkit.opv2v.</span></span><span class="sig-name descname"><span class="pre">pose_to_transformation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pose</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/dataset/toolkit/opv2v.html#pose_to_transformation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.dataset.toolkit.opv2v.pose_to_transformation" title="Permalink to this definition"></a></dt>
+<dd><dl class="simple">
+<dt>Args:</dt><dd><p>pose: list, [x, y, z, roll, pitch, yaw]</p>
+</dd>
+<dt>Returns:</dt><dd><p>transformation: np.ndarray, (4, 4)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.dataset.toolkit.opv2v.project_points">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.dataset.toolkit.opv2v.</span></span><span class="sig-name descname"><span class="pre">project_points</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">points</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lidar2cam</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">I</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/dataset/toolkit/opv2v.html#project_points"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.dataset.toolkit.opv2v.project_points" title="Permalink to this definition"></a></dt>
+<dd><p>Project 3d points to image planes</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.dataset.toolkit.opv2v.project_world_objects">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.dataset.toolkit.opv2v.</span></span><span class="sig-name descname"><span class="pre">project_world_objects</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">object_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lidar_pose</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/dataset/toolkit/opv2v.html#project_world_objects"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.dataset.toolkit.opv2v.project_world_objects" title="Permalink to this definition"></a></dt>
+<dd><p>Project the objects under world coordinates into another coordinate
+based on the provided extrinsic.</p>
+<section id="id5">
+<h3>Parameters<a class="headerlink" href="#id5" title="Permalink to this heading"></a></h3>
+<dl class="simple">
+<dt>object_dict<span class="classifier">dict</span></dt><dd><p>The dictionary contains all objects surrounding a certain cav.</p>
+</dd>
+<dt>output_dict<span class="classifier">dict</span></dt><dd><p>key: object id, value: object bbx (xyzlwhyaw).</p>
+</dd>
+<dt>lidar_pose<span class="classifier">list</span></dt><dd><p>(6, ), lidar pose under world coordinate, [x, y, z, roll, yaw, pitch].</p>
+</dd>
+<dt>order<span class="classifier">str</span></dt><dd><p>‘lwh’ or ‘hwl’</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.dataset.toolkit.opv2v.update_2d_bboxes">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.dataset.toolkit.opv2v.</span></span><span class="sig-name descname"><span class="pre">update_2d_bboxes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fdict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cav_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lidar_pose</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_dir</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/dataset/toolkit/opv2v.html#update_2d_bboxes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.dataset.toolkit.opv2v.update_2d_bboxes" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.dataset.toolkit.opv2v.update_cam_params">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.dataset.toolkit.opv2v.</span></span><span class="sig-name descname"><span class="pre">update_cam_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">opv2v_params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cosense_fdict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">agent_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scenario</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frame</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/dataset/toolkit/opv2v.html#update_cam_params"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.dataset.toolkit.opv2v.update_cam_params" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.dataset.toolkit.opv2v.update_global_bboxes_num_pts">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.dataset.toolkit.opv2v.</span></span><span class="sig-name descname"><span class="pre">update_global_bboxes_num_pts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/dataset/toolkit/opv2v.html#update_global_bboxes_num_pts"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.dataset.toolkit.opv2v.update_global_bboxes_num_pts" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.dataset.toolkit.opv2v.update_local_boxes3d">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.dataset.toolkit.opv2v.</span></span><span class="sig-name descname"><span class="pre">update_local_boxes3d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fdict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">objects_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ref_pose</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cav_id</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/dataset/toolkit/opv2v.html#update_local_boxes3d"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.dataset.toolkit.opv2v.update_local_boxes3d" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.dataset.toolkit.opv2v.x1_to_x2">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.dataset.toolkit.opv2v.</span></span><span class="sig-name descname"><span class="pre">x1_to_x2</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/dataset/toolkit/opv2v.html#x1_to_x2"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.dataset.toolkit.opv2v.x1_to_x2" title="Permalink to this definition"></a></dt>
+<dd><p>Transformation matrix from x1 to x2.</p>
+<section id="id6">
+<h3>Parameters<a class="headerlink" href="#id6" title="Permalink to this heading"></a></h3>
+<dl class="simple">
+<dt>x1<span class="classifier">list or np.ndarray</span></dt><dd><p>The pose of x1 under world coordinates or
+transformation matrix x1-&gt;world</p>
+</dd>
+<dt>x2<span class="classifier">list or np.ndarray</span></dt><dd><dl class="simple">
+<dt>The pose of x2 under world coordinates or</dt><dd><p>transformation matrix x2-&gt;world</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+<section id="id7">
+<h3>Returns<a class="headerlink" href="#id7" title="Permalink to this heading"></a></h3>
+<dl class="simple">
+<dt>transformation_matrix<span class="classifier">np.ndarray</span></dt><dd><p>The transformation matrix.</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.dataset.toolkit.opv2v.x_to_world">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.dataset.toolkit.opv2v.</span></span><span class="sig-name descname"><span class="pre">x_to_world</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pose</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="reference internal" href="_modules/cosense3d/dataset/toolkit/opv2v.html#x_to_world"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.dataset.toolkit.opv2v.x_to_world" title="Permalink to this definition"></a></dt>
+<dd><p>The transformation matrix from x-coordinate system to carla world system
+Parameters</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>pose</strong> – [x, y, z, roll, yaw, pitch]</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The transformation matrix.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-cosense3d.dataset.toolkit.opv2v_t">
+<span id="cosense3d-dataset-toolkit-opv2v-t-module"></span><h2>cosense3d.dataset.toolkit.opv2v_t module<a class="headerlink" href="#module-cosense3d.dataset.toolkit.opv2v_t" title="Permalink to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.dataset.toolkit.opv2v_t.gen_time_offsets">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.dataset.toolkit.opv2v_t.</span></span><span class="sig-name descname"><span class="pre">gen_time_offsets</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_dir</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/dataset/toolkit/opv2v_t.html#gen_time_offsets"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.dataset.toolkit.opv2v_t.gen_time_offsets" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.dataset.toolkit.opv2v_t.get_box_velo">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.dataset.toolkit.opv2v_t.</span></span><span class="sig-name descname"><span class="pre">get_box_velo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">box</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">speeds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frame</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/dataset/toolkit/opv2v_t.html#get_box_velo"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.dataset.toolkit.opv2v_t.get_box_velo" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.dataset.toolkit.opv2v_t.get_local_boxes3d">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.dataset.toolkit.opv2v_t.</span></span><span class="sig-name descname"><span class="pre">get_local_boxes3d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">objects_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ref_pose</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/dataset/toolkit/opv2v_t.html#get_local_boxes3d"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.dataset.toolkit.opv2v_t.get_local_boxes3d" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.dataset.toolkit.opv2v_t.get_velos">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.dataset.toolkit.opv2v_t.</span></span><span class="sig-name descname"><span class="pre">get_velos</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">boxes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">speeds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frame</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/dataset/toolkit/opv2v_t.html#get_velos"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.dataset.toolkit.opv2v_t.get_velos" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.dataset.toolkit.opv2v_t.load_frame_data">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.dataset.toolkit.opv2v_t.</span></span><span class="sig-name descname"><span class="pre">load_frame_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scene_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cavs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frame</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/dataset/toolkit/opv2v_t.html#load_frame_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.dataset.toolkit.opv2v_t.load_frame_data" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.dataset.toolkit.opv2v_t.load_vehicles_gframe">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.dataset.toolkit.opv2v_t.</span></span><span class="sig-name descname"><span class="pre">load_vehicles_gframe</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/dataset/toolkit/opv2v_t.html#load_vehicles_gframe"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.dataset.toolkit.opv2v_t.load_vehicles_gframe" title="Permalink to this definition"></a></dt>
+<dd><p>Load vehicles in global coordinate system.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.dataset.toolkit.opv2v_t.opv2vt_to_cosense">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.dataset.toolkit.opv2v_t.</span></span><span class="sig-name descname"><span class="pre">opv2vt_to_cosense</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">split</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_out_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta_out_dir</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/dataset/toolkit/opv2v_t.html#opv2vt_to_cosense"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.dataset.toolkit.opv2v_t.opv2vt_to_cosense" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.dataset.toolkit.opv2v_t.pad_box_result">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.dataset.toolkit.opv2v_t.</span></span><span class="sig-name descname"><span class="pre">pad_box_result</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">res</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_len</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/dataset/toolkit/opv2v_t.html#pad_box_result"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.dataset.toolkit.opv2v_t.pad_box_result" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.dataset.toolkit.opv2v_t.parse_speed_from_yamls">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.dataset.toolkit.opv2v_t.</span></span><span class="sig-name descname"><span class="pre">parse_speed_from_yamls</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scene_dir</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/dataset/toolkit/opv2v_t.html#parse_speed_from_yamls"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.dataset.toolkit.opv2v_t.parse_speed_from_yamls" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.dataset.toolkit.opv2v_t.parse_sub_frame">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.dataset.toolkit.opv2v_t.</span></span><span class="sig-name descname"><span class="pre">parse_sub_frame</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">f</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/dataset/toolkit/opv2v_t.html#parse_sub_frame"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.dataset.toolkit.opv2v_t.parse_sub_frame" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.dataset.toolkit.opv2v_t.read_frame_plys_boxes">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.dataset.toolkit.opv2v_t.</span></span><span class="sig-name descname"><span class="pre">read_frame_plys_boxes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prev_frame</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_offset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parse_boxes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/dataset/toolkit/opv2v_t.html#read_frame_plys_boxes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.dataset.toolkit.opv2v_t.read_frame_plys_boxes" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.dataset.toolkit.opv2v_t.read_ply">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.dataset.toolkit.opv2v_t.</span></span><span class="sig-name descname"><span class="pre">read_ply</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">properties</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/dataset/toolkit/opv2v_t.html#read_ply"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.dataset.toolkit.opv2v_t.read_ply" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.dataset.toolkit.opv2v_t.read_ply_to_dict">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.dataset.toolkit.opv2v_t.</span></span><span class="sig-name descname"><span class="pre">read_ply_to_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">f</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/dataset/toolkit/opv2v_t.html#read_ply_to_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.dataset.toolkit.opv2v_t.read_ply_to_dict" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.dataset.toolkit.opv2v_t.read_sub_frame">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.dataset.toolkit.opv2v_t.</span></span><span class="sig-name descname"><span class="pre">read_sub_frame</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">f</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/dataset/toolkit/opv2v_t.html#read_sub_frame"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.dataset.toolkit.opv2v_t.read_sub_frame" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.dataset.toolkit.opv2v_t.transform_boxes_global_to_ref">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.dataset.toolkit.opv2v_t.</span></span><span class="sig-name descname"><span class="pre">transform_boxes_global_to_ref</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">boxes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ref_pose</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/dataset/toolkit/opv2v_t.html#transform_boxes_global_to_ref"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.dataset.toolkit.opv2v_t.transform_boxes_global_to_ref" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.dataset.toolkit.opv2v_t.update_bev_map">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.dataset.toolkit.opv2v_t.</span></span><span class="sig-name descname"><span class="pre">update_bev_map</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">root_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta_in</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta_out</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">split</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/dataset/toolkit/opv2v_t.html#update_bev_map"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.dataset.toolkit.opv2v_t.update_bev_map" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.dataset.toolkit.opv2v_t.update_global_boxes">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.dataset.toolkit.opv2v_t.</span></span><span class="sig-name descname"><span class="pre">update_global_boxes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">root_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta_in</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta_out</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">split</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/dataset/toolkit/opv2v_t.html#update_global_boxes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.dataset.toolkit.opv2v_t.update_global_boxes" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.dataset.toolkit.opv2v_t.update_velo">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.dataset.toolkit.opv2v_t.</span></span><span class="sig-name descname"><span class="pre">update_velo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scenario_meta_file</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/dataset/toolkit/opv2v_t.html#update_velo"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.dataset.toolkit.opv2v_t.update_velo" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.dataset.toolkit.opv2v_t.vis_cosense_scenario">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.dataset.toolkit.opv2v_t.</span></span><span class="sig-name descname"><span class="pre">vis_cosense_scenario</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scenario_meta_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_dir</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/dataset/toolkit/opv2v_t.html#vis_cosense_scenario"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.dataset.toolkit.opv2v_t.vis_cosense_scenario" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.dataset.toolkit.opv2v_t.vis_frame_data">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.dataset.toolkit.opv2v_t.</span></span><span class="sig-name descname"><span class="pre">vis_frame_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/dataset/toolkit/opv2v_t.html#vis_frame_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.dataset.toolkit.opv2v_t.vis_frame_data" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="module-cosense3d.dataset.toolkit">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-cosense3d.dataset.toolkit" title="Permalink to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.dataset.toolkit.callback_registrations">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.dataset.toolkit.</span></span><span class="sig-name descname"><span class="pre">callback_registrations</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source_points</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_points</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/dataset/toolkit.html#callback_registrations"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.dataset.toolkit.callback_registrations" title="Permalink to this definition"></a></dt>
+<dd><p>Callback function for point picking. Registers two point clouds using selected corresponding points.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.dataset.toolkit.click_register">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.dataset.toolkit.</span></span><span class="sig-name descname"><span class="pre">click_register</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/dataset/toolkit.html#click_register"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.dataset.toolkit.click_register" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.dataset.toolkit.register_pcds">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.dataset.toolkit.</span></span><span class="sig-name descname"><span class="pre">register_pcds</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source_cloud</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_cloud</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_transf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">visualize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'PCD'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/dataset/toolkit.html#register_pcds"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.dataset.toolkit.register_pcds" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="cosense3d.dataset.pipeline.html" class="btn btn-neutral float-left" title="cosense3d.dataset.pipeline package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="cosense3d.modules.html" class="btn btn-neutral float-right" title="cosense3d.modules package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Anonymous Author.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

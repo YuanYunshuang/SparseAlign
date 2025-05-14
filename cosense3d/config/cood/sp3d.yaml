@@ -1,0 +1,41 @@
+DATASET: 'pycfg.base.opv2v.seq1_vox02'
+
+TRAIN:
+#  project_name: 'centernet'
+  wandb_account: 'opheliayuan'
+  log_every: 10
+  max_epoch: 50
+  gpus: 0
+  hooks: 'pycfg.base.hooks.train_hooks'
+  optimizer:
+    lr: 0.0001
+    weight_decay: 1e-2
+    betas: [0.95, 0.999]
+  lr_scheduler:
+    policy: 'MultiStepLR'
+    milestones: [10, 20]
+    gamma: 0.1
+
+TEST:
+  hooks: 'pycfg.nets.cood_minkunet.test_hooks_opv2v'
+
+
+CONTROLLER:
+  num_loss_frame: 1
+  data_manager: 'pycfg.base.opv2v.data_manager_no_bev_tgt'
+  shared_modules: 'pycfg.nets.cood_minkunet.shared_modules_opv2v'
+  cav_manager:
+    prototype: cood_collection.Sp3DCAV
+    dataset: opv2v
+    all_grad: false
+
+VISUALIZATION:
+  output_viewer:
+    plots: 'pycfg.nets.cood_minkunet.plots_opv2v'
+
+
+
+
+
+
+

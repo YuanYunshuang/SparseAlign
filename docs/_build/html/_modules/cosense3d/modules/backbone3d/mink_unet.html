@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>cosense3d.modules.backbone3d.mink_unet &mdash; OpenCosense3D 1.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js?v=af2ce170"></script>
+        <script src="../../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            OpenCosense3D
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../md/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../md/prepare_data.html">Prepare Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../md/structure.html">The Structure of the framework</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules.html">CoSense3d</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">OpenCosense3D</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+          <li class="breadcrumb-item"><a href="../../modules.html">cosense3d.modules</a></li>
+      <li class="breadcrumb-item active">cosense3d.modules.backbone3d.mink_unet</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for cosense3d.modules.backbone3d.mink_unet</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">nn</span>
+<span class="kn">from</span> <span class="nn">cosense3d.modules</span> <span class="kn">import</span> <span class="n">BaseModule</span>
+<span class="kn">from</span> <span class="nn">cosense3d.modules.utils.common</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">cosense3d.modules.utils.me_utils</span> <span class="kn">import</span> <span class="o">*</span>
+
+
+<div class="viewcode-block" id="MinkUnet"><a class="viewcode-back" href="../../../../cosense3d.modules.backbone3d.html#cosense3d.modules.backbone3d.mink_unet.MinkUnet">[docs]</a><span class="k">class</span> <span class="nc">MinkUnet</span><span class="p">(</span><span class="n">BaseModule</span><span class="p">):</span>
+    <span class="n">QMODE</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">SparseTensorQuantizationMode</span><span class="o">.</span><span class="n">UNWEIGHTED_AVERAGE</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">data_info</span><span class="p">,</span>
+                 <span class="n">stride</span><span class="p">,</span>
+                 <span class="n">in_dim</span><span class="p">,</span>
+                 <span class="n">d</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+                 <span class="n">kernel_size_layer1</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+                 <span class="n">cache_strides</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">floor_height</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                 <span class="n">height_compression</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">to_dense</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                 <span class="n">dist</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                 <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">MinkUnet</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">update_me_essentials</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_info</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stride</span> <span class="o">=</span> <span class="n">stride</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">in_dim</span> <span class="o">=</span> <span class="n">in_dim</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">floor_height</span> <span class="o">=</span> <span class="n">floor_height</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">to_dense</span> <span class="o">=</span> <span class="n">to_dense</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">height_compression</span> <span class="o">=</span> <span class="n">height_compression</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">d</span> <span class="o">=</span> <span class="n">d</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lidar_range_tensor</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Parameter</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lidar_range</span><span class="p">),</span> <span class="n">requires_grad</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="c1"># For determine batchnorm type: if the model is trained on multiple GPUs with ME.MinkowskiBatchNorm,</span>
+        <span class="c1"># the BN would perform differently in eval mode because the running_mean and running_var would be</span>
+        <span class="c1"># different to training mode, this is caused by different number of tracked batches, therefore if</span>
+        <span class="c1"># ditributed training is used for this model, either ME.MinkowskiSyncBatchNorm should be used, or</span>
+        <span class="c1"># the running mean and var should be adapted.</span>
+        <span class="c1"># TODO: adapt running mean and var in inference mode if model is trained with DDP</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dist</span> <span class="o">=</span> <span class="n">dist</span>
+        <span class="k">if</span> <span class="n">cache_strides</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cache_strides</span> <span class="o">=</span> <span class="p">[</span><span class="n">stride</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">max_resolution</span> <span class="o">=</span> <span class="n">stride</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">max_resolution</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">cache_strides</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cache_strides</span> <span class="o">=</span> <span class="n">cache_strides</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_init_unet_layers</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">height_compression</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_init_height_compression_layers</span><span class="p">(</span><span class="n">height_compression</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">init_weights</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_init_unet_layers</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kernel_size_layer1</span><span class="o">=</span><span class="mi">3</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">enc_mlp</span> <span class="o">=</span> <span class="n">linear_layers</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">in_dim</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="mi">32</span><span class="p">],</span> <span class="n">norm</span><span class="o">=</span><span class="s1">&#39;LN&#39;</span><span class="p">)</span>
+        <span class="n">kernel_conv1</span> <span class="o">=</span> <span class="p">[</span><span class="n">kernel_size_layer1</span><span class="p">,]</span> <span class="o">*</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">d</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+        <span class="n">kernel</span> <span class="o">=</span> <span class="p">[</span><span class="mi">3</span><span class="p">,]</span> <span class="o">*</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">d</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">d</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
+            <span class="n">kernel</span> <span class="o">=</span> <span class="n">kernel</span> <span class="o">+</span> <span class="p">[</span><span class="mi">1</span><span class="p">,]</span>
+            <span class="n">kernel_conv1</span> <span class="o">=</span> <span class="n">kernel</span> <span class="o">+</span> <span class="p">[</span><span class="mi">1</span><span class="p">,]</span>
+
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;d&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">d</span><span class="p">,</span> <span class="s1">&#39;bn_momentum&#39;</span><span class="p">:</span> <span class="mf">0.1</span><span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">conv1</span> <span class="o">=</span> <span class="n">minkconv_conv_block</span><span class="p">(</span><span class="mi">32</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="n">kernel_conv1</span><span class="p">,</span>
+                                         <span class="mi">1</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">conv2</span> <span class="o">=</span> <span class="n">get_conv_block</span><span class="p">([</span><span class="mi">32</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="mi">32</span><span class="p">],</span> <span class="n">kernel</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">conv3</span> <span class="o">=</span> <span class="n">get_conv_block</span><span class="p">([</span><span class="mi">32</span><span class="p">,</span> <span class="mi">64</span><span class="p">,</span> <span class="mi">64</span><span class="p">],</span> <span class="n">kernel</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">conv4</span> <span class="o">=</span> <span class="n">get_conv_block</span><span class="p">([</span><span class="mi">64</span><span class="p">,</span> <span class="mi">128</span><span class="p">,</span> <span class="mi">128</span><span class="p">],</span> <span class="n">kernel</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_resolution</span> <span class="o">&lt;=</span> <span class="mi">4</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">trconv4</span> <span class="o">=</span> <span class="n">get_conv_block</span><span class="p">([</span><span class="mi">128</span><span class="p">,</span> <span class="mi">64</span><span class="p">,</span> <span class="mi">64</span><span class="p">],</span> <span class="n">kernel</span><span class="p">,</span> <span class="n">tr</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_resolution</span> <span class="o">&lt;=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">trconv3</span> <span class="o">=</span> <span class="n">get_conv_block</span><span class="p">([</span><span class="mi">128</span><span class="p">,</span> <span class="mi">64</span><span class="p">,</span> <span class="mi">64</span><span class="p">],</span> <span class="n">kernel</span><span class="p">,</span> <span class="n">tr</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_resolution</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">trconv2</span> <span class="o">=</span> <span class="n">get_conv_block</span><span class="p">([</span><span class="mi">96</span><span class="p">,</span> <span class="mi">64</span><span class="p">,</span> <span class="mi">32</span><span class="p">],</span> <span class="n">kernel</span><span class="p">,</span> <span class="n">tr</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">out_layer</span> <span class="o">=</span> <span class="n">minkconv_layer</span><span class="p">(</span><span class="mi">64</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="n">kernel</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">d</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">d</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_init_height_compression_layers</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">planes</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stride_size_dict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">planes</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stride_size_dict</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">k</span><span class="p">[</span><span class="mi">1</span><span class="p">])]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">grid_size</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">k</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+            <span class="n">layers</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">steps</span> <span class="o">=</span> <span class="n">v</span><span class="p">[</span><span class="s1">&#39;steps&#39;</span><span class="p">]</span>
+            <span class="n">channels</span> <span class="o">=</span> <span class="n">v</span><span class="p">[</span><span class="s1">&#39;channels&#39;</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">steps</span><span class="p">):</span>
+                <span class="n">step</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">d</span>
+                <span class="n">step</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">s</span>
+                <span class="n">layers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="n">minkconv_conv_block</span><span class="p">(</span><span class="n">channels</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">channels</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">],</span>
+                                        <span class="n">step</span><span class="p">,</span> <span class="n">step</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">d</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">)</span>
+                <span class="p">)</span>
+            <span class="n">layers</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span><span class="o">*</span><span class="n">layers</span><span class="p">)</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s1">_compression&#39;</span><span class="p">,</span> <span class="n">layers</span><span class="p">)</span>
+
+<div class="viewcode-block" id="MinkUnet.init_weights"><a class="viewcode-back" href="../../../../cosense3d.modules.backbone3d.html#cosense3d.modules.backbone3d.mink_unet.MinkUnet.init_weights">[docs]</a>    <span class="k">def</span> <span class="nf">init_weights</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">named_parameters</span><span class="p">():</span>
+            <span class="k">if</span> <span class="p">(</span><span class="s1">&#39;mlp&#39;</span> <span class="ow">in</span> <span class="n">n</span> <span class="ow">and</span> <span class="s1">&#39;weight&#39;</span> <span class="ow">in</span> <span class="n">n</span><span class="p">)</span> <span class="ow">or</span> <span class="s1">&#39;kernel&#39;</span> <span class="ow">in</span> <span class="n">n</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="n">nn</span><span class="o">.</span><span class="n">init</span><span class="o">.</span><span class="n">xavier_uniform_</span><span class="p">(</span><span class="n">p</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="MinkUnet.to_gpu"><a class="viewcode-back" href="../../../../cosense3d.modules.backbone3d.html#cosense3d.modules.backbone3d.mink_unet.MinkUnet.to_gpu">[docs]</a>    <span class="k">def</span> <span class="nf">to_gpu</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gpu_id</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">gpu_id</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">ME</span><span class="o">.</span><span class="n">MinkowskiSyncBatchNorm</span><span class="o">.</span><span class="n">convert_sync_batchnorm</span></div>
+
+<div class="viewcode-block" id="MinkUnet.forward"><a class="viewcode-back" href="../../../../cosense3d.modules.backbone3d.html#cosense3d.modules.backbone3d.mink_unet.MinkUnet.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">points</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">forward_unet</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">height_compression</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">forward_height_compression</span><span class="p">(</span><span class="n">res</span><span class="p">)</span>
+
+        <span class="n">res</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">format_output</span><span class="p">(</span><span class="n">res</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">points</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">res</span></div>
+
+<div class="viewcode-block" id="MinkUnet.forward_unet"><a class="viewcode-back" href="../../../../cosense3d.modules.backbone3d.html#cosense3d.modules.backbone3d.mink_unet.MinkUnet.forward_unet">[docs]</a>    <span class="k">def</span> <span class="nf">forward_unet</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">points</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">N</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">points</span><span class="p">)</span>
+        <span class="n">points</span> <span class="o">=</span> <span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">torch</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="n">pts</span><span class="p">[:,</span> <span class="p">:</span><span class="mi">1</span><span class="p">])</span> <span class="o">*</span> <span class="n">i</span><span class="p">,</span> <span class="n">pts</span><span class="p">],</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span>
+                            <span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">pts</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">points</span><span class="p">)]</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">prepare_input_data</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">voxel_size</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">QMODE</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">floor_height</span><span class="p">,</span>
+                               <span class="bp">self</span><span class="o">.</span><span class="n">d</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">in_dim</span><span class="p">)</span>
+        <span class="n">x1</span><span class="p">,</span> <span class="n">norm_points_p1</span><span class="p">,</span> <span class="n">points_p1</span><span class="p">,</span> <span class="n">count_p1</span><span class="p">,</span> <span class="n">pos_embs</span> <span class="o">=</span> <span class="n">voxelize_with_centroids</span><span class="p">(</span>
+            <span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">enc_mlp</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lidar_range_tensor</span><span class="p">)</span>
+
+        <span class="c1"># convs</span>
+        <span class="n">x1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conv1</span><span class="p">(</span><span class="n">x1</span><span class="p">)</span>
+        <span class="n">x2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conv2</span><span class="p">(</span><span class="n">x1</span><span class="p">)</span>
+        <span class="n">x4</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conv3</span><span class="p">(</span><span class="n">x2</span><span class="p">)</span>
+        <span class="n">p8</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conv4</span><span class="p">(</span><span class="n">x4</span><span class="p">)</span>
+        <span class="n">p8_cat</span> <span class="o">=</span> <span class="n">p8</span>
+
+        <span class="c1"># transposed convs</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_resolution</span> <span class="o">&lt;=</span> <span class="mi">4</span><span class="p">:</span>
+            <span class="n">p4</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">trconv4</span><span class="p">(</span><span class="n">p8</span><span class="p">)</span>
+            <span class="n">p4_cat</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">x4</span><span class="p">,</span> <span class="n">p4</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_resolution</span> <span class="o">&lt;=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">p2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">trconv3</span><span class="p">(</span><span class="n">p4_cat</span><span class="p">)</span>
+            <span class="n">p2_cat</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">p2</span><span class="p">,</span> <span class="n">p2</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_resolution</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">p1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">trconv2</span><span class="p">(</span><span class="n">p2_cat</span><span class="p">)</span>
+            <span class="n">p1_cat</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">out_layer</span><span class="p">(</span><span class="n">ME</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">x1</span><span class="p">,</span> <span class="n">p1</span><span class="p">))</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_resolution</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">p0</span> <span class="o">=</span> <span class="n">devoxelize_with_centroids</span><span class="p">(</span><span class="n">p1</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">pos_embs</span><span class="p">)</span>
+            <span class="n">p0_cat</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;coor&#39;</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span> <span class="s1">&#39;feat&#39;</span><span class="p">:</span> <span class="n">p0</span><span class="p">}</span>
+
+        <span class="nb">vars</span> <span class="o">=</span> <span class="nb">locals</span><span class="p">()</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="p">{</span><span class="sa">f</span><span class="s1">&#39;p</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">:</span> <span class="nb">vars</span><span class="p">[</span><span class="sa">f</span><span class="s1">&#39;p</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s1">_cat&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">cache_strides</span><span class="p">}</span>
+
+        <span class="n">tmp</span> <span class="o">=</span> <span class="n">x4</span><span class="o">.</span><span class="n">F</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">values</span>
+        <span class="k">return</span> <span class="n">res</span></div>
+
+<div class="viewcode-block" id="MinkUnet.forward_height_compression"><a class="viewcode-back" href="../../../../cosense3d.modules.backbone3d.html#cosense3d.modules.backbone3d.mink_unet.MinkUnet.forward_height_compression">[docs]</a>    <span class="k">def</span> <span class="nf">forward_height_compression</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">res</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">stride</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">stride_size_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">out_tensor</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;p</span><span class="si">{</span><span class="n">stride</span><span class="si">}</span><span class="s1">_compression&#39;</span><span class="p">)(</span><span class="n">res</span><span class="p">[</span><span class="sa">f</span><span class="s1">&#39;p</span><span class="si">{</span><span class="n">stride</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">])</span>
+            <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">out_tensor</span><span class="o">.</span><span class="n">C</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">())</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span> \
+                <span class="p">(</span><span class="sa">f</span><span class="s2">&quot;height is not fully compressed. &quot;</span>
+                 <span class="sa">f</span><span class="s2">&quot;Unique z coords: </span><span class="si">{</span><span class="s1">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">item</span><span class="p">())</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">out_tensor</span><span class="o">.</span><span class="n">C</span><span class="p">[:,</span><span class="w"> </span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">()])</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_dense</span><span class="p">:</span>
+                <span class="n">out_tensor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stensor_to_dense</span><span class="p">(</span><span class="n">out_tensor</span><span class="p">)</span><span class="o">.</span><span class="n">permute</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+                <span class="n">res</span><span class="p">[</span><span class="sa">f</span><span class="s1">&#39;p</span><span class="si">{</span><span class="n">stride</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">out_tensor</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">ctr</span> <span class="o">=</span> <span class="n">indices2metric</span><span class="p">(</span><span class="n">out_tensor</span><span class="o">.</span><span class="n">C</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">voxel_size</span><span class="p">)</span>
+                <span class="n">res</span><span class="p">[</span><span class="sa">f</span><span class="s1">&#39;p</span><span class="si">{</span><span class="n">stride</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;coor&#39;</span><span class="p">:</span> <span class="n">out_tensor</span><span class="o">.</span><span class="n">C</span><span class="p">,</span> <span class="s1">&#39;feat&#39;</span><span class="p">:</span> <span class="n">out_tensor</span><span class="o">.</span><span class="n">F</span><span class="p">,</span> <span class="s1">&#39;ctr&#39;</span><span class="p">:</span> <span class="n">ctr</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:]}</span>
+        <span class="k">return</span> <span class="n">res</span></div>
+
+<div class="viewcode-block" id="MinkUnet.format_output"><a class="viewcode-back" href="../../../../cosense3d.modules.backbone3d.html#cosense3d.modules.backbone3d.mink_unet.MinkUnet.format_output">[docs]</a>    <span class="k">def</span> <span class="nf">format_output</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">res</span><span class="p">,</span> <span class="n">N</span><span class="p">):</span>
+        <span class="n">out_dict</span> <span class="o">=</span> <span class="p">{</span><span class="bp">self</span><span class="o">.</span><span class="n">scatter_keys</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span> <span class="bp">self</span><span class="o">.</span><span class="n">decompose_stensor</span><span class="p">(</span><span class="n">res</span><span class="p">,</span> <span class="n">N</span><span class="p">)}</span>
+        <span class="k">return</span> <span class="n">out_dict</span></div>
+
+<div class="viewcode-block" id="MinkUnet.stensor_to_dense"><a class="viewcode-back" href="../../../../cosense3d.modules.backbone3d.html#cosense3d.modules.backbone3d.mink_unet.MinkUnet.stensor_to_dense">[docs]</a>    <span class="k">def</span> <span class="nf">stensor_to_dense</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stensor</span><span class="p">):</span>
+        <span class="n">mask</span><span class="p">,</span> <span class="n">indices</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">valid_coords</span><span class="p">(</span><span class="n">stensor</span><span class="p">)</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">stensor</span><span class="o">.</span><span class="n">C</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">())</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="n">stensor</span><span class="o">.</span><span class="n">F</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">features</span> <span class="o">=</span> <span class="n">stensor</span><span class="o">.</span><span class="n">F</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">d</span><span class="p">)</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stride_size_dict</span><span class="p">[</span><span class="n">stensor</span><span class="o">.</span><span class="n">tensor_stride</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+        <span class="n">dtensor</span> <span class="o">=</span> <span class="n">features</span><span class="o">.</span><span class="n">new_zeros</span><span class="p">((</span><span class="n">b</span><span class="p">,</span> <span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">s</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">d</span><span class="p">))</span>
+        <span class="n">dtensor</span><span class="p">[</span><span class="n">indices</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">indices</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">indices</span><span class="p">[</span><span class="mi">2</span><span class="p">]]</span> <span class="o">=</span> <span class="n">features</span>
+        <span class="k">return</span> <span class="n">dtensor</span></div>
+
+<div class="viewcode-block" id="MinkUnet.valid_coords"><a class="viewcode-back" href="../../../../cosense3d.modules.backbone3d.html#cosense3d.modules.backbone3d.mink_unet.MinkUnet.valid_coords">[docs]</a>    <span class="k">def</span> <span class="nf">valid_coords</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stensor</span><span class="p">):</span>
+        <span class="n">stride</span> <span class="o">=</span> <span class="n">stensor</span><span class="o">.</span><span class="n">tensor_stride</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stride_size_dict</span><span class="p">[</span><span class="n">stride</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+        <span class="c1"># remove voxels that are outside range</span>
+        <span class="n">xi</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">div</span><span class="p">(</span><span class="n">stensor</span><span class="o">.</span><span class="n">C</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">stride</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">rounding_mode</span><span class="o">=</span><span class="s1">&#39;floor&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span>
+        <span class="n">yi</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">div</span><span class="p">(</span><span class="n">stensor</span><span class="o">.</span><span class="n">C</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">],</span> <span class="n">stride</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">rounding_mode</span><span class="o">=</span><span class="s1">&#39;floor&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="n">s</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span>
+
+        <span class="n">mask</span> <span class="o">=</span> <span class="p">(</span><span class="n">xi</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">xi</span> <span class="o">&lt;</span> <span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">*</span> <span class="p">(</span><span class="n">yi</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">yi</span> <span class="o">&lt;</span> <span class="n">s</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">indices</span> <span class="o">=</span> <span class="p">(</span><span class="n">stensor</span><span class="o">.</span><span class="n">C</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">][</span><span class="n">mask</span><span class="p">]</span><span class="o">.</span><span class="n">long</span><span class="p">(),</span>
+                   <span class="n">xi</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span><span class="o">.</span><span class="n">long</span><span class="p">(),</span>
+                   <span class="n">yi</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span><span class="o">.</span><span class="n">long</span><span class="p">()</span>
+                   <span class="p">)</span>
+        <span class="c1"># if the backbone uses 4d convs, last dim is time</span>
+        <span class="k">if</span> <span class="n">stensor</span><span class="o">.</span><span class="n">C</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">5</span><span class="p">:</span>
+            <span class="n">ti</span> <span class="o">=</span> <span class="n">stensor</span><span class="o">.</span><span class="n">C</span><span class="p">[:,</span> <span class="mi">4</span><span class="p">]</span>
+            <span class="n">mask</span> <span class="o">=</span> <span class="n">mask</span> <span class="o">*</span> <span class="p">(</span><span class="n">ti</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">ti</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">seq_len</span><span class="p">)</span>
+            <span class="n">indices</span> <span class="o">=</span> <span class="n">indices</span> <span class="o">+</span> <span class="n">ti</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span><span class="o">.</span><span class="n">long</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">mask</span><span class="p">,</span> <span class="n">indices</span></div>
+
+<div class="viewcode-block" id="MinkUnet.grid_size"><a class="viewcode-back" href="../../../../cosense3d.modules.backbone3d.html#cosense3d.modules.backbone3d.mink_unet.MinkUnet.grid_size">[docs]</a>    <span class="k">def</span> <span class="nf">grid_size</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stride</span><span class="p">):</span>
+        <span class="n">x_range</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lidar_range</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">lidar_range</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">y_range</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lidar_range</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">lidar_range</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">x_size</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">x_range</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">voxel_size</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">//</span> <span class="n">stride</span>
+        <span class="n">y_size</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">y_range</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">voxel_size</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">//</span> <span class="n">stride</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">x_size</span><span class="p">,</span> <span class="n">y_size</span><span class="p">)</span></div></div>
+
+
+
+
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Anonymous Author.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

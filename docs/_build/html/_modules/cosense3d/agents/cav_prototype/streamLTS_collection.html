@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>cosense3d.agents.cav_prototype.streamLTS_collection &mdash; OpenCosense3D 1.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js?v=af2ce170"></script>
+        <script src="../../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            OpenCosense3D
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../md/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../md/prepare_data.html">Prepare Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../md/structure.html">The Structure of the framework</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules.html">CoSense3d</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">OpenCosense3D</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+          <li class="breadcrumb-item"><a href="../cav_prototype.html">cosense3d.agents.cav_prototype</a></li>
+      <li class="breadcrumb-item active">cosense3d.agents.cav_prototype.streamLTS_collection</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for cosense3d.agents.cav_prototype.streamLTS_collection</h1><div class="highlight"><pre>
+<span></span>
+
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">import</span> <span class="nn">torch_scatter</span>
+<span class="kn">from</span> <span class="nn">cosense3d.agents.utils.transform</span> <span class="kn">import</span> <span class="n">DataOnlineProcessor</span> <span class="k">as</span> <span class="n">DOP</span>
+<span class="kn">from</span> <span class="nn">cosense3d.agents.cav_prototype.base_cav</span> <span class="kn">import</span> <span class="n">BaseCAV</span>
+
+
+<div class="viewcode-block" id="StreamLidarCAV"><a class="viewcode-back" href="../../../../cosense3d.agents.cav_prototype.html#cosense3d.agents.cav_prototype.streamLTS_collection.StreamLidarCAV">[docs]</a><span class="k">class</span> <span class="nc">StreamLidarCAV</span><span class="p">(</span><span class="n">BaseCAV</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;dataset&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lidar_range</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Parameter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lidar_range</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prepare_data_keys</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;points&#39;</span><span class="p">,</span> <span class="s1">&#39;annos_local&#39;</span><span class="p">,</span> <span class="s1">&#39;annos_global&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;memory&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">aug_transform</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">T_aug2g</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">T_g2aug</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">T_e2g</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">use_aug</span> <span class="o">=</span> <span class="kc">True</span>
+
+<div class="viewcode-block" id="StreamLidarCAV.refresh_memory"><a class="viewcode-back" href="../../../../cosense3d.agents.cav_prototype.html#cosense3d.agents.cav_prototype.streamLTS_collection.StreamLidarCAV.refresh_memory">[docs]</a>    <span class="k">def</span> <span class="nf">refresh_memory</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prev_exists</span><span class="p">):</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">prev_exists</span><span class="o">.</span><span class="n">float</span><span class="p">()</span>
+        <span class="n">init_pose</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lidar_pose</span><span class="o">.</span><span class="n">device</span><span class="p">)</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">x</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;memory&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s1">&#39;embeddings&#39;</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">new_zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">memory_len</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">memory_num_propagated</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">memory_emb_dims</span><span class="p">),</span>
+                <span class="s1">&#39;ref_pts&#39;</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">new_zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">memory_len</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">memory_num_propagated</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref_pts_dim</span><span class="p">),</span>
+                <span class="s1">&#39;timestamp&#39;</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">new_zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">memory_len</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">memory_num_propagated</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+                <span class="s1">&#39;pose&#39;</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">new_zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">memory_len</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">memory_num_propagated</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span> <span class="p">,</span>
+                <span class="s1">&#39;pose_no_aug&#39;</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">new_zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">memory_len</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">memory_num_propagated</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span> <span class="p">,</span>
+                <span class="s1">&#39;velo&#39;</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">new_zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">memory_len</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">memory_num_propagated</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>
+            <span class="p">}</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;memory&#39;</span><span class="p">][</span><span class="s1">&#39;pose_no_aug&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;memory&#39;</span><span class="p">][</span><span class="s1">&#39;pose&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">init_pose</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">aug_transform</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">T_aug2g</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">T_g2aug</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">T_e2g</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;memory&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;memory&#39;</span><span class="p">][</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;memory&#39;</span><span class="p">][</span><span class="n">k</span><span class="p">][:</span><span class="bp">self</span><span class="o">.</span><span class="n">memory_len</span><span class="p">]</span> <span class="o">*</span> <span class="n">x</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">x</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;memory&#39;</span><span class="p">][</span><span class="s1">&#39;pose_no_aug&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">init_pose</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">memory_num_propagated</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;memory&#39;</span><span class="p">][</span><span class="s1">&#39;prev_exists&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">x</span></div>
+
+<div class="viewcode-block" id="StreamLidarCAV.apply_transform"><a class="viewcode-back" href="../../../../cosense3d.agents.cav_prototype.html#cosense3d.agents.cav_prototype.streamLTS_collection.StreamLidarCAV.apply_transform">[docs]</a>    <span class="k">def</span> <span class="nf">apply_transform</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_aug</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_ego</span><span class="p">:</span>
+                <span class="n">T_e2g</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lidar_pose</span>
+                <span class="n">T_g2e</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lidar_pose</span><span class="o">.</span><span class="n">inverse</span><span class="p">()</span>
+                <span class="n">T_c2e</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lidar_pose</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># cav to ego</span>
+                <span class="n">T_e2g</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;received_request&#39;</span><span class="p">][</span><span class="s1">&#39;lidar_pose&#39;</span><span class="p">]</span>
+                <span class="n">T_g2e</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;received_request&#39;</span><span class="p">][</span><span class="s1">&#39;lidar_pose&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">inverse</span><span class="p">()</span>
+                <span class="n">T_c2e</span> <span class="o">=</span> <span class="n">T_g2e</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">lidar_pose</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">aug_transform</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">aug_transform</span> <span class="o">=</span> <span class="n">DOP</span><span class="o">.</span><span class="n">update_transform_with_aug</span><span class="p">(</span>
+                    <span class="n">torch</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lidar_pose</span><span class="o">.</span><span class="n">device</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;augment_params&#39;</span><span class="p">])</span>
+                <span class="n">T_e2aug</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">aug_transform</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># adapt aug params to the current ego frame</span>
+                <span class="n">T_e2aug</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">T_g2aug</span> <span class="o">@</span> <span class="n">T_e2g</span>
+
+            <span class="n">T_c2aug</span> <span class="o">=</span> <span class="n">T_e2aug</span> <span class="o">@</span> <span class="n">T_c2e</span>
+            <span class="n">T_g2aug</span> <span class="o">=</span> <span class="n">T_e2aug</span> <span class="o">@</span> <span class="n">T_g2e</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_ego</span><span class="p">:</span>
+                <span class="n">DOP</span><span class="o">.</span><span class="n">apply_transform</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">T_c2aug</span><span class="p">,</span> <span class="n">apply_to</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">prepare_data_keys</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">DOP</span><span class="o">.</span><span class="n">apply_transform</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">T_c2aug</span><span class="p">,</span> <span class="n">apply_to</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;points&#39;</span><span class="p">,</span> <span class="s1">&#39;annos_local&#39;</span><span class="p">])</span>
+                <span class="c1"># global bboxes share the same memory with the ego cav, therefore it is already transformed to the aug coor</span>
+                <span class="c1"># DOP.apply_transform(self.data, T_e2aug, apply_to=[&#39;annos_global&#39;])</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;prev_exists&#39;</span><span class="p">]:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;memory&#39;</span><span class="p">][</span><span class="s1">&#39;pose_no_aug&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">T_g2e</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;memory&#39;</span><span class="p">][</span><span class="s1">&#39;pose_no_aug&#39;</span><span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;memory&#39;</span><span class="p">][</span><span class="s1">&#39;ref_pts&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">transform_ref_pts</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;memory&#39;</span><span class="p">][</span><span class="s1">&#39;ref_pts&#39;</span><span class="p">],</span> <span class="n">T_g2aug</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;memory&#39;</span><span class="p">][</span><span class="s1">&#39;pose&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">aug_transform</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;memory&#39;</span><span class="p">][</span><span class="s1">&#39;pose_no_aug&#39;</span><span class="p">]</span>
+
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">T_e2g</span> <span class="o">=</span> <span class="n">T_e2g</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">T_g2aug</span> <span class="o">=</span> <span class="n">T_g2aug</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">T_aug2g</span> <span class="o">=</span> <span class="n">T_g2aug</span><span class="o">.</span><span class="n">inverse</span><span class="p">()</span> <span class="c1"># ego aug to global</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_ego</span><span class="p">:</span>
+                <span class="n">transform</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lidar_pose</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># cav to ego</span>
+                <span class="n">request</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;received_request&#39;</span><span class="p">]</span>
+                <span class="n">transform</span> <span class="o">=</span> <span class="n">request</span><span class="p">[</span><span class="s1">&#39;lidar_pose&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">inverse</span><span class="p">()</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">lidar_pose</span>
+
+            <span class="n">T_c2aug</span> <span class="o">=</span> <span class="n">DOP</span><span class="o">.</span><span class="n">update_transform_with_aug</span><span class="p">(</span><span class="n">transform</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;augment_params&#39;</span><span class="p">])</span>
+            <span class="n">DOP</span><span class="o">.</span><span class="n">apply_transform</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">T_c2aug</span><span class="p">,</span> <span class="n">apply_to</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;points&#39;</span><span class="p">,</span> <span class="s1">&#39;annos_local&#39;</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">T_aug2g</span> <span class="o">=</span> <span class="n">T_c2aug</span></div>
+
+<div class="viewcode-block" id="StreamLidarCAV.prepare_data"><a class="viewcode-back" href="../../../../cosense3d.agents.cav_prototype.html#cosense3d.agents.cav_prototype.streamLTS_collection.StreamLidarCAV.prepare_data">[docs]</a>    <span class="k">def</span> <span class="nf">prepare_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prepare_time_scale</span><span class="p">()</span>
+        <span class="n">DOP</span><span class="o">.</span><span class="n">adaptive_free_space_augmentation</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">time_idx</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">apply_transform</span><span class="p">()</span>
+        <span class="n">DOP</span><span class="o">.</span><span class="n">filter_range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lidar_range</span><span class="p">,</span> <span class="n">apply_to</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">prepare_data_keys</span><span class="p">)</span></div>
+        <span class="c1"># self.vis_data(&#39;transformed&#39;, 4)</span>
+
+<div class="viewcode-block" id="StreamLidarCAV.prepare_time_scale"><a class="viewcode-back" href="../../../../cosense3d.agents.cav_prototype.html#cosense3d.agents.cav_prototype.streamLTS_collection.StreamLidarCAV.prepare_time_scale">[docs]</a>    <span class="k">def</span> <span class="nf">prepare_time_scale</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># hash time</span>
+        <span class="n">azi</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">arctan2</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;points&#39;</span><span class="p">][:,</span> <span class="mi">1</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;points&#39;</span><span class="p">][:,</span> <span class="mi">0</span><span class="p">])</span>
+        <span class="n">azi</span><span class="p">,</span> <span class="n">inds</span> <span class="o">=</span> <span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">rad2deg</span><span class="p">(</span><span class="n">azi</span><span class="p">)</span> <span class="o">+</span> <span class="mi">180</span><span class="p">)</span><span class="o">.</span><span class="n">floor</span><span class="p">()</span><span class="o">.</span><span class="n">long</span><span class="p">()</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">return_inverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">times</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">azi</span><span class="p">)</span><span class="o">.</span><span class="n">float</span><span class="p">()</span>
+        <span class="n">torch_scatter</span><span class="o">.</span><span class="n">scatter_mean</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;points&#39;</span><span class="p">][:,</span> <span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">inds</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">times</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">times</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">360</span><span class="p">:</span>
+            <span class="n">time360</span> <span class="o">=</span> <span class="n">times</span><span class="o">.</span><span class="n">new_zeros</span><span class="p">(</span><span class="mi">360</span><span class="p">)</span>
+            <span class="n">time360</span><span class="p">[</span><span class="n">azi</span><span class="p">]</span> <span class="o">=</span> <span class="n">times</span>
+            <span class="n">time360</span><span class="p">[</span><span class="n">time360</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">times</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">time360</span> <span class="o">=</span> <span class="n">times</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;time_scale&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">time360</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;time_scale_reduced&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">time360</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">timestamp</span></div>
+        <span class="c1"># self.data[&#39;points&#39;] = self.data[&#39;points&#39;][:, :-1]</span>
+
+<div class="viewcode-block" id="StreamLidarCAV.update_memory_timestamps"><a class="viewcode-back" href="../../../../cosense3d.agents.cav_prototype.html#cosense3d.agents.cav_prototype.streamLTS_collection.StreamLidarCAV.update_memory_timestamps">[docs]</a>    <span class="k">def</span> <span class="nf">update_memory_timestamps</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ref_pts</span><span class="p">):</span>
+        <span class="c1"># transform ref pts to coop coordinates</span>
+        <span class="n">transform</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lidar_pose</span><span class="o">.</span><span class="n">inverse</span><span class="p">()</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">T_aug2g</span>
+        <span class="n">pts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">transform_ref_pts</span><span class="p">(</span><span class="n">ref_pts</span><span class="p">,</span> <span class="n">transform</span><span class="p">)</span>
+        <span class="n">timestamp</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">rad2deg</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">arctan2</span><span class="p">(</span><span class="n">pts</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">pts</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]))</span> <span class="o">+</span> <span class="mi">180</span>
+        <span class="n">timestamp</span> <span class="o">=</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;time_scale&#39;</span><span class="p">][(</span><span class="n">timestamp</span> <span class="o">%</span> <span class="mi">360</span><span class="p">)</span><span class="o">.</span><span class="n">floor</span><span class="p">()</span><span class="o">.</span><span class="n">long</span><span class="p">()]</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">timestamp</span></div>
+
+<div class="viewcode-block" id="StreamLidarCAV.get_response_cpm"><a class="viewcode-back" href="../../../../cosense3d.agents.cav_prototype.html#cosense3d.agents.cav_prototype.streamLTS_collection.StreamLidarCAV.get_response_cpm">[docs]</a>    <span class="k">def</span> <span class="nf">get_response_cpm</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">cpm</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;temp_fusion_feat&#39;</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">:</span>
+                <span class="n">cpm</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">cpm</span></div>
+
+<div class="viewcode-block" id="StreamLidarCAV.forward_local"><a class="viewcode-back" href="../../../../cosense3d.agents.cav_prototype.html#cosense3d.agents.cav_prototype.streamLTS_collection.StreamLidarCAV.forward_local">[docs]</a>    <span class="k">def</span> <span class="nf">forward_local</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tasks</span><span class="p">,</span> <span class="n">training_mode</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_ego</span> <span class="ow">and</span> <span class="n">training_mode</span><span class="p">:</span>
+            <span class="n">grad_mode</span> <span class="o">=</span> <span class="s1">&#39;with_grad&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">grad_mode</span> <span class="o">=</span> <span class="s1">&#39;no_grad&#39;</span>
+        <span class="n">tasks</span><span class="p">[</span><span class="n">grad_mode</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s1">&#39;01:pts_backbone&#39;</span><span class="p">,</span> <span class="p">{}))</span>
+        <span class="n">tasks</span><span class="p">[</span><span class="n">grad_mode</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s1">&#39;02:backbone_neck&#39;</span><span class="p">,</span> <span class="p">{}))</span>
+        <span class="n">tasks</span><span class="p">[</span><span class="n">grad_mode</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s1">&#39;03:roi_head&#39;</span><span class="p">,</span> <span class="p">{}))</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">require_grad</span> <span class="ow">and</span> <span class="n">training_mode</span><span class="p">:</span>
+            <span class="n">grad_mode</span> <span class="o">=</span> <span class="s1">&#39;with_grad&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">grad_mode</span> <span class="o">=</span> <span class="s1">&#39;no_grad&#39;</span>
+        <span class="n">tasks</span><span class="p">[</span><span class="n">grad_mode</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s1">&#39;04:temporal_fusion&#39;</span><span class="p">,</span> <span class="p">{}))</span>
+        <span class="n">tasks</span><span class="p">[</span><span class="n">grad_mode</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s1">&#39;05:det1_head&#39;</span><span class="p">,</span> <span class="p">{}))</span></div>
+
+<div class="viewcode-block" id="StreamLidarCAV.forward_fusion"><a class="viewcode-back" href="../../../../cosense3d.agents.cav_prototype.html#cosense3d.agents.cav_prototype.streamLTS_collection.StreamLidarCAV.forward_fusion">[docs]</a>    <span class="k">def</span> <span class="nf">forward_fusion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tasks</span><span class="p">,</span> <span class="n">training_mode</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_ego</span><span class="p">:</span>
+            <span class="n">tasks</span><span class="p">[</span><span class="s1">&#39;with_grad&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s1">&#39;11:spatial_fusion&#39;</span><span class="p">,</span> <span class="p">{}))</span>
+        <span class="k">return</span> <span class="n">tasks</span></div>
+
+<div class="viewcode-block" id="StreamLidarCAV.forward_head"><a class="viewcode-back" href="../../../../cosense3d.agents.cav_prototype.html#cosense3d.agents.cav_prototype.streamLTS_collection.StreamLidarCAV.forward_head">[docs]</a>    <span class="k">def</span> <span class="nf">forward_head</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tasks</span><span class="p">,</span> <span class="n">training_mode</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_ego</span><span class="p">:</span>
+            <span class="n">tasks</span><span class="p">[</span><span class="s1">&#39;with_grad&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s1">&#39;13:det2_head&#39;</span><span class="p">,</span> <span class="p">{}))</span>
+        <span class="k">return</span> <span class="n">tasks</span></div>
+
+<div class="viewcode-block" id="StreamLidarCAV.loss"><a class="viewcode-back" href="../../../../cosense3d.agents.cav_prototype.html#cosense3d.agents.cav_prototype.streamLTS_collection.StreamLidarCAV.loss">[docs]</a>    <span class="k">def</span> <span class="nf">loss</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tasks</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_ego</span><span class="p">:</span>
+            <span class="n">tasks</span><span class="p">[</span><span class="s1">&#39;loss&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s1">&#39;21:roi_head&#39;</span><span class="p">,</span> <span class="p">{}))</span>
+            <span class="n">tasks</span><span class="p">[</span><span class="s1">&#39;loss&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s1">&#39;22:det1_head&#39;</span><span class="p">,</span> <span class="p">{}))</span>
+            <span class="n">tasks</span><span class="p">[</span><span class="s1">&#39;loss&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s1">&#39;23:det2_head&#39;</span><span class="p">,</span> <span class="p">{}))</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">require_grad</span><span class="p">:</span>
+            <span class="n">tasks</span><span class="p">[</span><span class="s1">&#39;loss&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s1">&#39;22:det1_head&#39;</span><span class="p">,</span> <span class="p">{}))</span>
+        <span class="k">return</span> <span class="n">tasks</span></div>
+
+<div class="viewcode-block" id="StreamLidarCAV.pre_update_memory"><a class="viewcode-back" href="../../../../cosense3d.agents.cav_prototype.html#cosense3d.agents.cav_prototype.streamLTS_collection.StreamLidarCAV.pre_update_memory">[docs]</a>    <span class="k">def</span> <span class="nf">pre_update_memory</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Update memory before each forward run of a single frame.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;memory&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;memory&#39;</span><span class="p">][</span><span class="s1">&#39;timestamp&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">timestamp</span>
+            <span class="c1"># pose_inv = self.lidar_pose.inverse()</span>
+            <span class="c1"># self.data[&#39;memory&#39;][&#39;pose&#39;] = pose_inv @ self.data[&#39;memory&#39;][&#39;pose&#39;]</span>
+            <span class="c1"># self.data[&#39;memory&#39;][&#39;ref_pts&#39;] = self.transform_ref_pts(</span>
+            <span class="c1">#     self.data[&#39;memory&#39;][&#39;ref_pts&#39;], pose_inv)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">refresh_memory</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;prev_exists&#39;</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="StreamLidarCAV.post_update_memory"><a class="viewcode-back" href="../../../../cosense3d.agents.cav_prototype.html#cosense3d.agents.cav_prototype.streamLTS_collection.StreamLidarCAV.post_update_memory">[docs]</a>    <span class="k">def</span> <span class="nf">post_update_memory</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Update memory after each forward run of a single frame.&quot;&quot;&quot;</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;detection_local&#39;</span><span class="p">]</span>
+        <span class="n">scores</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="s1">&#39;all_cls_scores&#39;</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="o">...</span><span class="p">,</span>
+                 <span class="nb">min</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="s1">&#39;all_cls_scores&#39;</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">):]</span><span class="o">.</span><span class="n">topk</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="n">topk</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">topk</span><span class="p">(</span><span class="n">scores</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">memory_num_propagated</span><span class="p">)</span><span class="o">.</span><span class="n">indices</span>
+
+        <span class="n">ref_pts</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="s1">&#39;all_bbox_preds&#39;</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">][:,</span> <span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">ref_pts_dim</span><span class="p">]</span>
+        <span class="n">velo</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="s1">&#39;all_bbox_preds&#39;</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">][:,</span> <span class="o">-</span><span class="mi">2</span><span class="p">:]</span>
+        <span class="n">embeddings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;temp_fusion_feat&#39;</span><span class="p">][</span><span class="s1">&#39;outs_dec&#39;</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="n">timestamp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">update_memory_timestamps</span><span class="p">(</span><span class="n">ref_pts</span><span class="p">)</span>
+        <span class="n">pose_no_aug</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">ref_pts</span><span class="o">.</span><span class="n">device</span><span class="p">)</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span>
+            <span class="n">timestamp</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="nb">vars</span> <span class="o">=</span> <span class="nb">locals</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;memory&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">k</span> <span class="o">==</span> <span class="s1">&#39;prev_exists&#39;</span> <span class="ow">or</span> <span class="n">k</span> <span class="o">==</span> <span class="s1">&#39;pose&#39;</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">rec_topk</span> <span class="o">=</span> <span class="nb">vars</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">topk</span><span class="p">]</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;memory&#39;</span><span class="p">][</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">rec_topk</span><span class="p">,</span> <span class="n">v</span><span class="p">],</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="c1"># self.vis_ref_pts(&#39;post update&#39;)</span>
+
+        <span class="c1"># ego aug to global</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;memory&#39;</span><span class="p">][</span><span class="s1">&#39;ref_pts&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">transform_ref_pts</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;memory&#39;</span><span class="p">][</span><span class="s1">&#39;ref_pts&#39;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">T_aug2g</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;memory&#39;</span><span class="p">][</span><span class="s1">&#39;timestamp&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">:]</span> <span class="o">-=</span> <span class="bp">self</span><span class="o">.</span><span class="n">timestamp</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;memory&#39;</span><span class="p">][</span><span class="s1">&#39;pose_no_aug&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">T_e2g</span><span class="p">[(</span><span class="kc">None</span><span class="p">,)</span> <span class="o">*</span> <span class="mi">2</span><span class="p">]</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;memory&#39;</span><span class="p">][</span><span class="s1">&#39;pose_no_aug&#39;</span><span class="p">]</span> <span class="c1"># aug --&gt;global</span></div>
+
+        <span class="c1"># if self.require_grad:</span>
+        <span class="c1">#     # self.vis_local_detection()</span>
+        <span class="c1">#     self.vis_local_pred()</span>
+        <span class="c1">#     print(&#39;d&#39;)</span>
+
+<div class="viewcode-block" id="StreamLidarCAV.transform_ref_pts"><a class="viewcode-back" href="../../../../cosense3d.agents.cav_prototype.html#cosense3d.agents.cav_prototype.streamLTS_collection.StreamLidarCAV.transform_ref_pts">[docs]</a>    <span class="k">def</span> <span class="nf">transform_ref_pts</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reference_points</span><span class="p">,</span> <span class="n">matrix</span><span class="p">):</span>
+        <span class="n">reference_points</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">reference_points</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="n">reference_points</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">:</span><span class="mi">1</span><span class="p">])],</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">reference_points</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="n">reference_points</span> <span class="o">=</span> <span class="n">matrix</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="o">@</span> <span class="n">reference_points</span><span class="o">.</span><span class="n">permute</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">reference_points</span> <span class="o">=</span> <span class="n">reference_points</span><span class="o">.</span><span class="n">permute</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="o">...</span><span class="p">,</span> <span class="p">:</span><span class="mi">3</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="n">reference_points</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">reference_points</span> <span class="o">=</span> <span class="n">matrix</span> <span class="o">@</span> <span class="n">reference_points</span><span class="o">.</span><span class="n">T</span>
+            <span class="n">reference_points</span> <span class="o">=</span> <span class="n">reference_points</span><span class="o">.</span><span class="n">T</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="p">:</span><span class="mi">3</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+        <span class="k">return</span> <span class="n">reference_points</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">timestamp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span> <span class="o">==</span> <span class="s1">&#39;opv2vt&#39;</span><span class="p">:</span>
+            <span class="n">timestamp</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;frame&#39;</span><span class="p">])</span> <span class="o">*</span> <span class="mf">0.1</span> <span class="o">/</span> <span class="mi">2</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span> <span class="o">==</span> <span class="s1">&#39;dairv2xt&#39;</span><span class="p">:</span>
+            <span class="n">timestamp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;global_time&#39;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+        <span class="k">return</span> <span class="n">timestamp</span>
+
+<div class="viewcode-block" id="StreamLidarCAV.vis_ref_pts"><a class="viewcode-back" href="../../../../cosense3d.agents.cav_prototype.html#cosense3d.agents.cav_prototype.streamLTS_collection.StreamLidarCAV.vis_ref_pts">[docs]</a>    <span class="k">def</span> <span class="nf">vis_ref_pts</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">his_len</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+        <span class="kn">from</span> <span class="nn">cosense3d.utils.vislib</span> <span class="kn">import</span> <span class="n">draw_points_boxes_plt</span>
+        <span class="k">if</span> <span class="n">ax</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>
+            <span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">()</span>
+        <span class="n">pcd</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;points&#39;</span><span class="p">][:,</span> <span class="p">:</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+        <span class="n">gt_boxes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;local_bboxes_3d&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+        <span class="n">ax</span> <span class="o">=</span> <span class="n">draw_points_boxes_plt</span><span class="p">(</span>
+            <span class="n">pc_range</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lidar_range</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span>
+            <span class="n">boxes_gt</span><span class="o">=</span><span class="n">gt_boxes</span><span class="p">[:,</span> <span class="p">:</span><span class="mi">7</span><span class="p">],</span>
+            <span class="n">points</span><span class="o">=</span><span class="n">pcd</span><span class="p">,</span>
+            <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span>
+            <span class="n">return_ax</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">ref_pts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;memory&#39;</span><span class="p">][</span><span class="s1">&#39;ref_pts&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+        <span class="n">markers</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;.r&#39;</span><span class="p">,</span> <span class="s1">&#39;.m&#39;</span><span class="p">,</span> <span class="s1">&#39;.b&#39;</span><span class="p">,</span> <span class="s1">&#39;.c&#39;</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">his_len</span><span class="p">):</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ref_pts</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">ref_pts</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">markers</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">markersize</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;scenario&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;frame&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">ax</span></div>
+
+<div class="viewcode-block" id="StreamLidarCAV.vis_poses"><a class="viewcode-back" href="../../../../cosense3d.agents.cav_prototype.html#cosense3d.agents.cav_prototype.streamLTS_collection.StreamLidarCAV.vis_poses">[docs]</a>    <span class="k">def</span> <span class="nf">vis_poses</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">his_len</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+        <span class="n">markers</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="s1">&#39;m&#39;</span><span class="p">,</span> <span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="s1">&#39;c&#39;</span><span class="p">]</span>
+        <span class="n">mem_poses</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;memory&#39;</span><span class="p">][</span><span class="s1">&#39;pose&#39;</span><span class="p">][:,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span>
+        <span class="n">p0</span> <span class="o">=</span> <span class="n">mem_poses</span><span class="p">[:</span><span class="n">his_len</span><span class="p">,</span> <span class="p">:</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+        <span class="n">p1</span> <span class="o">=</span> <span class="n">mem_poses</span><span class="p">[:</span><span class="n">his_len</span><span class="p">]</span> <span class="o">@</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([</span><span class="mf">1.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">])</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">his_len</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">p2</span> <span class="o">=</span> <span class="n">mem_poses</span><span class="p">[:</span><span class="n">his_len</span><span class="p">]</span> <span class="o">@</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">])</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">his_len</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">p1</span> <span class="o">=</span> <span class="n">p1</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)[:,</span> <span class="p">:</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+        <span class="n">p2</span> <span class="o">=</span> <span class="n">p2</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)[:,</span> <span class="p">:</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">ax</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+            <span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">()</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;equal&#39;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">his_len</span><span class="p">):</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="n">p0</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">p1</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="mi">0</span><span class="p">]],</span> <span class="p">[</span><span class="n">p0</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">p1</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="mi">1</span><span class="p">]],</span> <span class="n">markers</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="n">p0</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">p2</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="mi">0</span><span class="p">]],</span> <span class="p">[</span><span class="n">p0</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">p2</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="mi">1</span><span class="p">]],</span> <span class="n">markers</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">ax</span></div>
+
+<div class="viewcode-block" id="StreamLidarCAV.vis_local_detection"><a class="viewcode-back" href="../../../../cosense3d.agents.cav_prototype.html#cosense3d.agents.cav_prototype.streamLTS_collection.StreamLidarCAV.vis_local_detection">[docs]</a>    <span class="k">def</span> <span class="nf">vis_local_detection</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+        <span class="kn">from</span> <span class="nn">cosense3d.utils.vislib</span> <span class="kn">import</span> <span class="n">draw_points_boxes_plt</span>
+        <span class="n">points</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;points&#39;</span><span class="p">][:,</span> <span class="p">:</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+        <span class="c1"># pred_boxes = self.data[&#39;det_local&#39;][&#39;preds&#39;][&#39;box&#39;].detach().cpu().numpy()</span>
+        <span class="n">gt_boxes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;local_bboxes_3d&#39;</span><span class="p">][:,</span> <span class="p">:</span><span class="mi">7</span><span class="p">]</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+        <span class="n">ax</span> <span class="o">=</span> <span class="n">draw_points_boxes_plt</span><span class="p">(</span>
+            <span class="n">pc_range</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lidar_range</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span>
+            <span class="n">boxes_gt</span><span class="o">=</span><span class="n">gt_boxes</span><span class="p">[:,</span> <span class="p">:</span><span class="mi">7</span><span class="p">],</span>
+            <span class="c1"># boxes_pred=pred_boxes,</span>
+            <span class="n">points</span><span class="o">=</span><span class="n">points</span><span class="p">,</span>
+            <span class="n">return_ax</span><span class="o">=</span><span class="kc">True</span>
+        <span class="p">)</span>
+
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;ego&#39;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_ego</span> <span class="k">else</span> <span class="s1">&#39;coop&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s2">&quot;/home/yuan/Pictures/local_det.png&quot;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="StreamLidarCAV.vis_local_pred"><a class="viewcode-back" href="../../../../cosense3d.agents.cav_prototype.html#cosense3d.agents.cav_prototype.streamLTS_collection.StreamLidarCAV.vis_local_pred">[docs]</a>    <span class="k">def</span> <span class="nf">vis_local_pred</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+        <span class="kn">from</span> <span class="nn">cosense3d.utils.vislib</span> <span class="kn">import</span> <span class="n">draw_points_boxes_plt</span>
+        <span class="n">points</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;points&#39;</span><span class="p">][:,</span> <span class="p">:</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+        <span class="c1"># pred_boxes = self.data[&#39;detection_local&#39;][&#39;preds&#39;][&#39;box&#39;].detach().cpu().numpy()</span>
+        <span class="n">ref_pts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;temp_fusion_feat&#39;</span><span class="p">][</span><span class="s1">&#39;ref_pts&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lidar_range</span><span class="p">[</span><span class="mi">3</span><span class="p">:]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">lidar_range</span><span class="p">[:</span><span class="mi">3</span><span class="p">])</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">lidar_range</span><span class="p">[:</span><span class="mi">3</span><span class="p">]</span>
+        <span class="n">ref_pts</span> <span class="o">=</span> <span class="n">ref_pts</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+        <span class="n">gt_boxes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;global_bboxes_3d&#39;</span><span class="p">][:,</span> <span class="p">:</span><span class="mi">7</span><span class="p">]</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+        <span class="n">ax</span> <span class="o">=</span> <span class="n">draw_points_boxes_plt</span><span class="p">(</span>
+            <span class="n">pc_range</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lidar_range</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span>
+            <span class="n">boxes_gt</span><span class="o">=</span><span class="n">gt_boxes</span><span class="p">[:,</span> <span class="p">:</span><span class="mi">7</span><span class="p">],</span>
+            <span class="c1"># boxes_pred=pred_boxes,</span>
+            <span class="n">points</span><span class="o">=</span><span class="n">points</span><span class="p">,</span>
+            <span class="n">return_ax</span><span class="o">=</span><span class="kc">True</span>
+        <span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ref_pts</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">ref_pts</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span> <span class="s1">&#39;.r&#39;</span><span class="p">,</span> <span class="n">markersize</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;ego&#39;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_ego</span> <span class="k">else</span> <span class="s1">&#39;coop&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s2">&quot;/home/yuan/Pictures/local_pred.png&quot;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div></div>
+
+
+<div class="viewcode-block" id="slcDenseToSparse"><a class="viewcode-back" href="../../../../cosense3d.agents.cav_prototype.html#cosense3d.agents.cav_prototype.streamLTS_collection.slcDenseToSparse">[docs]</a><span class="k">class</span> <span class="nc">slcDenseToSparse</span><span class="p">(</span><span class="n">StreamLidarCAV</span><span class="p">):</span>
+
+<div class="viewcode-block" id="slcDenseToSparse.prepare_data"><a class="viewcode-back" href="../../../../cosense3d.agents.cav_prototype.html#cosense3d.agents.cav_prototype.streamLTS_collection.slcDenseToSparse.prepare_data">[docs]</a>    <span class="k">def</span> <span class="nf">prepare_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prepare_time_scale</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">apply_transform</span><span class="p">()</span>
+        <span class="n">DOP</span><span class="o">.</span><span class="n">filter_range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lidar_range</span><span class="p">,</span> <span class="n">apply_to</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">prepare_data_keys</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="slcDenseToSparse.forward_local"><a class="viewcode-back" href="../../../../cosense3d.agents.cav_prototype.html#cosense3d.agents.cav_prototype.streamLTS_collection.slcDenseToSparse.forward_local">[docs]</a>    <span class="k">def</span> <span class="nf">forward_local</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tasks</span><span class="p">,</span> <span class="n">training_mode</span><span class="p">):</span>
+        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">is_ego</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">require_grad</span><span class="p">)</span> <span class="ow">and</span> <span class="n">training_mode</span><span class="p">:</span>
+            <span class="n">grad_mode</span> <span class="o">=</span> <span class="s1">&#39;with_grad&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">grad_mode</span> <span class="o">=</span> <span class="s1">&#39;no_grad&#39;</span>
+        <span class="n">tasks</span><span class="p">[</span><span class="n">grad_mode</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s1">&#39;01:pts_backbone&#39;</span><span class="p">,</span> <span class="p">{}))</span>
+        <span class="n">tasks</span><span class="p">[</span><span class="n">grad_mode</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s1">&#39;02:roi_head&#39;</span><span class="p">,</span> <span class="p">{}))</span>
+        <span class="n">tasks</span><span class="p">[</span><span class="n">grad_mode</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s1">&#39;03:formatting&#39;</span><span class="p">,</span> <span class="p">{}))</span>
+        <span class="n">tasks</span><span class="p">[</span><span class="n">grad_mode</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s1">&#39;04:temporal_fusion&#39;</span><span class="p">,</span> <span class="p">{}))</span>
+        <span class="n">tasks</span><span class="p">[</span><span class="n">grad_mode</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s1">&#39;05:det1_head&#39;</span><span class="p">,</span> <span class="p">{}))</span></div></div>
+
+
+<span class="n">slcFcooper</span> <span class="o">=</span> <span class="n">slcDenseToSparse</span>
+<span class="n">slcAttnFusion</span> <span class="o">=</span> <span class="n">slcDenseToSparse</span>
+
+
+<div class="viewcode-block" id="slcFPVRCNN"><a class="viewcode-back" href="../../../../cosense3d.agents.cav_prototype.html#cosense3d.agents.cav_prototype.streamLTS_collection.slcFPVRCNN">[docs]</a><span class="k">class</span> <span class="nc">slcFPVRCNN</span><span class="p">(</span><span class="n">StreamLidarCAV</span><span class="p">):</span>
+<div class="viewcode-block" id="slcFPVRCNN.prepare_data"><a class="viewcode-back" href="../../../../cosense3d.agents.cav_prototype.html#cosense3d.agents.cav_prototype.streamLTS_collection.slcFPVRCNN.prepare_data">[docs]</a>    <span class="k">def</span> <span class="nf">prepare_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prepare_time_scale</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">apply_transform</span><span class="p">()</span>
+        <span class="n">DOP</span><span class="o">.</span><span class="n">filter_range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lidar_range</span><span class="p">,</span> <span class="n">apply_to</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">prepare_data_keys</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="slcFPVRCNN.forward_local"><a class="viewcode-back" href="../../../../cosense3d.agents.cav_prototype.html#cosense3d.agents.cav_prototype.streamLTS_collection.slcFPVRCNN.forward_local">[docs]</a>    <span class="k">def</span> <span class="nf">forward_local</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tasks</span><span class="p">,</span> <span class="n">training_mode</span><span class="p">):</span>
+        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">is_ego</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">require_grad</span><span class="p">)</span> <span class="ow">and</span> <span class="n">training_mode</span><span class="p">:</span>
+            <span class="n">grad_mode</span> <span class="o">=</span> <span class="s1">&#39;with_grad&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">grad_mode</span> <span class="o">=</span> <span class="s1">&#39;no_grad&#39;</span>
+        <span class="n">tasks</span><span class="p">[</span><span class="n">grad_mode</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s1">&#39;01:pts_backbone&#39;</span><span class="p">,</span> <span class="p">{}))</span>
+        <span class="n">tasks</span><span class="p">[</span><span class="n">grad_mode</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s1">&#39;02:roi_head&#39;</span><span class="p">,</span> <span class="p">{}))</span>
+        <span class="n">tasks</span><span class="p">[</span><span class="n">grad_mode</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s1">&#39;03:keypoint_composer&#39;</span><span class="p">,</span> <span class="p">{}))</span>
+        <span class="n">tasks</span><span class="p">[</span><span class="n">grad_mode</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s1">&#39;04:formatting&#39;</span><span class="p">,</span> <span class="p">{}))</span>
+        <span class="n">tasks</span><span class="p">[</span><span class="n">grad_mode</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s1">&#39;05:temporal_fusion&#39;</span><span class="p">,</span> <span class="p">{}))</span>
+        <span class="n">tasks</span><span class="p">[</span><span class="n">grad_mode</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s1">&#39;06:det1_head&#39;</span><span class="p">,</span> <span class="p">{}))</span></div></div>
+
+    <span class="c1"># def forward_fusion(self, tasks, training_mode):</span>
+    <span class="c1">#     # if self.is_ego:</span>
+    <span class="c1">#     #     tasks[&#39;with_grad&#39;].append((self.id, &#39;11:spatial_fusion&#39;, {}))</span>
+    <span class="c1">#     return tasks</span>
+    <span class="c1">#</span>
+    <span class="c1"># def forward_head(self, tasks, training_mode):</span>
+    <span class="c1">#     # if self.is_ego:</span>
+    <span class="c1">#     #     tasks[&#39;with_grad&#39;].append((self.id, &#39;13:det2_head&#39;, {}))</span>
+    <span class="c1">#     return tasks</span>
+    <span class="c1">#</span>
+    <span class="c1"># def pre_update_memory(self):</span>
+    <span class="c1">#     pass</span>
+    <span class="c1">#</span>
+    <span class="c1"># def post_update_memory(self):</span>
+    <span class="c1">#     pass</span>
+    <span class="c1">#</span>
+    <span class="c1"># def get_response_cpm(self):</span>
+    <span class="c1">#     return {}</span>
+    <span class="c1">#</span>
+    <span class="c1"># def loss(self, tasks):</span>
+    <span class="c1">#     if self.is_ego:</span>
+    <span class="c1">#         tasks[&#39;loss&#39;].append((self.id, &#39;21:roi_head&#39;, {}))</span>
+    <span class="c1">#     return tasks</span>
+    <span class="c1">#</span>
+    <span class="c1"># def apply_transform(self):</span>
+    <span class="c1">#     if self.use_aug:</span>
+    <span class="c1">#         if self.is_ego:</span>
+    <span class="c1">#             T_e2g = self.lidar_pose</span>
+    <span class="c1">#             T_g2e = self.lidar_pose.inverse()</span>
+    <span class="c1">#             T_c2e = torch.eye(4).to(self.lidar_pose.device)</span>
+    <span class="c1">#         else:</span>
+    <span class="c1">#             # cav to ego</span>
+    <span class="c1">#             T_e2g = self.data[&#39;received_request&#39;][&#39;lidar_pose&#39;]</span>
+    <span class="c1">#             T_g2e = self.data[&#39;received_request&#39;][&#39;lidar_pose&#39;].inverse()</span>
+    <span class="c1">#             T_c2e = T_g2e @ self.lidar_pose</span>
+    <span class="c1">#</span>
+    <span class="c1">#         if self.aug_transform is None:</span>
+    <span class="c1">#             self.aug_transform = DOP.update_transform_with_aug(</span>
+    <span class="c1">#                 torch.eye(4).to(self.lidar_pose.device), self.data[&#39;augment_params&#39;])</span>
+    <span class="c1">#             T_e2aug = self.aug_transform</span>
+    <span class="c1">#         else:</span>
+    <span class="c1">#             # adapt aug params to the current ego frame</span>
+    <span class="c1">#             T_e2aug = self.T_g2aug @ T_e2g</span>
+    <span class="c1">#</span>
+    <span class="c1">#         T_c2aug = T_e2aug @ T_c2e</span>
+    <span class="c1">#         T_g2aug = T_e2aug @ T_g2e</span>
+    <span class="c1">#</span>
+    <span class="c1">#         DOP.apply_transform(self.data, T_c2aug, apply_to=self.prepare_data_keys)</span>
+    <span class="c1">#</span>
+    <span class="c1">#         self.T_e2g = T_e2g</span>
+    <span class="c1">#         self.T_g2aug = T_g2aug</span>
+    <span class="c1">#         self.T_aug2g = T_g2aug.inverse() # ego aug to global</span>
+    <span class="c1">#</span>
+    <span class="c1">#     else:</span>
+    <span class="c1">#         if self.is_ego:</span>
+    <span class="c1">#             transform = torch.eye(4).to(self.lidar_pose.device)</span>
+    <span class="c1">#         else:</span>
+    <span class="c1">#             # cav to ego</span>
+    <span class="c1">#             request = self.data[&#39;received_request&#39;]</span>
+    <span class="c1">#             transform = request[&#39;lidar_pose&#39;].inverse() @ self.lidar_pose</span>
+    <span class="c1">#</span>
+    <span class="c1">#         T_c2aug = DOP.update_transform_with_aug(transform, self.data[&#39;augment_params&#39;])</span>
+    <span class="c1">#         DOP.apply_transform(self.data, T_c2aug, apply_to=self.prepare_data_keys)</span>
+    <span class="c1">#         self.T_aug2g = T_c2aug</span>
+
+
+<div class="viewcode-block" id="slcNoBoxTime"><a class="viewcode-back" href="../../../../cosense3d.agents.cav_prototype.html#cosense3d.agents.cav_prototype.streamLTS_collection.slcNoBoxTime">[docs]</a><span class="k">class</span> <span class="nc">slcNoBoxTime</span><span class="p">(</span><span class="n">StreamLidarCAV</span><span class="p">):</span>
+
+<div class="viewcode-block" id="slcNoBoxTime.prepare_data"><a class="viewcode-back" href="../../../../cosense3d.agents.cav_prototype.html#cosense3d.agents.cav_prototype.streamLTS_collection.slcNoBoxTime.prepare_data">[docs]</a>    <span class="k">def</span> <span class="nf">prepare_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">DOP</span><span class="o">.</span><span class="n">adaptive_free_space_augmentation</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">time_idx</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">apply_transform</span><span class="p">()</span>
+        <span class="n">DOP</span><span class="o">.</span><span class="n">filter_range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lidar_range</span><span class="p">,</span> <span class="n">apply_to</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">prepare_data_keys</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="slcNoBoxTime.update_memory_timestamps"><a class="viewcode-back" href="../../../../cosense3d.agents.cav_prototype.html#cosense3d.agents.cav_prototype.streamLTS_collection.slcNoBoxTime.update_memory_timestamps">[docs]</a>    <span class="k">def</span> <span class="nf">update_memory_timestamps</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ref_pts</span><span class="p">):</span>
+        <span class="n">timestamp</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">ref_pts</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="p">:</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">timestamp</span></div></div>
+
+
+<div class="viewcode-block" id="slcCIASSD"><a class="viewcode-back" href="../../../../cosense3d.agents.cav_prototype.html#cosense3d.agents.cav_prototype.streamLTS_collection.slcCIASSD">[docs]</a><span class="k">class</span> <span class="nc">slcCIASSD</span><span class="p">(</span><span class="n">StreamLidarCAV</span><span class="p">):</span>
+<div class="viewcode-block" id="slcCIASSD.prepare_data"><a class="viewcode-back" href="../../../../cosense3d.agents.cav_prototype.html#cosense3d.agents.cav_prototype.streamLTS_collection.slcCIASSD.prepare_data">[docs]</a>    <span class="k">def</span> <span class="nf">prepare_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prepare_time_scale</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">apply_transform</span><span class="p">()</span>
+        <span class="n">DOP</span><span class="o">.</span><span class="n">filter_range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lidar_range</span><span class="p">,</span> <span class="n">apply_to</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">prepare_data_keys</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="slcCIASSD.forward_local"><a class="viewcode-back" href="../../../../cosense3d.agents.cav_prototype.html#cosense3d.agents.cav_prototype.streamLTS_collection.slcCIASSD.forward_local">[docs]</a>    <span class="k">def</span> <span class="nf">forward_local</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tasks</span><span class="p">,</span> <span class="n">training_mode</span><span class="p">):</span>
+        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">is_ego</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">require_grad</span><span class="p">)</span> <span class="ow">and</span> <span class="n">training_mode</span><span class="p">:</span>
+            <span class="n">grad_mode</span> <span class="o">=</span> <span class="s1">&#39;with_grad&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">grad_mode</span> <span class="o">=</span> <span class="s1">&#39;no_grad&#39;</span>
+        <span class="n">tasks</span><span class="p">[</span><span class="n">grad_mode</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s1">&#39;01:pts_backbone&#39;</span><span class="p">,</span> <span class="p">{}))</span>
+        <span class="n">tasks</span><span class="p">[</span><span class="n">grad_mode</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s1">&#39;02:roi_head&#39;</span><span class="p">,</span> <span class="p">{}))</span></div>
+
+<div class="viewcode-block" id="slcCIASSD.forward_fusion"><a class="viewcode-back" href="../../../../cosense3d.agents.cav_prototype.html#cosense3d.agents.cav_prototype.streamLTS_collection.slcCIASSD.forward_fusion">[docs]</a>    <span class="k">def</span> <span class="nf">forward_fusion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tasks</span><span class="p">,</span> <span class="n">training_mode</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">tasks</span></div>
+
+<div class="viewcode-block" id="slcCIASSD.forward_head"><a class="viewcode-back" href="../../../../cosense3d.agents.cav_prototype.html#cosense3d.agents.cav_prototype.streamLTS_collection.slcCIASSD.forward_head">[docs]</a>    <span class="k">def</span> <span class="nf">forward_head</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tasks</span><span class="p">,</span> <span class="n">training_mode</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">tasks</span></div>
+
+<div class="viewcode-block" id="slcCIASSD.pre_update_memory"><a class="viewcode-back" href="../../../../cosense3d.agents.cav_prototype.html#cosense3d.agents.cav_prototype.streamLTS_collection.slcCIASSD.pre_update_memory">[docs]</a>    <span class="k">def</span> <span class="nf">pre_update_memory</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="slcCIASSD.post_update_memory"><a class="viewcode-back" href="../../../../cosense3d.agents.cav_prototype.html#cosense3d.agents.cav_prototype.streamLTS_collection.slcCIASSD.post_update_memory">[docs]</a>    <span class="k">def</span> <span class="nf">post_update_memory</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="slcCIASSD.get_response_cpm"><a class="viewcode-back" href="../../../../cosense3d.agents.cav_prototype.html#cosense3d.agents.cav_prototype.streamLTS_collection.slcCIASSD.get_response_cpm">[docs]</a>    <span class="k">def</span> <span class="nf">get_response_cpm</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{}</span></div>
+
+<div class="viewcode-block" id="slcCIASSD.loss"><a class="viewcode-back" href="../../../../cosense3d.agents.cav_prototype.html#cosense3d.agents.cav_prototype.streamLTS_collection.slcCIASSD.loss">[docs]</a>    <span class="k">def</span> <span class="nf">loss</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tasks</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_ego</span><span class="p">:</span>
+            <span class="n">tasks</span><span class="p">[</span><span class="s1">&#39;loss&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s1">&#39;21:roi_head&#39;</span><span class="p">,</span> <span class="p">{}))</span>
+        <span class="k">return</span> <span class="n">tasks</span></div>
+
+<div class="viewcode-block" id="slcCIASSD.apply_transform"><a class="viewcode-back" href="../../../../cosense3d.agents.cav_prototype.html#cosense3d.agents.cav_prototype.streamLTS_collection.slcCIASSD.apply_transform">[docs]</a>    <span class="k">def</span> <span class="nf">apply_transform</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_aug</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_ego</span><span class="p">:</span>
+                <span class="n">T_e2g</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lidar_pose</span>
+                <span class="n">T_g2e</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lidar_pose</span><span class="o">.</span><span class="n">inverse</span><span class="p">()</span>
+                <span class="n">T_c2e</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lidar_pose</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># cav to ego</span>
+                <span class="n">T_e2g</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;received_request&#39;</span><span class="p">][</span><span class="s1">&#39;lidar_pose&#39;</span><span class="p">]</span>
+                <span class="n">T_g2e</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;received_request&#39;</span><span class="p">][</span><span class="s1">&#39;lidar_pose&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">inverse</span><span class="p">()</span>
+                <span class="n">T_c2e</span> <span class="o">=</span> <span class="n">T_g2e</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">lidar_pose</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">aug_transform</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">aug_transform</span> <span class="o">=</span> <span class="n">DOP</span><span class="o">.</span><span class="n">update_transform_with_aug</span><span class="p">(</span>
+                    <span class="n">torch</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lidar_pose</span><span class="o">.</span><span class="n">device</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;augment_params&#39;</span><span class="p">])</span>
+                <span class="n">T_e2aug</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">aug_transform</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># adapt aug params to the current ego frame</span>
+                <span class="n">T_e2aug</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">T_g2aug</span> <span class="o">@</span> <span class="n">T_e2g</span>
+
+            <span class="n">T_c2aug</span> <span class="o">=</span> <span class="n">T_e2aug</span> <span class="o">@</span> <span class="n">T_c2e</span>
+            <span class="n">T_g2aug</span> <span class="o">=</span> <span class="n">T_e2aug</span> <span class="o">@</span> <span class="n">T_g2e</span>
+
+            <span class="n">DOP</span><span class="o">.</span><span class="n">apply_transform</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">T_c2aug</span><span class="p">,</span> <span class="n">apply_to</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">prepare_data_keys</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">T_e2g</span> <span class="o">=</span> <span class="n">T_e2g</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">T_g2aug</span> <span class="o">=</span> <span class="n">T_g2aug</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">T_aug2g</span> <span class="o">=</span> <span class="n">T_g2aug</span><span class="o">.</span><span class="n">inverse</span><span class="p">()</span> <span class="c1"># ego aug to global</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_ego</span><span class="p">:</span>
+                <span class="n">transform</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lidar_pose</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># cav to ego</span>
+                <span class="n">request</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;received_request&#39;</span><span class="p">]</span>
+                <span class="n">transform</span> <span class="o">=</span> <span class="n">request</span><span class="p">[</span><span class="s1">&#39;lidar_pose&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">inverse</span><span class="p">()</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">lidar_pose</span>
+
+            <span class="n">T_c2aug</span> <span class="o">=</span> <span class="n">DOP</span><span class="o">.</span><span class="n">update_transform_with_aug</span><span class="p">(</span><span class="n">transform</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;augment_params&#39;</span><span class="p">])</span>
+            <span class="n">DOP</span><span class="o">.</span><span class="n">apply_transform</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">T_c2aug</span><span class="p">,</span> <span class="n">apply_to</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">prepare_data_keys</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">T_aug2g</span> <span class="o">=</span> <span class="n">T_c2aug</span></div></div>
+
+
+<div class="viewcode-block" id="LTSCAVLocCorr"><a class="viewcode-back" href="../../../../cosense3d.agents.cav_prototype.html#cosense3d.agents.cav_prototype.streamLTS_collection.LTSCAVLocCorr">[docs]</a><span class="k">class</span> <span class="nc">LTSCAVLocCorr</span><span class="p">(</span><span class="n">StreamLidarCAV</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prepare_data_keys</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;points&#39;</span><span class="p">,</span> <span class="s1">&#39;annos_local&#39;</span><span class="p">,</span> <span class="s1">&#39;roadline_tgts&#39;</span><span class="p">,</span> <span class="s1">&#39;annos_global&#39;</span><span class="p">]</span>
+
+<div class="viewcode-block" id="LTSCAVLocCorr.prepare_data"><a class="viewcode-back" href="../../../../cosense3d.agents.cav_prototype.html#cosense3d.agents.cav_prototype.streamLTS_collection.LTSCAVLocCorr.prepare_data">[docs]</a>    <span class="k">def</span> <span class="nf">prepare_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prepare_time_scale</span><span class="p">()</span>
+        <span class="n">DOP</span><span class="o">.</span><span class="n">adaptive_free_space_augmentation</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">time_idx</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="c1"># DOP.adaptive_free_space_augmentation(self.data, res=0.5, min_h=0)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_ego</span><span class="p">:</span>
+            <span class="n">DOP</span><span class="o">.</span><span class="n">generate_sparse_target_roadline_points</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="nb">range</span><span class="o">=</span><span class="mi">75</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">apply_transform</span><span class="p">()</span>
+        <span class="n">DOP</span><span class="o">.</span><span class="n">filter_range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lidar_range</span><span class="p">,</span> <span class="n">apply_to</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">prepare_data_keys</span><span class="p">)</span></div></div>
+
+    <span class="c1"># def get_response_cpm(self):</span>
+    <span class="c1">#     cpm = {}</span>
+    <span class="c1">#     cpm[&#39;coop_det_ctr&#39;] = self.data[&#39;detection_local&#39;][&#39;preds&#39;][&#39;box&#39;][:, :3]</span>
+    <span class="c1">#     for k in [&#39;temp_fusion_feat&#39;]:</span>
+    <span class="c1">#         if k in self.data:</span>
+    <span class="c1">#             cpm[k] = self.data[k]</span>
+    <span class="c1">#     return cpm</span>
+    <span class="c1">#</span>
+    <span class="c1"># def forward_fusion(self, tasks, training_mode):</span>
+    <span class="c1">#     if self.is_ego:</span>
+    <span class="c1">#         tasks[&#39;with_grad&#39;].append((self.id, &#39;11:spatial_alignment&#39;, {}))</span>
+    <span class="c1">#         tasks[&#39;with_grad&#39;].append((self.id, &#39;12:spatial_fusion&#39;, {}))</span>
+    <span class="c1">#     return tasks</span>
+
+
+<div class="viewcode-block" id="LTSDairV2X"><a class="viewcode-back" href="../../../../cosense3d.agents.cav_prototype.html#cosense3d.agents.cav_prototype.streamLTS_collection.LTSDairV2X">[docs]</a><span class="k">class</span> <span class="nc">LTSDairV2X</span><span class="p">(</span><span class="n">StreamLidarCAV</span><span class="p">):</span>
+<div class="viewcode-block" id="LTSDairV2X.forward_local"><a class="viewcode-back" href="../../../../cosense3d.agents.cav_prototype.html#cosense3d.agents.cav_prototype.streamLTS_collection.LTSDairV2X.forward_local">[docs]</a>    <span class="k">def</span> <span class="nf">forward_local</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tasks</span><span class="p">,</span> <span class="n">training_mode</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">require_grad</span> <span class="ow">and</span> <span class="n">training_mode</span><span class="p">:</span>
+            <span class="n">grad_mode</span> <span class="o">=</span> <span class="s1">&#39;with_grad&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">grad_mode</span> <span class="o">=</span> <span class="s1">&#39;no_grad&#39;</span>
+        <span class="n">tasks</span><span class="p">[</span><span class="n">grad_mode</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s1">&#39;01:pts_backbone&#39;</span><span class="p">,</span> <span class="p">{}))</span>
+        <span class="n">tasks</span><span class="p">[</span><span class="n">grad_mode</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s1">&#39;02:backbone_neck&#39;</span><span class="p">,</span> <span class="p">{}))</span>
+        <span class="n">tasks</span><span class="p">[</span><span class="n">grad_mode</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s1">&#39;03:roi_head&#39;</span><span class="p">,</span> <span class="p">{}))</span>
+        <span class="n">tasks</span><span class="p">[</span><span class="n">grad_mode</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s1">&#39;04:temporal_fusion&#39;</span><span class="p">,</span> <span class="p">{}))</span>
+        <span class="n">tasks</span><span class="p">[</span><span class="n">grad_mode</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s1">&#39;05:det1_head&#39;</span><span class="p">,</span> <span class="p">{}))</span></div>
+
+<div class="viewcode-block" id="LTSDairV2X.forward_fusion"><a class="viewcode-back" href="../../../../cosense3d.agents.cav_prototype.html#cosense3d.agents.cav_prototype.streamLTS_collection.LTSDairV2X.forward_fusion">[docs]</a>    <span class="k">def</span> <span class="nf">forward_fusion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tasks</span><span class="p">,</span> <span class="n">training_mode</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_ego</span><span class="p">:</span>
+            <span class="n">tasks</span><span class="p">[</span><span class="s1">&#39;with_grad&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s1">&#39;11:spatial_fusion&#39;</span><span class="p">,</span> <span class="p">{}))</span>
+        <span class="k">return</span> <span class="n">tasks</span></div>
+
+<div class="viewcode-block" id="LTSDairV2X.forward_head"><a class="viewcode-back" href="../../../../cosense3d.agents.cav_prototype.html#cosense3d.agents.cav_prototype.streamLTS_collection.LTSDairV2X.forward_head">[docs]</a>    <span class="k">def</span> <span class="nf">forward_head</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tasks</span><span class="p">,</span> <span class="n">training_mode</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_ego</span><span class="p">:</span>
+            <span class="n">tasks</span><span class="p">[</span><span class="s1">&#39;with_grad&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s1">&#39;13:det2_head&#39;</span><span class="p">,</span> <span class="p">{}))</span>
+        <span class="k">return</span> <span class="n">tasks</span></div>
+
+<div class="viewcode-block" id="LTSDairV2X.loss"><a class="viewcode-back" href="../../../../cosense3d.agents.cav_prototype.html#cosense3d.agents.cav_prototype.streamLTS_collection.LTSDairV2X.loss">[docs]</a>    <span class="k">def</span> <span class="nf">loss</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tasks</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">require_grad</span><span class="p">:</span>
+            <span class="n">tasks</span><span class="p">[</span><span class="s1">&#39;loss&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s1">&#39;21:roi_head&#39;</span><span class="p">,</span> <span class="p">{}))</span>
+            <span class="n">tasks</span><span class="p">[</span><span class="s1">&#39;loss&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s1">&#39;22:det1_head&#39;</span><span class="p">,</span> <span class="p">{}))</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_ego</span><span class="p">:</span>
+            <span class="n">tasks</span><span class="p">[</span><span class="s1">&#39;loss&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s1">&#39;23:det2_head&#39;</span><span class="p">,</span> <span class="p">{}))</span>
+        <span class="k">return</span> <span class="n">tasks</span></div></div>
+
+
+
+
+
+
+
+
+
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Anonymous Author.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>cosense3d.utils.iou2d_calculator &mdash; OpenCosense3D 1.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js?v=af2ce170"></script>
+        <script src="../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            OpenCosense3D
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../md/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../md/prepare_data.html">Prepare Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../md/structure.html">The Structure of the framework</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">CoSense3d</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">OpenCosense3D</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">cosense3d.utils.iou2d_calculator</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for cosense3d.utils.iou2d_calculator</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (c) OpenMMLab. All rights reserved.</span>
+<span class="kn">import</span> <span class="nn">torch</span>
+
+
+<div class="viewcode-block" id="cast_tensor_type"><a class="viewcode-back" href="../../../cosense3d.utils.html#cosense3d.utils.iou2d_calculator.cast_tensor_type">[docs]</a><span class="k">def</span> <span class="nf">cast_tensor_type</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">dtype</span> <span class="o">==</span> <span class="s1">&#39;fp16&#39;</span><span class="p">:</span>
+        <span class="c1"># scale is for preventing overflows</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span> <span class="o">/</span> <span class="n">scale</span><span class="p">)</span><span class="o">.</span><span class="n">half</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">x</span></div>
+
+
+<div class="viewcode-block" id="fp16_clamp"><a class="viewcode-back" href="../../../cosense3d.utils.html#cosense3d.utils.iou2d_calculator.fp16_clamp">[docs]</a><span class="k">def</span> <span class="nf">fp16_clamp</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">x</span><span class="o">.</span><span class="n">is_cuda</span> <span class="ow">and</span> <span class="n">x</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="n">torch</span><span class="o">.</span><span class="n">float16</span><span class="p">:</span>
+        <span class="c1"># clamp for cpu float16, tensor fp16 has no clamp implementation</span>
+        <span class="k">return</span> <span class="n">x</span><span class="o">.</span><span class="n">float</span><span class="p">()</span><span class="o">.</span><span class="n">clamp</span><span class="p">(</span><span class="nb">min</span><span class="p">,</span> <span class="nb">max</span><span class="p">)</span><span class="o">.</span><span class="n">half</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">x</span><span class="o">.</span><span class="n">clamp</span><span class="p">(</span><span class="nb">min</span><span class="p">,</span> <span class="nb">max</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="bbox_overlaps"><a class="viewcode-back" href="../../../cosense3d.utils.html#cosense3d.utils.iou2d_calculator.bbox_overlaps">[docs]</a><span class="k">def</span> <span class="nf">bbox_overlaps</span><span class="p">(</span><span class="n">bboxes1</span><span class="p">,</span> <span class="n">bboxes2</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;iou&#39;</span><span class="p">,</span> <span class="n">is_aligned</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Calculate overlap between two set of bboxes.</span>
+
+<span class="sd">    FP16 Contributed by https://github.com/open-mmlab/mmdetection/pull/4889</span>
+<span class="sd">    Note:</span>
+<span class="sd">    Assume bboxes1 is M x 4, bboxes2 is N x 4, when mode is &#39;iou&#39;,</span>
+<span class="sd">    there are some new generated variable when calculating IOU</span>
+<span class="sd">    using bbox_overlaps function:</span>
+
+<span class="sd">    1) is_aligned is False</span>
+<span class="sd">        area1: M x 1</span>
+<span class="sd">        area2: N x 1</span>
+<span class="sd">        lt: M x N x 2</span>
+<span class="sd">        rb: M x N x 2</span>
+<span class="sd">        wh: M x N x 2</span>
+<span class="sd">        overlap: M x N x 1</span>
+<span class="sd">        union: M x N x 1</span>
+<span class="sd">        ious: M x N x 1</span>
+
+<span class="sd">        Total memory:</span>
+<span class="sd">            S = (9 x N x M + N + M) * 4 Byte,</span>
+
+<span class="sd">        When using FP16, we can reduce:</span>
+<span class="sd">            R = (9 x N x M + N + M) * 4 / 2 Byte</span>
+<span class="sd">            R large than (N + M) * 4 * 2 is always true when N and M &gt;= 1.</span>
+<span class="sd">            Obviously, N + M &lt;= N * M &lt; 3 * N * M, when N &gt;=2 and M &gt;=2,</span>
+<span class="sd">                       N + 1 &lt; 3 * N, when N or M is 1.</span>
+
+<span class="sd">        Given M = 40 (ground truth), N = 400000 (three anchor boxes</span>
+<span class="sd">        in per grid, FPN, R-CNNs),</span>
+<span class="sd">            R = 275 MB (one times)</span>
+
+<span class="sd">        A special case (dense detection), M = 512 (ground truth),</span>
+<span class="sd">            R = 3516 MB = 3.43 GB</span>
+
+<span class="sd">        When the batch size is B, reduce:</span>
+<span class="sd">            B x R</span>
+
+<span class="sd">        Therefore, CUDA memory runs out frequently.</span>
+
+<span class="sd">        Experiments on GeForce RTX 2080Ti (11019 MiB):</span>
+
+<span class="sd">        |   dtype   |   M   |   N   |   Use    |   Real   |   Ideal   |</span>
+<span class="sd">        +----+----+----+----+----+----+</span>
+<span class="sd">        |   FP32   |   512 | 400000 | 8020 MiB |   --   |   --   |</span>
+<span class="sd">        |   FP16   |   512 | 400000 |   4504 MiB | 3516 MiB | 3516 MiB |</span>
+<span class="sd">        |   FP32   |   40 | 400000 |   1540 MiB |   --   |   --   |</span>
+<span class="sd">        |   FP16   |   40 | 400000 |   1264 MiB |   276MiB   | 275 MiB |</span>
+
+<span class="sd">    2) is_aligned is True</span>
+<span class="sd">        area1: N x 1</span>
+<span class="sd">        area2: N x 1</span>
+<span class="sd">        lt: N x 2</span>
+<span class="sd">        rb: N x 2</span>
+<span class="sd">        wh: N x 2</span>
+<span class="sd">        overlap: N x 1</span>
+<span class="sd">        union: N x 1</span>
+<span class="sd">        ious: N x 1</span>
+
+<span class="sd">        Total memory:</span>
+<span class="sd">            S = 11 x N * 4 Byte</span>
+
+<span class="sd">        When using FP16, we can reduce:</span>
+<span class="sd">            R = 11 x N * 4 / 2 Byte</span>
+
+<span class="sd">    So do the &#39;giou&#39; (large than &#39;iou&#39;).</span>
+
+<span class="sd">    Time-wise, FP16 is generally faster than FP32.</span>
+
+<span class="sd">    When gpu_assign_thr is not -1, it takes more time on cpu</span>
+<span class="sd">    but not reduce memory.</span>
+<span class="sd">    There, we can reduce half the memory and keep the speed.</span>
+
+<span class="sd">    If ``is_aligned`` is ``False``, then calculate the overlaps between each</span>
+<span class="sd">    bbox of bboxes1 and bboxes2, otherwise the overlaps between each aligned</span>
+<span class="sd">    pair of bboxes1 and bboxes2.</span>
+
+
+<span class="sd">    :param bboxes1: (Tensor) shape (B, m, 4) in &lt;x1, y1, x2, y2&gt; format or empty.</span>
+<span class="sd">    :param bboxes2: (Tensor) shape (B, n, 4) in &lt;x1, y1, x2, y2&gt; format or empty.</span>
+<span class="sd">    B indicates the batch dim, in shape (B1, B2, ..., Bn).</span>
+<span class="sd">    If ``is_aligned`` is ``True``, then m and n must be equal.</span>
+<span class="sd">    :param mode: (str) &quot;iou&quot; (intersection over union), &quot;iof&quot; (intersection over</span>
+<span class="sd">    foreground) or &quot;giou&quot; (generalized intersection over union).</span>
+<span class="sd">    Default &quot;iou&quot;.</span>
+<span class="sd">    :param is_aligned: (bool, optional) If True, then m and n must be equal.</span>
+<span class="sd">    Default False.</span>
+<span class="sd">    :param eps: (float, optional) A value added to the denominator for numerical</span>
+<span class="sd">        stability. Default 1e-6.</span>
+
+<span class="sd">    :return:</span>
+<span class="sd">        Tensor: shape (m, n) if ``is_aligned`` is False else shape (m,)</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        &gt;&gt;&gt; bboxes1 = torch.FloatTensor([</span>
+<span class="sd">        &gt;&gt;&gt;     [0, 0, 10, 10],</span>
+<span class="sd">        &gt;&gt;&gt;     [10, 10, 20, 20],</span>
+<span class="sd">        &gt;&gt;&gt;     [32, 32, 38, 42],</span>
+<span class="sd">        &gt;&gt;&gt; ])</span>
+<span class="sd">        &gt;&gt;&gt; bboxes2 = torch.FloatTensor([</span>
+<span class="sd">        &gt;&gt;&gt;     [0, 0, 10, 20],</span>
+<span class="sd">        &gt;&gt;&gt;     [0, 10, 10, 19],</span>
+<span class="sd">        &gt;&gt;&gt;     [10, 10, 20, 20],</span>
+<span class="sd">        &gt;&gt;&gt; ])</span>
+<span class="sd">        &gt;&gt;&gt; overlaps = bbox_overlaps(bboxes1, bboxes2)</span>
+<span class="sd">        &gt;&gt;&gt; assert overlaps.shape == (3, 3)</span>
+<span class="sd">        &gt;&gt;&gt; overlaps = bbox_overlaps(bboxes1, bboxes2, is_aligned=True)</span>
+<span class="sd">        &gt;&gt;&gt; assert overlaps.shape == (3, )</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        &gt;&gt;&gt; empty = torch.empty(0, 4)</span>
+<span class="sd">        &gt;&gt;&gt; nonempty = torch.FloatTensor([[0, 0, 10, 9]])</span>
+<span class="sd">        &gt;&gt;&gt; assert tuple(bbox_overlaps(empty, nonempty).shape) == (0, 1)</span>
+<span class="sd">        &gt;&gt;&gt; assert tuple(bbox_overlaps(nonempty, empty).shape) == (1, 0)</span>
+<span class="sd">        &gt;&gt;&gt; assert tuple(bbox_overlaps(empty, empty).shape) == (0, 0)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">assert</span> <span class="n">mode</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;iou&#39;</span><span class="p">,</span> <span class="s1">&#39;iof&#39;</span><span class="p">,</span> <span class="s1">&#39;giou&#39;</span><span class="p">],</span> <span class="sa">f</span><span class="s1">&#39;Unsupported mode </span><span class="si">{</span><span class="n">mode</span><span class="si">}</span><span class="s1">&#39;</span>
+    <span class="c1"># Either the boxes are empty or the length of boxes&#39; last dimension is 4</span>
+    <span class="k">assert</span> <span class="p">(</span><span class="n">bboxes1</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">==</span> <span class="mi">4</span> <span class="ow">or</span> <span class="n">bboxes1</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="p">(</span><span class="n">bboxes2</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">==</span> <span class="mi">4</span> <span class="ow">or</span> <span class="n">bboxes2</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
+
+    <span class="c1"># Batch dim must be the same</span>
+    <span class="c1"># Batch dim: (B1, B2, ... Bn)</span>
+    <span class="k">assert</span> <span class="n">bboxes1</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="n">bboxes2</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>
+    <span class="n">batch_shape</span> <span class="o">=</span> <span class="n">bboxes1</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>
+
+    <span class="n">rows</span> <span class="o">=</span> <span class="n">bboxes1</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">cols</span> <span class="o">=</span> <span class="n">bboxes2</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">is_aligned</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="n">rows</span> <span class="o">==</span> <span class="n">cols</span>
+
+    <span class="k">if</span> <span class="n">rows</span> <span class="o">*</span> <span class="n">cols</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">is_aligned</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">bboxes1</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">batch_shape</span> <span class="o">+</span> <span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">bboxes1</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">batch_shape</span> <span class="o">+</span> <span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">))</span>
+
+    <span class="n">area1</span> <span class="o">=</span> <span class="p">(</span><span class="n">bboxes1</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">bboxes1</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span> <span class="o">*</span> <span class="p">(</span>
+        <span class="n">bboxes1</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">-</span> <span class="n">bboxes1</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+    <span class="n">area2</span> <span class="o">=</span> <span class="p">(</span><span class="n">bboxes2</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">bboxes2</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span> <span class="o">*</span> <span class="p">(</span>
+        <span class="n">bboxes2</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">-</span> <span class="n">bboxes2</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+
+    <span class="k">if</span> <span class="n">is_aligned</span><span class="p">:</span>
+        <span class="n">lt</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">bboxes1</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="p">:</span><span class="mi">2</span><span class="p">],</span> <span class="n">bboxes2</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="p">:</span><span class="mi">2</span><span class="p">])</span>  <span class="c1"># [B, rows, 2]</span>
+        <span class="n">rb</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">bboxes1</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">2</span><span class="p">:],</span> <span class="n">bboxes2</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">2</span><span class="p">:])</span>  <span class="c1"># [B, rows, 2]</span>
+
+        <span class="n">wh</span> <span class="o">=</span> <span class="n">fp16_clamp</span><span class="p">(</span><span class="n">rb</span> <span class="o">-</span> <span class="n">lt</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">overlap</span> <span class="o">=</span> <span class="n">wh</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">wh</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">mode</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;iou&#39;</span><span class="p">,</span> <span class="s1">&#39;giou&#39;</span><span class="p">]:</span>
+            <span class="n">union</span> <span class="o">=</span> <span class="n">area1</span> <span class="o">+</span> <span class="n">area2</span> <span class="o">-</span> <span class="n">overlap</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">union</span> <span class="o">=</span> <span class="n">area1</span>
+        <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;giou&#39;</span><span class="p">:</span>
+            <span class="n">enclosed_lt</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">bboxes1</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="p">:</span><span class="mi">2</span><span class="p">],</span> <span class="n">bboxes2</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="p">:</span><span class="mi">2</span><span class="p">])</span>
+            <span class="n">enclosed_rb</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">bboxes1</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">2</span><span class="p">:],</span> <span class="n">bboxes2</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">2</span><span class="p">:])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">lt</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">bboxes1</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="p">:,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">:</span><span class="mi">2</span><span class="p">],</span>
+                       <span class="n">bboxes2</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:</span><span class="mi">2</span><span class="p">])</span>  <span class="c1"># [B, rows, cols, 2]</span>
+        <span class="n">rb</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">bboxes1</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="p">:,</span> <span class="kc">None</span><span class="p">,</span> <span class="mi">2</span><span class="p">:],</span>
+                       <span class="n">bboxes2</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">:,</span> <span class="mi">2</span><span class="p">:])</span>  <span class="c1"># [B, rows, cols, 2]</span>
+
+        <span class="n">wh</span> <span class="o">=</span> <span class="n">fp16_clamp</span><span class="p">(</span><span class="n">rb</span> <span class="o">-</span> <span class="n">lt</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">overlap</span> <span class="o">=</span> <span class="n">wh</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">wh</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">mode</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;iou&#39;</span><span class="p">,</span> <span class="s1">&#39;giou&#39;</span><span class="p">]:</span>
+            <span class="n">union</span> <span class="o">=</span> <span class="n">area1</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">+</span> <span class="n">area2</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">:]</span> <span class="o">-</span> <span class="n">overlap</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">union</span> <span class="o">=</span> <span class="n">area1</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;giou&#39;</span><span class="p">:</span>
+            <span class="n">enclosed_lt</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">bboxes1</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="p">:,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">:</span><span class="mi">2</span><span class="p">],</span>
+                                    <span class="n">bboxes2</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:</span><span class="mi">2</span><span class="p">])</span>
+            <span class="n">enclosed_rb</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">bboxes1</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="p">:,</span> <span class="kc">None</span><span class="p">,</span> <span class="mi">2</span><span class="p">:],</span>
+                                    <span class="n">bboxes2</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">:,</span> <span class="mi">2</span><span class="p">:])</span>
+
+    <span class="n">eps</span> <span class="o">=</span> <span class="n">union</span><span class="o">.</span><span class="n">new_tensor</span><span class="p">([</span><span class="n">eps</span><span class="p">])</span>
+    <span class="n">union</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">union</span><span class="p">,</span> <span class="n">eps</span><span class="p">)</span>
+    <span class="n">ious</span> <span class="o">=</span> <span class="n">overlap</span> <span class="o">/</span> <span class="n">union</span>
+    <span class="k">if</span> <span class="n">mode</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;iou&#39;</span><span class="p">,</span> <span class="s1">&#39;iof&#39;</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="n">ious</span>
+    <span class="c1"># calculate gious</span>
+    <span class="n">enclose_wh</span> <span class="o">=</span> <span class="n">fp16_clamp</span><span class="p">(</span><span class="n">enclosed_rb</span> <span class="o">-</span> <span class="n">enclosed_lt</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">enclose_area</span> <span class="o">=</span> <span class="n">enclose_wh</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">enclose_wh</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+    <span class="n">enclose_area</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">enclose_area</span><span class="p">,</span> <span class="n">eps</span><span class="p">)</span>
+    <span class="n">gious</span> <span class="o">=</span> <span class="n">ious</span> <span class="o">-</span> <span class="p">(</span><span class="n">enclose_area</span> <span class="o">-</span> <span class="n">union</span><span class="p">)</span> <span class="o">/</span> <span class="n">enclose_area</span>
+    <span class="k">return</span> <span class="n">gious</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Anonymous Author.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

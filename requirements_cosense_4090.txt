@@ -1,0 +1,17 @@
+opencv-python==4.2.0.34
+numpy
+torch-scatter -f https://data.pyg.org/whl/torch-2.1.0%2Bcu118/torch_scatter-2.1.2%2Bpt21cu118-cp38-cp38-linux_x86_64.whl
+PyYAML
+Shapely
+scipy
+rich
+tqdm
+open3d
+plyfile
+einops
+timm
+packaging
+flash-attn
+spconv-cu118
+pypcd
+g2o-python

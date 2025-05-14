@@ -1,0 +1,18 @@
+DATASET: 'pycfg.base.dairv2x.seq1_vox04'
+
+
+CONTROLLER:
+  num_loss_frame: 1
+  data_manager: 'pycfg.base.dairv2x.data_manager'
+  shared_modules: {}
+  cav_manager:
+    prototype: base_cav.DairV2XCAV
+    memory_len: 1
+
+VISUALIZATION:
+  output_viewer:
+    plots: []
+
+
+
+

@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>cosense3d.modules.heads.nbr_attn_bev &mdash; OpenCosense3D 1.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js?v=af2ce170"></script>
+        <script src="../../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            OpenCosense3D
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../md/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../md/prepare_data.html">Prepare Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../md/structure.html">The Structure of the framework</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules.html">CoSense3d</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">OpenCosense3D</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+          <li class="breadcrumb-item"><a href="../../modules.html">cosense3d.modules</a></li>
+      <li class="breadcrumb-item active">cosense3d.modules.heads.nbr_attn_bev</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for cosense3d.modules.heads.nbr_attn_bev</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">torch</span>
+
+<span class="kn">from</span> <span class="nn">cosense3d.modules</span> <span class="kn">import</span> <span class="n">BaseModule</span>
+<span class="kn">from</span> <span class="nn">cosense3d.modules.utils.me_utils</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">cosense3d.modules.utils.common</span> <span class="kn">import</span> <span class="n">pad_r</span><span class="p">,</span> <span class="n">linear_last</span><span class="p">,</span> <span class="n">cat_coor_with_idx</span>
+<span class="kn">from</span> <span class="nn">cosense3d.ops.utils</span> <span class="kn">import</span> <span class="n">points_in_boxes_gpu</span>
+<span class="kn">from</span> <span class="nn">cosense3d.modules.losses.edl</span> <span class="kn">import</span> <span class="n">edl_mse_loss</span><span class="p">,</span> <span class="n">evidence_to_conf_unc</span>
+<span class="kn">from</span> <span class="nn">cosense3d.modules.utils.nbr_attn</span> <span class="kn">import</span> <span class="n">NeighborhoodAttention</span>
+
+
+<div class="viewcode-block" id="NbrAttentionBEV"><a class="viewcode-back" href="../../../../cosense3d.modules.heads.html#cosense3d.modules.heads.nbr_attn_bev.NbrAttentionBEV">[docs]</a><span class="k">class</span> <span class="nc">NbrAttentionBEV</span><span class="p">(</span><span class="n">BaseModule</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">data_info</span><span class="p">,</span>
+                 <span class="n">in_dim</span><span class="p">,</span>
+                 <span class="n">stride</span><span class="p">,</span>
+                 <span class="n">annealing_step</span><span class="p">,</span>
+                 <span class="n">sampling</span><span class="p">,</span>
+                 <span class="n">target_assigner</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">class_names_each_head</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">NbrAttentionBEV</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">in_dim</span> <span class="o">=</span> <span class="n">in_dim</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">class_names_each_head</span> <span class="o">=</span> <span class="n">class_names_each_head</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stride</span> <span class="o">=</span> <span class="n">stride</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">annealing_step</span> <span class="o">=</span> <span class="n">annealing_step</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sampling</span> <span class="o">=</span> <span class="n">sampling</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">data_info</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+        <span class="n">update_me_essentials</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_info</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">stride</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">nbr_attn</span> <span class="o">=</span> <span class="n">NeighborhoodAttention</span><span class="p">(</span><span class="n">emb_dim</span><span class="o">=</span><span class="n">in_dim</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reg_layer</span> <span class="o">=</span> <span class="n">linear_last</span><span class="p">(</span><span class="n">in_dim</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">class_names_each_head</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">cosense3d.model.utils.target_assigner</span> <span class="kn">import</span> <span class="n">TargetAssigner</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">tgt_assigner</span> <span class="o">=</span> <span class="n">TargetAssigner</span><span class="p">(</span><span class="n">target_assigner</span><span class="p">,</span>
+                                               <span class="n">class_names_each_head</span><span class="p">)</span>
+
+<div class="viewcode-block" id="NbrAttentionBEV.forward"><a class="viewcode-back" href="../../../../cosense3d.modules.heads.html#cosense3d.modules.heads.nbr_attn_bev.NbrAttentionBEV.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stensor_list</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">coor</span><span class="p">,</span> <span class="n">feat</span><span class="p">,</span> <span class="n">ctr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">format_input</span><span class="p">(</span><span class="n">stensor_list</span><span class="p">)</span>
+        <span class="n">centers</span> <span class="o">=</span> <span class="n">indices2metric</span><span class="p">(</span><span class="n">coor</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">voxel_size</span><span class="p">)</span>
+        <span class="n">reference_points</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">generate_reference_points</span><span class="p">(</span><span class="n">centers</span><span class="p">)</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nbr_attn</span><span class="p">(</span><span class="n">feat</span><span class="p">,</span> <span class="n">coor</span><span class="p">,</span> <span class="n">reference_points</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">stensor_list</span><span class="p">))</span>
+        <span class="n">reg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reg_layer</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
+        <span class="n">conf</span><span class="p">,</span> <span class="n">unc</span> <span class="o">=</span> <span class="n">evidence_to_conf_unc</span><span class="p">(</span><span class="n">reg</span><span class="o">.</span><span class="n">relu</span><span class="p">())</span>
+
+        <span class="n">out_dict</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;center&#39;</span><span class="p">:</span> <span class="n">centers</span><span class="p">,</span>
+            <span class="s1">&#39;reg&#39;</span><span class="p">:</span> <span class="n">reg</span><span class="p">,</span>
+            <span class="s1">&#39;conf&#39;</span><span class="p">:</span> <span class="n">conf</span><span class="p">,</span>
+            <span class="s1">&#39;unc&#39;</span><span class="p">:</span> <span class="n">unc</span>
+        <span class="p">}</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">format_output</span><span class="p">(</span><span class="n">out_dict</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">stensor_list</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="NbrAttentionBEV.format_input"><a class="viewcode-back" href="../../../../cosense3d.modules.heads.html#cosense3d.modules.heads.nbr_attn_bev.NbrAttentionBEV.format_input">[docs]</a>    <span class="k">def</span> <span class="nf">format_input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stensor_list</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">compose_stensor</span><span class="p">(</span><span class="n">stensor_list</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">stride</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="NbrAttentionBEV.format_output"><a class="viewcode-back" href="../../../../cosense3d.modules.heads.html#cosense3d.modules.heads.nbr_attn_bev.NbrAttentionBEV.format_output">[docs]</a>    <span class="k">def</span> <span class="nf">format_output</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output</span><span class="p">,</span> <span class="n">B</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="c1"># decompose batch</span>
+        <span class="n">output_new</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="p">[]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">output</span><span class="o">.</span><span class="n">keys</span><span class="p">()}</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">B</span><span class="p">):</span>
+            <span class="n">mask</span> <span class="o">=</span> <span class="n">output</span><span class="p">[</span><span class="s1">&#39;center&#39;</span><span class="p">][:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">i</span>
+            <span class="n">output_new</span><span class="p">[</span><span class="s1">&#39;center&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">output</span><span class="p">[</span><span class="s1">&#39;center&#39;</span><span class="p">][</span><span class="n">mask</span><span class="p">,</span> <span class="mi">1</span><span class="p">:])</span>
+            <span class="n">output_new</span><span class="p">[</span><span class="s1">&#39;reg&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">output</span><span class="p">[</span><span class="s1">&#39;reg&#39;</span><span class="p">][</span><span class="n">mask</span><span class="p">])</span>
+            <span class="n">output_new</span><span class="p">[</span><span class="s1">&#39;conf&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">output</span><span class="p">[</span><span class="s1">&#39;conf&#39;</span><span class="p">][</span><span class="n">mask</span><span class="p">])</span>
+            <span class="n">output_new</span><span class="p">[</span><span class="s1">&#39;unc&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">output</span><span class="p">[</span><span class="s1">&#39;unc&#39;</span><span class="p">][</span><span class="n">mask</span><span class="p">])</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="p">{</span><span class="bp">self</span><span class="o">.</span><span class="n">scatter_keys</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span> <span class="bp">self</span><span class="o">.</span><span class="n">compose_result_list</span><span class="p">(</span><span class="n">output_new</span><span class="p">,</span> <span class="n">B</span><span class="p">)}</span>
+        <span class="k">return</span> <span class="n">output</span></div>
+
+<div class="viewcode-block" id="NbrAttentionBEV.generate_reference_points"><a class="viewcode-back" href="../../../../cosense3d.modules.heads.html#cosense3d.modules.heads.nbr_attn_bev.NbrAttentionBEV.generate_reference_points">[docs]</a>    <span class="k">def</span> <span class="nf">generate_reference_points</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">centers</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">training</span><span class="p">:</span>
+            <span class="n">reference_points</span> <span class="o">=</span> <span class="n">centers</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">rand_like</span><span class="p">(</span><span class="n">centers</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mf">0.5</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">reference_points</span> <span class="o">=</span> <span class="n">centers</span>
+        <span class="n">noise</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">rand_like</span><span class="p">(</span><span class="n">reference_points</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:])</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">voxel_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">stride</span>
+        <span class="n">reference_points</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:]</span> <span class="o">=</span> <span class="n">reference_points</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:]</span> <span class="o">+</span> <span class="n">noise</span>
+        <span class="k">return</span> <span class="n">reference_points</span></div>
+
+<div class="viewcode-block" id="NbrAttentionBEV.loss"><a class="viewcode-back" href="../../../../cosense3d.modules.heads.html#cosense3d.modules.heads.nbr_attn_bev.NbrAttentionBEV.loss">[docs]</a>    <span class="k">def</span> <span class="nf">loss</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch_list</span><span class="p">,</span> <span class="n">gt_boxes</span><span class="p">,</span> <span class="n">gt_labels</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">tgt_pts</span><span class="p">,</span> <span class="n">tgt_label</span><span class="p">,</span> <span class="n">valid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_tgt</span><span class="p">(</span><span class="n">batch_list</span><span class="p">,</span> <span class="n">gt_boxes</span><span class="p">,</span> <span class="n">gt_labels</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">epoch_num</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;epoch&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">reg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cat_data_from_list</span><span class="p">(</span><span class="n">batch_list</span><span class="p">,</span> <span class="s1">&#39;reg&#39;</span><span class="p">)</span>
+        <span class="n">loss_dict</span> <span class="o">=</span> <span class="n">edl_mse_loss</span><span class="p">(</span><span class="n">preds</span><span class="o">=</span><span class="n">reg</span><span class="p">[</span><span class="n">valid</span><span class="p">],</span>
+                                       <span class="n">tgt</span><span class="o">=</span><span class="n">tgt_label</span><span class="p">,</span>
+                                       <span class="n">n_cls</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                                       <span class="n">temp</span><span class="o">=</span><span class="n">epoch_num</span><span class="p">,</span>
+                                       <span class="n">annealing_step</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">annealing_step</span><span class="p">,</span>
+                                       <span class="n">model_label</span><span class="o">=</span><span class="s1">&#39;bev&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">loss_dict</span></div>
+
+<div class="viewcode-block" id="NbrAttentionBEV.get_tgt"><a class="viewcode-back" href="../../../../cosense3d.modules.heads.html#cosense3d.modules.heads.nbr_attn_bev.NbrAttentionBEV.get_tgt">[docs]</a>    <span class="nd">@torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">()</span>
+    <span class="k">def</span> <span class="nf">get_tgt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch_list</span><span class="p">,</span> <span class="n">gt_boxes</span><span class="p">,</span> <span class="n">gt_labels</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">epoch_num</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;epoch&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">B</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">batch_list</span><span class="p">)</span>
+        <span class="n">tgt_pts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cat_data_from_list</span><span class="p">(</span><span class="n">batch_list</span><span class="p">,</span> <span class="s1">&#39;center&#39;</span><span class="p">,</span> <span class="n">pad_idx</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">boxes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cat_data_from_list</span><span class="p">(</span><span class="n">gt_boxes</span><span class="p">,</span> <span class="n">pad_idx</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span>
+        <span class="n">boxes</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">pts</span> <span class="o">=</span> <span class="n">pad_r</span><span class="p">(</span><span class="n">tgt_pts</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">_</span><span class="p">,</span> <span class="n">box_idx_of_pts</span> <span class="o">=</span> <span class="n">points_in_boxes_gpu</span><span class="p">(</span>
+                <span class="n">pts</span><span class="p">,</span> <span class="n">boxes</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">B</span>
+            <span class="p">)</span>
+            <span class="n">boxes</span><span class="p">[:,</span> <span class="mi">4</span><span class="p">:</span><span class="mi">6</span><span class="p">]</span> <span class="o">*=</span> <span class="mi">2</span>
+            <span class="n">_</span><span class="p">,</span> <span class="n">box_idx_of_pts2</span> <span class="o">=</span> <span class="n">points_in_boxes_gpu</span><span class="p">(</span>
+                <span class="n">pts</span><span class="p">,</span> <span class="n">boxes</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">B</span>
+            <span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">boxes</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">pts</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="c1"># set area B: dense neg as -1 for down-sampling, differentiate from area C: sparse neg.</span>
+        <span class="n">tgt_label</span> <span class="o">=</span> <span class="o">-</span> <span class="p">(</span><span class="n">box_idx_of_pts</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">int</span><span class="p">()</span>
+        <span class="n">tgt_label</span><span class="p">[</span><span class="n">box_idx_of_pts</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+
+        <span class="n">n_sam</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">boxes</span><span class="p">)</span> <span class="o">*</span> <span class="mi">50</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sampling</span><span class="p">[</span><span class="s1">&#39;annealing&#39;</span><span class="p">]:</span>
+            <span class="n">annealing_ratio</span> <span class="o">=</span> <span class="n">epoch_num</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">annealing_step</span>
+            <span class="n">n_sam</span> <span class="o">=</span> <span class="n">n_sam</span> <span class="o">+</span> <span class="n">annealing_ratio</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">tgt_label</span><span class="p">)</span> <span class="o">/</span> <span class="mi">50</span>
+            <span class="c1"># down-sample</span>
+            <span class="n">mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">downsample_tgt_pts</span><span class="p">(</span><span class="n">tgt_label</span><span class="p">,</span> <span class="n">max_sam</span><span class="o">=</span><span class="n">n_sam</span><span class="p">)</span>
+            <span class="n">tgt_label</span><span class="p">[</span><span class="n">tgt_label</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># set area B to 0</span>
+
+            <span class="c1"># positive sample annealing</span>
+            <span class="n">conf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cat_data_from_list</span><span class="p">(</span><span class="n">batch_list</span><span class="p">,</span> <span class="s1">&#39;conf&#39;</span><span class="p">)</span>
+            <span class="n">labeled_pos</span> <span class="o">=</span> <span class="n">tgt_label</span> <span class="o">==</span> <span class="mi">1</span>
+            <span class="n">potential_pos</span> <span class="o">=</span> <span class="p">(</span><span class="n">conf</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">annealing_ratio</span> <span class="o">*</span> <span class="mf">0.5</span><span class="p">))</span>
+            <span class="n">unlabeled_potential_pos</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span><span class="n">potential_pos</span><span class="p">,</span>
+                                                        <span class="n">torch</span><span class="o">.</span><span class="n">logical_not</span><span class="p">(</span><span class="n">labeled_pos</span><span class="p">))</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sampling</span><span class="p">[</span><span class="s1">&#39;topk&#39;</span><span class="p">]:</span>
+                <span class="n">k</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">labeled_pos</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="o">.</span><span class="n">item</span><span class="p">()</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="mi">30</span> <span class="o">*</span> <span class="n">annealing_ratio</span><span class="p">))</span>
+                <span class="n">topk</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">topk</span><span class="p">(</span><span class="n">conf</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">k</span><span class="p">)</span>
+                <span class="n">is_topk</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">labeled_pos</span><span class="p">)</span>
+                <span class="n">is_topk</span><span class="p">[</span><span class="n">topk</span><span class="o">.</span><span class="n">indices</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+                <span class="n">topk_potential_pos</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span><span class="n">is_topk</span><span class="p">,</span> <span class="n">unlabeled_potential_pos</span><span class="p">)</span>
+                <span class="n">unlabeled_potential_pos</span> <span class="o">=</span> <span class="n">topk_potential_pos</span>
+
+            <span class="c1"># set potential positive samples label to ignore</span>
+            <span class="n">tgt_label</span><span class="p">[</span><span class="n">unlabeled_potential_pos</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">downsample_tgt_pts</span><span class="p">(</span><span class="n">tgt_label</span><span class="p">,</span> <span class="n">max_sam</span><span class="o">=</span><span class="n">n_sam</span><span class="p">)</span>
+            <span class="c1"># mask = torch.ones_like(tgt_label).bool()</span>
+            <span class="n">tgt_label</span><span class="p">[</span><span class="n">tgt_label</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># set area B to 0</span>
+
+        <span class="c1"># get final tgt</span>
+        <span class="n">tgt_pts</span> <span class="o">=</span> <span class="n">tgt_pts</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span>
+        <span class="n">tgt_label</span> <span class="o">=</span> <span class="n">tgt_label</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span>
+
+        <span class="c1"># from cosense3d.utils.vislib import draw_points_boxes_plt</span>
+        <span class="c1"># boxes_src = batch_dict[&#39;objects&#39;][:, [0, 3, 4, 5, 6, 7, 8, 11]]</span>
+        <span class="c1"># ax = draw_points_boxes_plt(</span>
+        <span class="c1">#     pc_range=self.lidar_range,</span>
+        <span class="c1">#     points=tgt_pts[tgt_pts[:, 0] == 0, 1:].cpu().numpy(),</span>
+        <span class="c1">#     boxes_gt=boxes_src[boxes_src[:, 0] == 0, 1:],</span>
+        <span class="c1">#     return_ax=True</span>
+        <span class="c1"># )</span>
+        <span class="c1"># pts_ = tgt_pts[tgt_label==1]</span>
+        <span class="c1"># ax = draw_points_boxes_plt(</span>
+        <span class="c1">#     points=pts_[pts_[:, 0] == 0, 1:].cpu().numpy(),</span>
+        <span class="c1">#     points_c=&#39;r&#39;,</span>
+        <span class="c1">#     ax=ax,</span>
+        <span class="c1">#     return_ax=True,</span>
+        <span class="c1"># )</span>
+        <span class="c1"># pts_ = tgt_pts[tgt_label==-1]</span>
+        <span class="c1"># draw_points_boxes_plt(</span>
+        <span class="c1">#     points=pts_[pts_[:, 0] == 0, 1:].cpu().numpy(),</span>
+        <span class="c1">#     points_c=&#39;orange&#39;,</span>
+        <span class="c1">#     filename=&#39;/home/yuan/Downloads/tmp1.png&#39;,</span>
+        <span class="c1">#     ax=ax</span>
+        <span class="c1"># )</span>
+
+        <span class="k">return</span> <span class="n">tgt_pts</span><span class="p">,</span> <span class="n">tgt_label</span><span class="p">,</span> <span class="n">mask</span></div>
+
+<div class="viewcode-block" id="NbrAttentionBEV.downsample_tgt_pts"><a class="viewcode-back" href="../../../../cosense3d.modules.heads.html#cosense3d.modules.heads.nbr_attn_bev.NbrAttentionBEV.downsample_tgt_pts">[docs]</a>    <span class="nd">@torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">()</span>
+    <span class="k">def</span> <span class="nf">downsample_tgt_pts</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tgt_label</span><span class="p">,</span> <span class="n">max_sam</span><span class="p">):</span>
+        <span class="n">selected</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="n">tgt_label</span><span class="o">.</span><span class="n">bool</span><span class="p">())</span>
+        <span class="n">pos</span> <span class="o">=</span> <span class="n">tgt_label</span> <span class="o">==</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="n">pos</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">&gt;</span> <span class="n">max_sam</span><span class="p">:</span>
+            <span class="n">mask</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">rand_like</span><span class="p">(</span><span class="n">tgt_label</span><span class="p">[</span><span class="n">pos</span><span class="p">]</span><span class="o">.</span><span class="n">float</span><span class="p">())</span> <span class="o">&lt;</span> <span class="n">max_sam</span> <span class="o">/</span> <span class="n">pos</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+            <span class="n">selected</span><span class="p">[</span><span class="n">pos</span><span class="p">]</span> <span class="o">=</span> <span class="n">mask</span>
+
+        <span class="n">neg</span> <span class="o">=</span> <span class="n">tgt_label</span> <span class="o">==</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="n">neg</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">&gt;</span> <span class="n">max_sam</span><span class="p">:</span>
+            <span class="n">mask</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">rand_like</span><span class="p">(</span><span class="n">tgt_label</span><span class="p">[</span><span class="n">neg</span><span class="p">]</span><span class="o">.</span><span class="n">float</span><span class="p">())</span> <span class="o">&lt;</span> <span class="n">max_sam</span> <span class="o">/</span> <span class="n">neg</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+            <span class="n">selected</span><span class="p">[</span><span class="n">neg</span><span class="p">]</span> <span class="o">=</span> <span class="n">mask</span>
+        <span class="k">return</span> <span class="n">selected</span></div></div>
+
+
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Anonymous Author.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

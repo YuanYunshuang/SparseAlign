@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>cosense3d.agents.cav_prototype.base_cav &mdash; OpenCosense3D 1.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js?v=af2ce170"></script>
+        <script src="../../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            OpenCosense3D
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../md/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../md/prepare_data.html">Prepare Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../md/structure.html">The Structure of the framework</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules.html">CoSense3d</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">OpenCosense3D</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+          <li class="breadcrumb-item"><a href="../cav_prototype.html">cosense3d.agents.cav_prototype</a></li>
+      <li class="breadcrumb-item active">cosense3d.agents.cav_prototype.base_cav</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for cosense3d.agents.cav_prototype.base_cav</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">from</span> <span class="nn">cosense3d.agents.utils.transform</span> <span class="kn">import</span> <span class="n">DataOnlineProcessor</span> <span class="k">as</span> <span class="n">DOP</span>
+
+
+<div class="viewcode-block" id="BaseCAV"><a class="viewcode-back" href="../../../../cosense3d.agents.cav_prototype.html#cosense3d.agents.cav_prototype.base_cav.BaseCAV">[docs]</a><span class="k">class</span> <span class="nc">BaseCAV</span><span class="p">:</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">mapped_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">is_ego</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+                 <span class="n">lidar_range</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">memory_len</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+                 <span class="n">lidar_pose</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">require_grad</span><span class="p">:</span> <span class="nb">bool</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                 <span class="n">seq_len</span><span class="p">:</span> <span class="nb">int</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Base class for CAV prototype.</span>
+
+<span class="sd">        :param id: agent id.</span>
+<span class="sd">        :param mapped_id: remapped id.</span>
+<span class="sd">        :param is_ego: if the agent is an ego agent.</span>
+<span class="sd">        :param lidar_range: visible lidar range,</span>
+<span class="sd">        :param memory_len: memory length for memory queue.</span>
+<span class="sd">        :param lidar_pose: lidar pose in shape (4, 4).</span>
+<span class="sd">        :param require_grad: if True, the gradients will be calculated for this agent during training.</span>
+<span class="sd">        :param seq_len: sequence length of the input data.</span>
+<span class="sd">        :param kwargs: additional key-value arguments.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="nb">id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mapped_id</span> <span class="o">=</span> <span class="n">mapped_id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">is_ego</span> <span class="o">=</span> <span class="n">is_ego</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lidar_pose</span> <span class="o">=</span> <span class="n">lidar_pose</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lidar_range</span> <span class="o">=</span> <span class="n">lidar_range</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">memory_len</span> <span class="o">=</span> <span class="n">memory_len</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">require_grad</span> <span class="o">=</span> <span class="n">require_grad</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">seq_len</span> <span class="o">=</span> <span class="n">seq_len</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="p">{}</span> <span class="c1"># memory FIFO</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prepare_data_keys</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;img&#39;</span><span class="p">,</span> <span class="s1">&#39;points&#39;</span><span class="p">,</span> <span class="s1">&#39;annos_global&#39;</span><span class="p">,</span> <span class="s1">&#39;annos_local&#39;</span><span class="p">]</span>
+
+<div class="viewcode-block" id="BaseCAV.update"><a class="viewcode-back" href="../../../../cosense3d.agents.cav_prototype.html#cosense3d.agents.cav_prototype.base_cav.BaseCAV.update">[docs]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lidar_pose</span><span class="p">,</span> <span class="n">is_ego</span><span class="p">,</span> <span class="n">require_grad</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lidar_pose</span> <span class="o">=</span> <span class="n">lidar_pose</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">is_ego</span> <span class="o">=</span> <span class="n">is_ego</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">require_grad</span> <span class="o">=</span> <span class="n">require_grad</span></div>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">repr_str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
+        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;(id=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s1">, &#39;</span>
+        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;is_ego=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">is_ego</span><span class="si">}</span><span class="s1">, &#39;</span>
+        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;data=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span><span class="si">}</span><span class="s1">)&#39;</span>
+        <span class="k">return</span> <span class="n">repr_str</span>
+
+<div class="viewcode-block" id="BaseCAV.apply_transform"><a class="viewcode-back" href="../../../../cosense3d.agents.cav_prototype.html#cosense3d.agents.cav_prototype.base_cav.BaseCAV.apply_transform">[docs]</a>    <span class="k">def</span> <span class="nf">apply_transform</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_ego</span><span class="p">:</span>
+            <span class="n">transform</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lidar_pose</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># cav to ego</span>
+            <span class="n">request</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;received_request&#39;</span><span class="p">]</span>
+            <span class="n">transform</span> <span class="o">=</span> <span class="n">request</span><span class="p">[</span><span class="s1">&#39;lidar_pose&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">inverse</span><span class="p">()</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">lidar_pose</span>
+        <span class="n">DOP</span><span class="o">.</span><span class="n">cav_aug_transform</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">transform</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;augment_params&#39;</span><span class="p">],</span>
+                              <span class="n">apply_to</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">prepare_data_keys</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="BaseCAV.prepare_data"><a class="viewcode-back" href="../../../../cosense3d.agents.cav_prototype.html#cosense3d.agents.cav_prototype.base_cav.BaseCAV.prepare_data">[docs]</a>    <span class="k">def</span> <span class="nf">prepare_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">apply_transform</span><span class="p">()</span>
+        <span class="n">DOP</span><span class="o">.</span><span class="n">filter_range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lidar_range</span><span class="p">,</span> <span class="n">apply_to</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">prepare_data_keys</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="BaseCAV.has_request"><a class="viewcode-back" href="../../../../cosense3d.agents.cav_prototype.html#cosense3d.agents.cav_prototype.base_cav.BaseCAV.has_request">[docs]</a>    <span class="k">def</span> <span class="nf">has_request</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="s1">&#39;received_request&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;received_request&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span></div>
+
+<div class="viewcode-block" id="BaseCAV.get_request_cpm"><a class="viewcode-back" href="../../../../cosense3d.agents.cav_prototype.html#cosense3d.agents.cav_prototype.base_cav.BaseCAV.get_request_cpm">[docs]</a>    <span class="k">def</span> <span class="nf">get_request_cpm</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;lidar_pose&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">lidar_pose</span><span class="p">}</span></div>
+
+<div class="viewcode-block" id="BaseCAV.get_response_cpm"><a class="viewcode-back" href="../../../../cosense3d.agents.cav_prototype.html#cosense3d.agents.cav_prototype.base_cav.BaseCAV.get_response_cpm">[docs]</a>    <span class="k">def</span> <span class="nf">get_response_cpm</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">cpm</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;points&#39;</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">:</span>
+                <span class="n">cpm</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">cpm</span></div>
+
+<div class="viewcode-block" id="BaseCAV.receive_request"><a class="viewcode-back" href="../../../../cosense3d.agents.cav_prototype.html#cosense3d.agents.cav_prototype.base_cav.BaseCAV.receive_request">[docs]</a>    <span class="k">def</span> <span class="nf">receive_request</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;received_request&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">request</span></div>
+
+<div class="viewcode-block" id="BaseCAV.receive_response"><a class="viewcode-back" href="../../../../cosense3d.agents.cav_prototype.html#cosense3d.agents.cav_prototype.base_cav.BaseCAV.receive_response">[docs]</a>    <span class="k">def</span> <span class="nf">receive_response</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">response</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;received_response&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">response</span></div>
+
+<div class="viewcode-block" id="BaseCAV.forward"><a class="viewcode-back" href="../../../../cosense3d.agents.cav_prototype.html#cosense3d.agents.cav_prototype.base_cav.BaseCAV.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tasks</span><span class="p">,</span> <span class="n">training_mode</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prepare_data</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">forward_local</span><span class="p">(</span><span class="n">tasks</span><span class="p">,</span> <span class="n">training_mode</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">forward_fusion</span><span class="p">(</span><span class="n">tasks</span><span class="p">,</span> <span class="n">training_mode</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">forward_head</span><span class="p">(</span><span class="n">tasks</span><span class="p">,</span> <span class="n">training_mode</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">tasks</span></div>
+
+<div class="viewcode-block" id="BaseCAV.forward_local"><a class="viewcode-back" href="../../../../cosense3d.agents.cav_prototype.html#cosense3d.agents.cav_prototype.base_cav.BaseCAV.forward_local">[docs]</a>    <span class="k">def</span> <span class="nf">forward_local</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tasks</span><span class="p">,</span> <span class="n">training_mode</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;To be overloaded.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">tasks</span></div>
+
+<div class="viewcode-block" id="BaseCAV.forward_fusion"><a class="viewcode-back" href="../../../../cosense3d.agents.cav_prototype.html#cosense3d.agents.cav_prototype.base_cav.BaseCAV.forward_fusion">[docs]</a>    <span class="k">def</span> <span class="nf">forward_fusion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tasks</span><span class="p">,</span> <span class="n">training_mode</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;To be overloaded.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">tasks</span></div>
+
+<div class="viewcode-block" id="BaseCAV.forward_head"><a class="viewcode-back" href="../../../../cosense3d.agents.cav_prototype.html#cosense3d.agents.cav_prototype.base_cav.BaseCAV.forward_head">[docs]</a>    <span class="k">def</span> <span class="nf">forward_head</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tasks</span><span class="p">,</span> <span class="n">training_mode</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;To be overloaded.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">tasks</span></div>
+
+<div class="viewcode-block" id="BaseCAV.loss"><a class="viewcode-back" href="../../../../cosense3d.agents.cav_prototype.html#cosense3d.agents.cav_prototype.base_cav.BaseCAV.loss">[docs]</a>    <span class="k">def</span> <span class="nf">loss</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tasks</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;To be overloaded.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">tasks</span></div>
+
+<div class="viewcode-block" id="BaseCAV.reset_data"><a class="viewcode-back" href="../../../../cosense3d.agents.cav_prototype.html#cosense3d.agents.cav_prototype.base_cav.BaseCAV.reset_data">[docs]</a>    <span class="k">def</span> <span class="nf">reset_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="p">{}</span></div>
+
+<div class="viewcode-block" id="BaseCAV.pre_update_memory"><a class="viewcode-back" href="../../../../cosense3d.agents.cav_prototype.html#cosense3d.agents.cav_prototype.base_cav.BaseCAV.pre_update_memory">[docs]</a>    <span class="k">def</span> <span class="nf">pre_update_memory</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Update memory before each forward run of a single frame.&quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="BaseCAV.post_update_memory"><a class="viewcode-back" href="../../../../cosense3d.agents.cav_prototype.html#cosense3d.agents.cav_prototype.base_cav.BaseCAV.post_update_memory">[docs]</a>    <span class="k">def</span> <span class="nf">post_update_memory</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Update memory after each forward run of a single frame.&quot;&quot;&quot;</span>
+        <span class="k">pass</span></div></div>
+
+
+<div class="viewcode-block" id="BaseSeqCAV"><a class="viewcode-back" href="../../../../cosense3d.agents.cav_prototype.html#cosense3d.agents.cav_prototype.base_cav.BaseSeqCAV">[docs]</a><span class="k">class</span> <span class="nc">BaseSeqCAV</span><span class="p">:</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">id</span><span class="p">,</span> <span class="n">mapped_id</span><span class="p">,</span> <span class="n">is_ego</span><span class="p">,</span> <span class="n">lidar_range</span><span class="p">,</span> <span class="n">memory_len</span><span class="p">,</span>
+                 <span class="n">lidar_pose</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">require_grad</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">seq_len</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="nb">id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mapped_id</span> <span class="o">=</span> <span class="n">mapped_id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">is_ego</span> <span class="o">=</span> <span class="n">is_ego</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lidar_pose</span> <span class="o">=</span> <span class="n">lidar_pose</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lidar_range</span> <span class="o">=</span> <span class="n">lidar_range</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">memory_len</span> <span class="o">=</span> <span class="n">memory_len</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">require_grad</span> <span class="o">=</span> <span class="n">require_grad</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">seq_len</span> <span class="o">=</span> <span class="n">seq_len</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="p">{}</span> <span class="c1"># memory FIFO</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">memory</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prepare_data_keys</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;img&#39;</span><span class="p">,</span> <span class="s1">&#39;points&#39;</span><span class="p">,</span> <span class="s1">&#39;annos_global&#39;</span><span class="p">,</span> <span class="s1">&#39;annos_local&#39;</span><span class="p">]</span>
+
+<div class="viewcode-block" id="BaseSeqCAV.update"><a class="viewcode-back" href="../../../../cosense3d.agents.cav_prototype.html#cosense3d.agents.cav_prototype.base_cav.BaseSeqCAV.update">[docs]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lidar_pose</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lidar_pose</span> <span class="o">=</span> <span class="n">lidar_pose</span></div>
+
+<div class="viewcode-block" id="BaseSeqCAV.task_id"><a class="viewcode-back" href="../../../../cosense3d.agents.cav_prototype.html#cosense3d.agents.cav_prototype.base_cav.BaseSeqCAV.task_id">[docs]</a>    <span class="k">def</span> <span class="nf">task_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seq_idx</span><span class="p">):</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">seq_idx</span><span class="si">}</span><span class="s2">&quot;</span></div>
+
+<div class="viewcode-block" id="BaseSeqCAV.get_data"><a class="viewcode-back" href="../../../../cosense3d.agents.cav_prototype.html#cosense3d.agents.cav_prototype.base_cav.BaseSeqCAV.get_data">[docs]</a>    <span class="k">def</span> <span class="nf">get_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">keys</span><span class="p">,</span> <span class="n">seq_idx</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">seq_idx</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">out</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+                <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+                    <span class="n">out</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">seq_idx</span><span class="p">][</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">}</span>
+        <span class="k">return</span> <span class="n">out</span></div>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">repr_str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
+        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;(id=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s1">, &#39;</span>
+        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;is_ego=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">is_ego</span><span class="si">}</span><span class="s1">, &#39;</span>
+        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;data=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span><span class="si">}</span><span class="s1">)&#39;</span>
+        <span class="k">return</span> <span class="n">repr_str</span>
+
+<div class="viewcode-block" id="BaseSeqCAV.apply_transform"><a class="viewcode-back" href="../../../../cosense3d.agents.cav_prototype.html#cosense3d.agents.cav_prototype.base_cav.BaseSeqCAV.apply_transform">[docs]</a>    <span class="k">def</span> <span class="nf">apply_transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seq_idx</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_ego</span><span class="p">:</span>
+            <span class="n">transform</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lidar_pose</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># cav to ego</span>
+            <span class="n">request</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;received_request&#39;</span><span class="p">]</span>
+            <span class="n">transform</span> <span class="o">=</span> <span class="n">request</span><span class="p">[</span><span class="s1">&#39;lidar_pose&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">inverse</span><span class="p">()</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">lidar_pose</span>
+        <span class="n">DOP</span><span class="o">.</span><span class="n">cav_aug_transform</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">transform</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;augment_params&#39;</span><span class="p">],</span>
+                              <span class="n">apply_to</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">prepare_data_keys</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="BaseSeqCAV.prepare_data"><a class="viewcode-back" href="../../../../cosense3d.agents.cav_prototype.html#cosense3d.agents.cav_prototype.base_cav.BaseSeqCAV.prepare_data">[docs]</a>    <span class="k">def</span> <span class="nf">prepare_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seq_idx</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">apply_transform</span><span class="p">()</span>
+        <span class="n">DOP</span><span class="o">.</span><span class="n">filter_range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lidar_range</span><span class="p">,</span> <span class="n">apply_to</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">prepare_data_keys</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="BaseSeqCAV.has_request"><a class="viewcode-back" href="../../../../cosense3d.agents.cav_prototype.html#cosense3d.agents.cav_prototype.base_cav.BaseSeqCAV.has_request">[docs]</a>    <span class="k">def</span> <span class="nf">has_request</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">has_req</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="k">if</span> <span class="s1">&#39;received_request&#39;</span> <span class="ow">in</span> <span class="n">d</span> <span class="ow">and</span> <span class="n">d</span><span class="p">[</span><span class="s1">&#39;received_request&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">has_req</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="k">break</span>
+        <span class="k">return</span> <span class="n">has_req</span></div>
+
+<div class="viewcode-block" id="BaseSeqCAV.get_request_cpm"><a class="viewcode-back" href="../../../../cosense3d.agents.cav_prototype.html#cosense3d.agents.cav_prototype.base_cav.BaseSeqCAV.get_request_cpm">[docs]</a>    <span class="k">def</span> <span class="nf">get_request_cpm</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_data</span><span class="p">([</span><span class="s1">&#39;lidar_poses&#39;</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="BaseSeqCAV.get_response_cpm"><a class="viewcode-back" href="../../../../cosense3d.agents.cav_prototype.html#cosense3d.agents.cav_prototype.base_cav.BaseSeqCAV.get_response_cpm">[docs]</a>    <span class="k">def</span> <span class="nf">get_response_cpm</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">cpm</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;points&#39;</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+                <span class="n">cpm</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="n">i</span><span class="p">:</span> <span class="n">d</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+        <span class="k">return</span> <span class="n">cpm</span></div>
+
+<div class="viewcode-block" id="BaseSeqCAV.receive_request"><a class="viewcode-back" href="../../../../cosense3d.agents.cav_prototype.html#cosense3d.agents.cav_prototype.base_cav.BaseSeqCAV.receive_request">[docs]</a>    <span class="k">def</span> <span class="nf">receive_request</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">req</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s1">&#39;received_request&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">req</span></div>
+
+<div class="viewcode-block" id="BaseSeqCAV.receive_response"><a class="viewcode-back" href="../../../../cosense3d.agents.cav_prototype.html#cosense3d.agents.cav_prototype.base_cav.BaseSeqCAV.receive_response">[docs]</a>    <span class="k">def</span> <span class="nf">receive_response</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">response</span><span class="p">,</span> <span class="n">seq_idx</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">cav_id</span><span class="p">,</span> <span class="n">resp</span> <span class="ow">in</span> <span class="n">response</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">seq_idx</span><span class="p">][</span><span class="s1">&#39;received_response&#39;</span><span class="p">][</span><span class="n">cav_id</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span><span class="p">[</span><span class="n">seq_idx</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">resp</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span></div>
+
+<div class="viewcode-block" id="BaseSeqCAV.forward"><a class="viewcode-back" href="../../../../cosense3d.agents.cav_prototype.html#cosense3d.agents.cav_prototype.base_cav.BaseSeqCAV.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>  <span class="n">tasks</span><span class="p">,</span> <span class="n">training_mode</span><span class="p">,</span> <span class="n">seq_idx</span><span class="p">,</span> <span class="n">with_loss</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prepare_data</span><span class="p">(</span><span class="n">seq_idx</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">forward_local</span><span class="p">(</span><span class="n">tasks</span><span class="p">,</span> <span class="n">training_mode</span><span class="p">,</span> <span class="n">seq_idx</span><span class="p">,</span> <span class="n">with_loss</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">forward_fusion</span><span class="p">(</span><span class="n">tasks</span><span class="p">,</span> <span class="n">training_mode</span><span class="p">,</span> <span class="n">seq_idx</span><span class="p">,</span> <span class="n">with_loss</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">forward_head</span><span class="p">(</span><span class="n">tasks</span><span class="p">,</span> <span class="n">training_mode</span><span class="p">,</span> <span class="n">seq_idx</span><span class="p">,</span> <span class="n">with_loss</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">tasks</span></div>
+
+<div class="viewcode-block" id="BaseSeqCAV.forward_local"><a class="viewcode-back" href="../../../../cosense3d.agents.cav_prototype.html#cosense3d.agents.cav_prototype.base_cav.BaseSeqCAV.forward_local">[docs]</a>    <span class="k">def</span> <span class="nf">forward_local</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>  <span class="n">tasks</span><span class="p">,</span> <span class="n">training_mode</span><span class="p">,</span> <span class="n">seq_idx</span><span class="p">,</span> <span class="n">with_loss</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;To be overloaded.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">tasks</span></div>
+
+<div class="viewcode-block" id="BaseSeqCAV.forward_fusion"><a class="viewcode-back" href="../../../../cosense3d.agents.cav_prototype.html#cosense3d.agents.cav_prototype.base_cav.BaseSeqCAV.forward_fusion">[docs]</a>    <span class="k">def</span> <span class="nf">forward_fusion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>  <span class="n">tasks</span><span class="p">,</span> <span class="n">training_mode</span><span class="p">,</span> <span class="n">seq_idx</span><span class="p">,</span> <span class="n">with_loss</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;To be overloaded.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">tasks</span></div>
+
+<div class="viewcode-block" id="BaseSeqCAV.forward_head"><a class="viewcode-back" href="../../../../cosense3d.agents.cav_prototype.html#cosense3d.agents.cav_prototype.base_cav.BaseSeqCAV.forward_head">[docs]</a>    <span class="k">def</span> <span class="nf">forward_head</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>  <span class="n">tasks</span><span class="p">,</span> <span class="n">training_mode</span><span class="p">,</span> <span class="n">seq_idx</span><span class="p">,</span> <span class="n">with_loss</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;To be overloaded.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">tasks</span></div>
+
+<div class="viewcode-block" id="BaseSeqCAV.loss"><a class="viewcode-back" href="../../../../cosense3d.agents.cav_prototype.html#cosense3d.agents.cav_prototype.base_cav.BaseSeqCAV.loss">[docs]</a>    <span class="k">def</span> <span class="nf">loss</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>  <span class="n">tasks</span><span class="p">,</span> <span class="n">training_mode</span><span class="p">,</span> <span class="n">seq_idx</span><span class="p">,</span> <span class="n">with_loss</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;To be overloaded.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">tasks</span></div>
+
+<div class="viewcode-block" id="BaseSeqCAV.reset_data"><a class="viewcode-back" href="../../../../cosense3d.agents.cav_prototype.html#cosense3d.agents.cav_prototype.base_cav.BaseSeqCAV.reset_data">[docs]</a>    <span class="k">def</span> <span class="nf">reset_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="p">{}</span></div>
+
+<div class="viewcode-block" id="BaseSeqCAV.pre_update_memory"><a class="viewcode-back" href="../../../../cosense3d.agents.cav_prototype.html#cosense3d.agents.cav_prototype.base_cav.BaseSeqCAV.pre_update_memory">[docs]</a>    <span class="k">def</span> <span class="nf">pre_update_memory</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seq_idx</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Update memory before each forward run of a single frame.&quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="BaseSeqCAV.post_update_memory"><a class="viewcode-back" href="../../../../cosense3d.agents.cav_prototype.html#cosense3d.agents.cav_prototype.base_cav.BaseSeqCAV.post_update_memory">[docs]</a>    <span class="k">def</span> <span class="nf">post_update_memory</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seq_idx</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Update memory after each forward run of a single frame.&quot;&quot;&quot;</span>
+        <span class="k">pass</span></div></div>
+
+
+<div class="viewcode-block" id="OPV2VtCAV"><a class="viewcode-back" href="../../../../cosense3d.agents.cav_prototype.html#cosense3d.agents.cav_prototype.base_cav.OPV2VtCAV">[docs]</a><span class="k">class</span> <span class="nc">OPV2VtCAV</span><span class="p">(</span><span class="n">BaseCAV</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prepare_data_keys</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;points&#39;</span><span class="p">,</span> <span class="s1">&#39;annos_local&#39;</span><span class="p">,</span> <span class="s1">&#39;annos_global&#39;</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="OPV2VtCAV_v2"><a class="viewcode-back" href="../../../../cosense3d.agents.cav_prototype.html#cosense3d.agents.cav_prototype.base_cav.OPV2VtCAV_v2">[docs]</a><span class="k">class</span> <span class="nc">OPV2VtCAV_v2</span><span class="p">(</span><span class="n">BaseCAV</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_ego</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">prepare_data_keys</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;points&#39;</span><span class="p">,</span> <span class="s1">&#39;annos_local&#39;</span><span class="p">,</span> <span class="s1">&#39;annos_global&#39;</span><span class="p">,</span> <span class="s1">&#39;annos_global_pred&#39;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">prepare_data_keys</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;points&#39;</span><span class="p">,</span> <span class="s1">&#39;annos_local&#39;</span><span class="p">,</span> <span class="s1">&#39;annos_global&#39;</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="DairV2XCAV"><a class="viewcode-back" href="../../../../cosense3d.agents.cav_prototype.html#cosense3d.agents.cav_prototype.base_cav.DairV2XCAV">[docs]</a><span class="k">class</span> <span class="nc">DairV2XCAV</span><span class="p">(</span><span class="n">BaseCAV</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prepare_data_keys</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;points&#39;</span><span class="p">,</span> <span class="s1">&#39;annos_global&#39;</span><span class="p">,</span> <span class="s1">&#39;annos_local&#39;</span><span class="p">]</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Anonymous Author.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

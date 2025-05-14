@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>cosense3d.utils.pclib &mdash; OpenCosense3D 1.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js?v=af2ce170"></script>
+        <script src="../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            OpenCosense3D
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../md/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../md/prepare_data.html">Prepare Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../md/structure.html">The Structure of the framework</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">CoSense3d</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">OpenCosense3D</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">cosense3d.utils.pclib</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for cosense3d.utils.pclib</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">shutil</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">import</span> <span class="nn">torch.nn.functional</span> <span class="k">as</span> <span class="nn">F</span>
+<span class="kn">import</span> <span class="nn">open3d</span> <span class="k">as</span> <span class="nn">o3d</span>
+<span class="kn">from</span> <span class="nn">plyfile</span> <span class="kn">import</span> <span class="n">PlyData</span><span class="p">,</span> <span class="n">PlyElement</span>
+<span class="kn">from</span> <span class="nn">scipy.spatial.transform</span> <span class="kn">import</span> <span class="n">Rotation</span> <span class="k">as</span> <span class="n">R</span>
+
+<span class="kn">from</span> <span class="nn">cosense3d.utils.misc</span> <span class="kn">import</span> <span class="n">check_numpy_to_torch</span>
+<span class="kn">from</span> <span class="nn">cosense3d.utils.pcdio</span> <span class="kn">import</span> <span class="n">point_cloud_from_path</span>
+
+<span class="n">ply_fields</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;x&#39;</span><span class="p">:</span> <span class="s1">&#39;f4&#39;</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">:</span> <span class="s1">&#39;f4&#39;</span><span class="p">,</span> <span class="s1">&#39;z&#39;</span><span class="p">:</span> <span class="s1">&#39;f4&#39;</span><span class="p">,</span> <span class="s1">&#39;ObjIdx&#39;</span><span class="p">:</span> <span class="s1">&#39;u4&#39;</span><span class="p">,</span> <span class="s1">&#39;ObjTag&#39;</span><span class="p">:</span> <span class="s1">&#39;u4&#39;</span><span class="p">,</span> <span class="s1">&#39;ring&#39;</span><span class="p">:</span> <span class="s1">&#39;u1&#39;</span><span class="p">,</span> <span class="s1">&#39;time&#39;</span><span class="p">:</span> <span class="s1">&#39;f4&#39;</span><span class="p">}</span>
+<span class="n">np_types</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;f4&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="s1">&#39;u4&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">uint32</span><span class="p">,</span> <span class="s1">&#39;u1&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">}</span>
+
+
+<div class="viewcode-block" id="header"><a class="viewcode-back" href="../../../cosense3d.utils.html#cosense3d.utils.pclib.header">[docs]</a><span class="k">def</span> <span class="nf">header</span><span class="p">(</span><span class="n">points</span><span class="p">):</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span><span class="se">\</span>
+<span class="s2">            VERSION 0.7</span>
+<span class="s2">            FIELDS x y z rgb</span>
+<span class="s2">            SIZE 4 4 4 4</span>
+<span class="s2">            TYPE F F F F</span>
+<span class="s2">            COUNT 1 1 1 1</span>
+<span class="s2">            WIDTH </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">points</span><span class="p">)</span><span class="si">}</span>
+<span class="s2">            HEIGHT 1</span>
+<span class="s2">            VIEWPOINT 0 0 0 1 0 0 0</span>
+<span class="s2">            POINTS </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">points</span><span class="p">)</span><span class="si">}</span>
+<span class="s2">            DATA ascii</span>
+<span class="s2">            &quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="pose_to_transformation"><a class="viewcode-back" href="../../../cosense3d.utils.html#cosense3d.utils.pclib.pose_to_transformation">[docs]</a><span class="k">def</span> <span class="nf">pose_to_transformation</span><span class="p">(</span><span class="n">pose</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    :param pose: list, [x, y, z, roll, pitch, yaw]</span>
+
+<span class="sd">    :return:</span>
+<span class="sd">        transformation: np.ndarray, (4, 4)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">transformation</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="n">R</span><span class="o">.</span><span class="n">from_euler</span><span class="p">(</span><span class="s1">&#39;xyz&#39;</span><span class="p">,</span> <span class="n">pose</span><span class="p">[</span><span class="mi">3</span><span class="p">:])</span><span class="o">.</span><span class="n">as_matrix</span><span class="p">()</span>
+    <span class="n">transformation</span><span class="p">[:</span><span class="mi">3</span><span class="p">,</span> <span class="p">:</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="n">r</span>
+    <span class="n">transformation</span><span class="p">[:</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">pose</span><span class="p">[:</span><span class="mi">3</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">transformation</span></div>
+
+
+<div class="viewcode-block" id="read_ply"><a class="viewcode-back" href="../../../cosense3d.utils.html#cosense3d.utils.pclib.read_ply">[docs]</a><span class="k">def</span> <span class="nf">read_ply</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
+    <span class="n">ply</span> <span class="o">=</span> <span class="n">PlyData</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">ply</span><span class="p">[</span><span class="s1">&#39;vertex&#39;</span><span class="p">]</span>
+    <span class="n">properties</span> <span class="o">=</span> <span class="p">[</span><span class="n">prop</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">prop</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">properties</span><span class="p">]</span>
+    <span class="n">property_types</span> <span class="o">=</span> <span class="p">[</span><span class="n">prop</span><span class="o">.</span><span class="n">val_dtype</span> <span class="k">for</span> <span class="n">prop</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">properties</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">name</span><span class="p">])</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">properties</span><span class="p">},</span> <span class="n">property_types</span></div>
+
+
+<div class="viewcode-block" id="save_cosense_ply"><a class="viewcode-back" href="../../../cosense3d.utils.html#cosense3d.utils.pclib.save_cosense_ply">[docs]</a><span class="k">def</span> <span class="nf">save_cosense_ply</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">output_file_name</span><span class="p">):</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;x&#39;</span><span class="p">:</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np_types</span><span class="p">[</span><span class="n">ply_fields</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]]),</span>
+        <span class="s1">&#39;y&#39;</span><span class="p">:</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np_types</span><span class="p">[</span><span class="n">ply_fields</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">]]),</span>
+        <span class="s1">&#39;z&#39;</span><span class="p">:</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;z&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np_types</span><span class="p">[</span><span class="n">ply_fields</span><span class="p">[</span><span class="s1">&#39;z&#39;</span><span class="p">]]),</span>
+        <span class="s1">&#39;ObjIdx&#39;</span><span class="p">:</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;ObjIdx&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np_types</span><span class="p">[</span><span class="n">ply_fields</span><span class="p">[</span><span class="s1">&#39;ObjIdx&#39;</span><span class="p">]]),</span>
+        <span class="s1">&#39;ObjTag&#39;</span><span class="p">:</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;ObjTag&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np_types</span><span class="p">[</span><span class="n">ply_fields</span><span class="p">[</span><span class="s1">&#39;ObjTag&#39;</span><span class="p">]]),</span>
+        <span class="s1">&#39;ring&#39;</span><span class="p">:</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;ring&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np_types</span><span class="p">[</span><span class="n">ply_fields</span><span class="p">[</span><span class="s1">&#39;ring&#39;</span><span class="p">]]),</span>
+        <span class="s1">&#39;time&#39;</span><span class="p">:</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np_types</span><span class="p">[</span><span class="n">ply_fields</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">]])</span>
+    <span class="p">}</span>
+    <span class="n">vertex_data</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">data</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">ply_fields</span><span class="o">.</span><span class="n">items</span><span class="p">()]))</span>
+    <span class="n">vertex_type</span> <span class="o">=</span> <span class="p">[(</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">ply_fields</span><span class="o">.</span><span class="n">items</span><span class="p">()]</span>
+    <span class="n">vertex</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">vertex_data</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">vertex_type</span><span class="p">)</span>
+    <span class="n">el</span> <span class="o">=</span> <span class="n">PlyElement</span><span class="o">.</span><span class="n">describe</span><span class="p">(</span><span class="n">vertex</span><span class="p">,</span> <span class="s1">&#39;vertex&#39;</span><span class="p">)</span>
+    <span class="n">PlyData</span><span class="p">([</span><span class="n">el</span><span class="p">])</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">output_file_name</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="lidar_ply2bin"><a class="viewcode-back" href="../../../cosense3d.utils.html#cosense3d.utils.pclib.lidar_ply2bin">[docs]</a><span class="k">def</span> <span class="nf">lidar_ply2bin</span><span class="p">(</span><span class="n">ply_file</span><span class="p">,</span> <span class="n">bin_file</span><span class="p">,</span>
+                  <span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="s1">&#39;z&#39;</span><span class="p">,</span> <span class="s1">&#39;intensity&#39;</span><span class="p">],</span>
+                  <span class="n">replace</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Read ply and save to the cosense3d binary format.</span>
+
+<span class="sd">    :param ply_file: str, input file name</span>
+<span class="sd">    :param bin_file: str, output file name</span>
+<span class="sd">    :param fields: list of str, names that indicates &#39;x&#39;, &#39;y&#39;, &#39;z&#39; and &#39;intensity&#39;</span>
+<span class="sd">    :param replace: replace the exisiting file if True</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">replace</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">bin_file</span><span class="p">):</span>
+        <span class="k">return</span>
+    <span class="n">pointcloud</span><span class="p">,</span> <span class="n">property_types</span> <span class="o">=</span> <span class="n">read_ply</span><span class="p">(</span><span class="n">ply_file</span><span class="p">)</span>
+    <span class="n">pcd_out</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">pointcloud</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">fields</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">pcd_out</span><span class="o">.</span><span class="n">tofile</span><span class="p">(</span><span class="n">bin_file</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="lidar_bin2pcd_o3d"><a class="viewcode-back" href="../../../cosense3d.utils.html#cosense3d.utils.pclib.lidar_bin2pcd_o3d">[docs]</a><span class="k">def</span> <span class="nf">lidar_bin2pcd_o3d</span><span class="p">(</span><span class="n">bin_file</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span> <span class="n">replace</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">replace</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">out_file</span><span class="p">):</span>
+        <span class="k">return</span>
+    <span class="n">bin_pcd</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fromfile</span><span class="p">(</span><span class="n">bin_file</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+
+    <span class="c1"># reshape</span>
+    <span class="n">points</span> <span class="o">=</span> <span class="n">bin_pcd</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+    <span class="c1"># remove nan points</span>
+    <span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_not</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">points</span><span class="p">[:,</span> <span class="p">:</span><span class="mi">3</span><span class="p">])</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
+    <span class="n">points</span> <span class="o">=</span> <span class="n">points</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span>
+
+    <span class="n">o3d_pcd</span> <span class="o">=</span> <span class="n">o3d</span><span class="o">.</span><span class="n">geometry</span><span class="o">.</span><span class="n">PointCloud</span><span class="p">()</span>
+    <span class="n">o3d_pcd</span><span class="o">.</span><span class="n">points</span> <span class="o">=</span> <span class="n">o3d</span><span class="o">.</span><span class="n">utility</span><span class="o">.</span><span class="n">Vector3dVector</span><span class="p">(</span><span class="n">points</span><span class="p">[:,</span> <span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+
+    <span class="n">point_intensity</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">points</span><span class="p">[:,</span> <span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">point_intensity</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">points</span><span class="p">[:,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="mf">255.</span>
+    <span class="n">o3d_pcd</span><span class="o">.</span><span class="n">colors</span> <span class="o">=</span> <span class="n">o3d</span><span class="o">.</span><span class="n">utility</span><span class="o">.</span><span class="n">Vector3dVector</span><span class="p">(</span><span class="n">point_intensity</span><span class="p">)</span>
+
+    <span class="c1"># write to pcd file</span>
+    <span class="n">o3d</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">write_point_cloud</span><span class="p">(</span><span class="n">out_file</span><span class="p">,</span>
+                             <span class="n">pointcloud</span><span class="o">=</span><span class="n">o3d_pcd</span><span class="p">,</span>
+                             <span class="n">write_ascii</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="lidar_bin2pcd"><a class="viewcode-back" href="../../../cosense3d.utils.html#cosense3d.utils.pclib.lidar_bin2pcd">[docs]</a><span class="k">def</span> <span class="nf">lidar_bin2pcd</span><span class="p">(</span><span class="n">bin_file</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span> <span class="n">replace</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">replace</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">out_file</span><span class="p">):</span>
+        <span class="k">return</span>
+    <span class="n">bin_pcd</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fromfile</span><span class="p">(</span><span class="n">bin_file</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+    <span class="c1"># reshape</span>
+    <span class="n">points</span> <span class="o">=</span> <span class="n">bin_pcd</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+    <span class="n">points</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">/=</span> <span class="mi">255</span>
+    <span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_not</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">points</span><span class="p">[:,</span> <span class="p">:</span><span class="mi">3</span><span class="p">])</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
+    <span class="n">points</span> <span class="o">=</span> <span class="n">points</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span>
+    <span class="n">header_str</span> <span class="o">=</span> <span class="n">header</span><span class="p">(</span><span class="n">points</span><span class="p">)</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">out_file</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh</span><span class="p">:</span>
+        <span class="c1"># fh.write()</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">savetxt</span><span class="p">(</span><span class="n">fh</span><span class="p">,</span> <span class="n">points</span><span class="p">,</span> <span class="n">fmt</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">%f</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="n">header_str</span><span class="p">)</span></div>
+    <span class="c1"># shutil.copy(out_file.replace(&#39;pcd&#39;, &#39;txt&#39;), out_file)</span>
+
+
+<div class="viewcode-block" id="lidar_bin2bin"><a class="viewcode-back" href="../../../cosense3d.utils.html#cosense3d.utils.pclib.lidar_bin2bin">[docs]</a><span class="k">def</span> <span class="nf">lidar_bin2bin</span><span class="p">(</span><span class="n">bin_file</span><span class="p">,</span> <span class="n">out_file</span><span class="p">):</span>
+    <span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">bin_file</span><span class="p">,</span> <span class="n">out_file</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="load_pcd"><a class="viewcode-back" href="../../../cosense3d.utils.html#cosense3d.utils.pclib.load_pcd">[docs]</a><span class="k">def</span> <span class="nf">load_pcd</span><span class="p">(</span><span class="n">pcd_file</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">return_o3d</span><span class="p">:</span> <span class="nb">bool</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Read  pcd and return numpy array.</span>
+
+<span class="sd">    :param pcd_file: The pcd file that contains the point cloud.</span>
+<span class="sd">    :param return_o3d: Default returns numpy array, set True to return pcd as o3d PointCloud object</span>
+
+<span class="sd">    :return: lidar_dict,</span>
+<span class="sd">        xyz: (pcd_np | pcd : np.ndarray | o3d.geometry.PointCloud) the lidar xyz coordinates in numpy format, shape:(n, 3);</span>
+<span class="sd">        intensity: (optional) np.ndarray, (n,).</span>
+<span class="sd">        label: (optional) np.ndarray, (n,).</span>
+<span class="sd">        time: (optional) np.ndarray, (n,).</span>
+<span class="sd">        ray: (optional) np.ndarray, (n,).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">lidar_dict</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">ext</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">pcd_file</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">ext</span> <span class="o">==</span> <span class="s1">&#39;.pcd&#39;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">return_o3d</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">o3d</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">read_point_cloud</span><span class="p">(</span><span class="n">pcd_file</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">pcd</span> <span class="o">=</span> <span class="n">point_cloud_from_path</span><span class="p">(</span><span class="n">pcd_file</span><span class="p">)</span>
+            <span class="n">lidar_dict</span><span class="p">[</span><span class="s1">&#39;xyz&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">pcd</span><span class="o">.</span><span class="n">pc_data</span><span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="s1">&#39;xyz&#39;</span><span class="p">],</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
+            <span class="c1"># we save the intensity in the first channel</span>
+            <span class="k">if</span> <span class="s1">&#39;intensity&#39;</span> <span class="ow">in</span> <span class="n">pcd</span><span class="o">.</span><span class="n">fields</span><span class="p">:</span>
+                <span class="n">lidar_dict</span><span class="p">[</span><span class="s1">&#39;intensity&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pcd</span><span class="o">.</span><span class="n">pc_data</span><span class="p">[</span><span class="s1">&#39;intensity&#39;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="s1">&#39;timestamp&#39;</span> <span class="ow">in</span> <span class="n">pcd</span><span class="o">.</span><span class="n">fields</span><span class="p">:</span>
+                <span class="n">lidar_dict</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pcd</span><span class="o">.</span><span class="n">pc_data</span><span class="p">[</span><span class="s1">&#39;timestamp&#39;</span><span class="p">]</span>
+
+    <span class="k">elif</span> <span class="n">ext</span> <span class="o">==</span> <span class="s1">&#39;.bin&#39;</span><span class="p">:</span>
+        <span class="n">pcd_np</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fromfile</span><span class="p">(</span><span class="n">pcd_file</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">return_o3d</span><span class="p">:</span>
+            <span class="n">pcd</span> <span class="o">=</span> <span class="n">o3d</span><span class="o">.</span><span class="n">geometry</span><span class="o">.</span><span class="n">PointCloud</span><span class="p">()</span>
+            <span class="n">pcd</span><span class="o">.</span><span class="n">points</span> <span class="o">=</span> <span class="n">o3d</span><span class="o">.</span><span class="n">utility</span><span class="o">.</span><span class="n">Vector3dVector</span><span class="p">(</span><span class="n">pcd_np</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">pcd</span>
+        <span class="n">lidar_dict</span><span class="p">[</span><span class="s1">&#39;xyz&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pcd_np</span><span class="p">[:,</span> <span class="p">:</span><span class="mi">3</span><span class="p">]</span>
+        <span class="c1"># check attribute of last column,</span>
+        <span class="c1"># num of unique labels for the datasets in this projects is less than 50,</span>
+        <span class="c1"># unique intensities is normally larger then 50</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">pcd_np</span><span class="p">[:,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]))</span> <span class="o">&lt;</span> <span class="mi">50</span><span class="p">:</span>
+            <span class="n">lidar_dict</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pcd_np</span><span class="p">[:,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="n">pcd_np</span><span class="p">[:,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">lidar_dict</span><span class="p">[</span><span class="s1">&#39;intensity&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pcd_np</span><span class="p">[:,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="mi">255</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">lidar_dict</span><span class="p">[</span><span class="s1">&#39;intensity&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pcd_np</span><span class="p">[:,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="k">elif</span> <span class="n">ext</span> <span class="o">==</span> <span class="s1">&#39;.ply&#39;</span><span class="p">:</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">read_ply</span><span class="p">(</span><span class="n">pcd_file</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">xyz</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">data</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="s1">&#39;xyz&#39;</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">lidar_dict</span><span class="p">[</span><span class="s1">&#39;xyz&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">xyz</span>
+        <span class="n">lidar_dict</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+    <span class="k">return</span> <span class="n">lidar_dict</span></div>
+
+
+<div class="viewcode-block" id="tf2pose"><a class="viewcode-back" href="../../../cosense3d.utils.html#cosense3d.utils.pclib.tf2pose">[docs]</a><span class="k">def</span> <span class="nf">tf2pose</span><span class="p">(</span><span class="n">tf_matrix</span><span class="p">):</span>
+    <span class="n">euler</span> <span class="o">=</span> <span class="n">R</span><span class="o">.</span><span class="n">from_matrix</span><span class="p">(</span><span class="n">tf_matrix</span><span class="p">[:</span><span class="mi">3</span><span class="p">,</span> <span class="p">:</span><span class="mi">3</span><span class="p">])</span><span class="o">.</span><span class="n">as_euler</span><span class="p">(</span><span class="s1">&#39;xyz&#39;</span><span class="p">)</span>
+    <span class="n">translation</span> <span class="o">=</span> <span class="n">tf_matrix</span><span class="p">[:</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">translation</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span> <span class="o">+</span> <span class="n">euler</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="pose2tf"><a class="viewcode-back" href="../../../cosense3d.utils.html#cosense3d.utils.pclib.pose2tf">[docs]</a><span class="k">def</span> <span class="nf">pose2tf</span><span class="p">(</span><span class="n">pose</span><span class="p">):</span>
+    <span class="n">tf_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+    <span class="n">tf_matrix</span><span class="p">[:</span><span class="mi">3</span><span class="p">,</span> <span class="p">:</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="n">rotation_matrix</span><span class="p">(</span><span class="n">pose</span><span class="p">[</span><span class="mi">3</span><span class="p">:])</span>
+    <span class="n">tf_matrix</span><span class="p">[:</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">pose</span><span class="p">[:</span><span class="mi">3</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">tf_matrix</span></div>
+
+
+<div class="viewcode-block" id="rotation_matrix"><a class="viewcode-back" href="../../../cosense3d.utils.html#cosense3d.utils.pclib.rotation_matrix">[docs]</a><span class="k">def</span> <span class="nf">rotation_matrix</span><span class="p">(</span><span class="n">euler</span><span class="p">,</span> <span class="n">degrees</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Construct rotation matrix with the given pose.</span>
+
+<span class="sd">    :param euler: list or np.ndarray</span>
+<span class="sd">        [roll, pitch, yaw]</span>
+<span class="sd">    :return: rot: np.ndarray, 3x3</span>
+<span class="sd">        rotation matrix</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">R</span><span class="o">.</span><span class="n">from_euler</span><span class="p">(</span><span class="s1">&#39;xyz&#39;</span><span class="p">,</span> <span class="n">euler</span><span class="p">,</span> <span class="n">degrees</span><span class="o">=</span><span class="n">degrees</span><span class="p">)</span><span class="o">.</span><span class="n">as_matrix</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="rotate3d"><a class="viewcode-back" href="../../../cosense3d.utils.html#cosense3d.utils.pclib.rotate3d">[docs]</a><span class="k">def</span> <span class="nf">rotate3d</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">euler</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Rotate point cloud with the euler angles given in pose.</span>
+
+<span class="sd">    :param points: np.ndarray, N x (3 + C)</span>
+<span class="sd">        each point in the row has the format [x, y, z, ...]</span>
+<span class="sd">    :param euler: list or np.ndarray</span>
+<span class="sd">        [roll, pitch, yaw]</span>
+
+<span class="sd">    :return: points: np.ndarray</span>
+<span class="sd">        rotated point cloud</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">euler</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span>
+    <span class="n">rot</span> <span class="o">=</span> <span class="n">rotation_matrix</span><span class="p">(</span><span class="n">euler</span><span class="p">)</span>
+    <span class="n">points</span><span class="p">[:,</span> <span class="p">:</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">rot</span> <span class="o">@</span> <span class="n">points</span><span class="p">[:,</span> <span class="p">:</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">T</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+    <span class="k">return</span> <span class="n">points</span></div>
+
+
+<div class="viewcode-block" id="cart2cyl"><a class="viewcode-back" href="../../../cosense3d.utils.html#cosense3d.utils.pclib.cart2cyl">[docs]</a><span class="k">def</span> <span class="nf">cart2cyl</span><span class="p">(</span><span class="n">input_xyz</span><span class="p">):</span>
+    <span class="n">rho</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">input_xyz</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">input_xyz</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="n">phi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arctan2</span><span class="p">(</span><span class="n">input_xyz</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">input_xyz</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">rho</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">phi</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">input_xyz</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">2</span><span class="p">:]),</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="cyl2cart"><a class="viewcode-back" href="../../../cosense3d.utils.html#cosense3d.utils.pclib.cyl2cart">[docs]</a><span class="k">def</span> <span class="nf">cyl2cart</span><span class="p">(</span><span class="n">input_xyz_polar</span><span class="p">):</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">input_xyz_polar</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">input_xyz_polar</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">input_xyz_polar</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">input_xyz_polar</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">x</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">y</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">input_xyz_polar</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">2</span><span class="p">:]),</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="mat_yaw"><a class="viewcode-back" href="../../../cosense3d.utils.html#cosense3d.utils.pclib.mat_yaw">[docs]</a><span class="k">def</span> <span class="nf">mat_yaw</span><span class="p">(</span><span class="n">cosa</span><span class="p">,</span> <span class="n">sina</span><span class="p">,</span> <span class="n">zeros</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">ones</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="k">return</span> <span class="p">[</span>
+        <span class="n">cosa</span><span class="p">,</span> <span class="o">-</span><span class="n">sina</span><span class="p">,</span> <span class="n">zeros</span><span class="p">,</span>
+        <span class="n">sina</span><span class="p">,</span> <span class="n">cosa</span><span class="p">,</span> <span class="n">zeros</span><span class="p">,</span>
+        <span class="n">zeros</span><span class="p">,</span> <span class="n">zeros</span><span class="p">,</span> <span class="n">ones</span>
+    <span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="mat_pitch"><a class="viewcode-back" href="../../../cosense3d.utils.html#cosense3d.utils.pclib.mat_pitch">[docs]</a><span class="k">def</span> <span class="nf">mat_pitch</span><span class="p">(</span><span class="n">cosa</span><span class="p">,</span> <span class="n">sina</span><span class="p">,</span> <span class="n">zeros</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">ones</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="k">return</span> <span class="p">[</span>
+        <span class="n">cosa</span><span class="p">,</span> <span class="n">zeros</span><span class="p">,</span> <span class="n">sina</span><span class="p">,</span>
+        <span class="n">zeros</span><span class="p">,</span> <span class="n">ones</span><span class="p">,</span> <span class="n">zeros</span><span class="p">,</span>
+        <span class="o">-</span><span class="n">sina</span><span class="p">,</span> <span class="n">zeros</span><span class="p">,</span> <span class="n">cosa</span><span class="p">,</span>
+    <span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="mat_roll"><a class="viewcode-back" href="../../../cosense3d.utils.html#cosense3d.utils.pclib.mat_roll">[docs]</a><span class="k">def</span> <span class="nf">mat_roll</span><span class="p">(</span><span class="n">cosa</span><span class="p">,</span> <span class="n">sina</span><span class="p">,</span> <span class="n">zeros</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">ones</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="k">return</span> <span class="p">[</span>
+        <span class="n">ones</span><span class="p">,</span> <span class="n">zeros</span><span class="p">,</span> <span class="n">zeros</span><span class="p">,</span>
+        <span class="n">zeros</span><span class="p">,</span> <span class="n">cosa</span><span class="p">,</span> <span class="o">-</span><span class="n">sina</span><span class="p">,</span>
+        <span class="n">zeros</span><span class="p">,</span> <span class="n">sina</span><span class="p">,</span> <span class="n">cosa</span><span class="p">,</span>
+    <span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="rotate_points_along_z_np"><a class="viewcode-back" href="../../../cosense3d.utils.html#cosense3d.utils.pclib.rotate_points_along_z_np">[docs]</a><span class="k">def</span> <span class="nf">rotate_points_along_z_np</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">angle</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    :param points: (N, 3 + C or 2 + C)</span>
+<span class="sd">    :param angle: float, angle along z-axis, angle increases x ==&gt; y</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">cosa</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span>
+    <span class="n">sina</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span>
+    <span class="n">rot_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span>
+        <span class="p">[</span><span class="n">cosa</span><span class="p">,</span>  <span class="n">sina</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+        <span class="p">[</span><span class="o">-</span><span class="n">sina</span><span class="p">,</span> <span class="n">cosa</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+        <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+    <span class="p">])</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">points</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">==</span><span class="mi">2</span><span class="p">:</span>
+        <span class="n">points_rot</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">rot_matrix</span><span class="p">[:</span><span class="mi">2</span><span class="p">,</span> <span class="p">:</span><span class="mi">2</span><span class="p">])</span>
+    <span class="k">elif</span> <span class="n">points</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">&gt;</span><span class="mi">2</span><span class="p">:</span>
+        <span class="n">points_rot</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">points</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">:</span><span class="mi">3</span><span class="p">],</span> <span class="n">rot_matrix</span><span class="p">)</span>
+        <span class="n">points_rot</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">points_rot</span><span class="p">,</span> <span class="n">points</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">:]),</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s1">&#39;Input points should have the shape: (N, 3 + C or 2 + C).&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">points_rot</span></div>
+
+
+<div class="viewcode-block" id="rotate_points_batch"><a class="viewcode-back" href="../../../cosense3d.utils.html#cosense3d.utils.pclib.rotate_points_batch">[docs]</a><span class="k">def</span> <span class="nf">rotate_points_batch</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">angles</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s1">&#39;xyz&#39;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    :param points: (B, N, 3 + C)</span>
+<span class="sd">    :param angles: (B, 1|3), radians</span>
+<span class="sd">        rotation = R(3)R(2)R(1) if angles shape in (B, 3)</span>
+<span class="sd">    :return: points_rot: (B, N, 3 + C)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">assert</span> <span class="n">angles</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">order</span><span class="p">),</span> \
+        <span class="s2">&quot;angles should has the shape (len(points), len(order)).&quot;</span>
+
+    <span class="n">points</span><span class="p">,</span> <span class="n">is_numpy</span> <span class="o">=</span> <span class="n">check_numpy_to_torch</span><span class="p">(</span><span class="n">points</span><span class="p">)</span>
+    <span class="n">angles</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">check_numpy_to_torch</span><span class="p">(</span><span class="n">angles</span><span class="p">)</span>
+
+    <span class="n">cosas</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">angles</span><span class="p">)</span>
+    <span class="n">sinas</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">angles</span><span class="p">)</span>
+    <span class="n">zeros</span> <span class="o">=</span> <span class="n">angles</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">new_zeros</span><span class="p">(</span><span class="n">points</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">ones</span> <span class="o">=</span> <span class="n">angles</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">new_ones</span><span class="p">(</span><span class="n">points</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">rot_matrix</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">points</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">points</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+    <span class="n">rot_matrix</span> <span class="o">=</span> <span class="n">rot_matrix</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">angles</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">cosa</span><span class="p">,</span> <span class="n">sina</span><span class="p">,</span> <span class="n">ax</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">cosas</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">sinas</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">order</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">ax</span> <span class="o">==</span> <span class="s1">&#39;z&#39;</span><span class="p">:</span>
+            <span class="n">rot</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">mat_yaw</span><span class="p">(</span>
+                <span class="n">cosa</span><span class="p">,</span> <span class="n">sina</span><span class="p">,</span> <span class="n">zeros</span><span class="p">,</span> <span class="n">ones</span>
+            <span class="p">),</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">float</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="n">ax</span> <span class="o">==</span> <span class="s1">&#39;y&#39;</span><span class="p">:</span>
+            <span class="n">rot</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">mat_pitch</span><span class="p">(</span>
+                <span class="n">cosa</span><span class="p">,</span> <span class="n">sina</span><span class="p">,</span> <span class="n">zeros</span><span class="p">,</span> <span class="n">ones</span>
+            <span class="p">),</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">float</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="n">ax</span> <span class="o">==</span> <span class="s1">&#39;x&#39;</span><span class="p">:</span>
+            <span class="n">rot</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">mat_roll</span><span class="p">(</span>
+                <span class="n">cosa</span><span class="p">,</span> <span class="n">sina</span><span class="p">,</span> <span class="n">zeros</span><span class="p">,</span> <span class="n">ones</span>
+            <span class="p">),</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">float</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+        <span class="n">rot_matrix</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">bmm</span><span class="p">(</span><span class="n">rot</span><span class="p">,</span> <span class="n">rot_matrix</span><span class="p">)</span>
+    <span class="n">points_rot</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">bmm</span><span class="p">(</span><span class="n">rot_matrix</span><span class="p">,</span> <span class="n">points</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">float</span><span class="p">()</span><span class="o">.</span>
+                           <span class="n">permute</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">permute</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">points_rot</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">((</span><span class="n">points_rot</span><span class="p">,</span> <span class="n">points</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">3</span><span class="p">:]),</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">points_rot</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span> <span class="k">if</span> <span class="n">is_numpy</span> <span class="k">else</span> <span class="n">points_rot</span></div>
+
+
+<div class="viewcode-block" id="rotate_points_along_z_torch"><a class="viewcode-back" href="../../../cosense3d.utils.html#cosense3d.utils.pclib.rotate_points_along_z_torch">[docs]</a><span class="k">def</span> <span class="nf">rotate_points_along_z_torch</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">angle</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    :param points: (N, 2 + C) or (B, 2 + C)</span>
+<span class="sd">    :param angle: float or tensor of shape (B), angle along z-axis, angle increases x ==&gt; y</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">points</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">points</span> <span class="o">=</span> <span class="n">points</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">angle</span><span class="p">,</span> <span class="nb">float</span><span class="p">):</span>
+        <span class="n">angle</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([</span><span class="n">angle</span><span class="p">],</span> <span class="n">device</span><span class="o">=</span><span class="n">points</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">angle</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">points</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">angle</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">points</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">cosa</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span>
+    <span class="n">sina</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span>
+    <span class="n">rot_matrix</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span>
+        <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">cosa</span><span class="p">,</span>  <span class="n">sina</span><span class="p">],</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">),</span>
+        <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="o">-</span><span class="n">sina</span><span class="p">,</span> <span class="n">cosa</span><span class="p">],</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="p">],</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">float</span><span class="p">()</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">points</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">points</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">angle</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">points</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">rot_matrix</span><span class="p">),</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="n">points_rot</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">bmm</span><span class="p">(</span><span class="n">points</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">],</span> <span class="n">rot_matrix</span><span class="p">)</span>
+    <span class="n">points_rot</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">((</span><span class="n">points_rot</span><span class="p">,</span> <span class="n">points</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">2</span><span class="p">:]),</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">points_rot</span></div>
+
+
+<div class="viewcode-block" id="rotate_points_with_tf_np"><a class="viewcode-back" href="../../../cosense3d.utils.html#cosense3d.utils.pclib.rotate_points_with_tf_np">[docs]</a><span class="k">def</span> <span class="nf">rotate_points_with_tf_np</span><span class="p">(</span><span class="n">points</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">tf_np</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Rotate points with transformation matrix.</span>
+
+<span class="sd">    :param points (np.ndarray): Nx3 points array</span>
+<span class="sd">    :param tf_np (np.ndarray): 4x4 transformation matrix</span>
+<span class="sd">    :return: points (np.ndarray): Nx3 points array</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">points_homo</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">points</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="n">points</span><span class="p">[:,</span> <span class="p">:</span><span class="mi">1</span><span class="p">])],</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+    <span class="n">points</span> <span class="o">=</span> <span class="p">(</span><span class="n">tf_np</span> <span class="o">@</span> <span class="n">points_homo</span><span class="p">)[:</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">T</span>
+    <span class="k">return</span> <span class="n">points</span></div>
+
+
+<div class="viewcode-block" id="rotate_box_corners_with_tf_np"><a class="viewcode-back" href="../../../cosense3d.utils.html#cosense3d.utils.pclib.rotate_box_corners_with_tf_np">[docs]</a><span class="k">def</span> <span class="nf">rotate_box_corners_with_tf_np</span><span class="p">(</span><span class="n">corners</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">tf_np</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Rotate points with transformation matrix</span>
+<span class="sd">    :param corners: Nx8X3 points array</span>
+<span class="sd">    :param tf_np: 4x4 transformation matrix</span>
+<span class="sd">    :return: corners, Nx8X3 points array</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">points</span> <span class="o">=</span> <span class="n">rotate_points_with_tf_np</span><span class="p">(</span><span class="n">corners</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">tf_np</span><span class="p">)</span>
+    <span class="n">corners</span> <span class="o">=</span> <span class="n">points</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">corners</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">corners</span></div>
+
+
+<div class="viewcode-block" id="mask_values_in_range"><a class="viewcode-back" href="../../../cosense3d.utils.html#cosense3d.utils.pclib.mask_values_in_range">[docs]</a><span class="k">def</span> <span class="nf">mask_values_in_range</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="nb">min</span><span class="p">,</span>  <span class="nb">max</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span><span class="n">values</span><span class="o">&gt;</span><span class="nb">min</span><span class="p">,</span> <span class="n">values</span><span class="o">&lt;</span><span class="nb">max</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="mask_points_in_box"><a class="viewcode-back" href="../../../cosense3d.utils.html#cosense3d.utils.pclib.mask_points_in_box">[docs]</a><span class="k">def</span> <span class="nf">mask_points_in_box</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">pc_range</span><span class="p">):</span>
+    <span class="n">n_ranges</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">pc_range</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span>
+    <span class="n">list_mask</span> <span class="o">=</span> <span class="p">[</span><span class="n">mask_values_in_range</span><span class="p">(</span><span class="n">points</span><span class="p">[:,</span> <span class="n">i</span><span class="p">],</span> <span class="n">pc_range</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+                                       <span class="n">pc_range</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="n">n_ranges</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_ranges</span><span class="p">)]</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">list_mask</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="mask_points_in_range"><a class="viewcode-back" href="../../../cosense3d.utils.html#cosense3d.utils.pclib.mask_points_in_range">[docs]</a><span class="k">def</span> <span class="nf">mask_points_in_range</span><span class="p">(</span><span class="n">points</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">,</span> <span class="n">dist</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    :rtype: np.array</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">points</span><span class="p">[:,</span> <span class="p">:</span><span class="mi">2</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">dist</span></div>
+
+
+<div class="viewcode-block" id="get_tf_matrix_torch"><a class="viewcode-back" href="../../../cosense3d.utils.html#cosense3d.utils.pclib.get_tf_matrix_torch">[docs]</a><span class="k">def</span> <span class="nf">get_tf_matrix_torch</span><span class="p">(</span><span class="n">vectors</span><span class="p">,</span> <span class="n">inv</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="n">device</span> <span class="o">=</span> <span class="n">vectors</span><span class="o">.</span><span class="n">device</span>
+    <span class="n">n</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">vectors</span><span class="o">.</span><span class="n">shape</span>
+    <span class="n">xs</span> <span class="o">=</span> <span class="n">vectors</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
+    <span class="n">ys</span> <span class="o">=</span> <span class="n">vectors</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span>
+    <span class="n">angles</span> <span class="o">=</span> <span class="n">vectors</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span>
+    <span class="n">cosa</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">angles</span><span class="p">)</span>
+    <span class="n">sina</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">angles</span><span class="p">)</span>
+    <span class="n">ones</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="n">angles</span><span class="p">)</span>
+    <span class="n">zeros</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">angles</span><span class="p">)</span>
+    <span class="n">rot_matrix</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">,</span> <span class="n">requires_grad</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">rot_matrix</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">cosa</span>
+    <span class="n">rot_matrix</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">sina</span>
+    <span class="n">rot_matrix</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">sina</span>
+    <span class="n">rot_matrix</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">cosa</span>
+    <span class="n">shift_matrix</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">rot_matrix</span><span class="p">,</span> <span class="n">requires_grad</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">shift_matrix</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">xs</span>
+    <span class="n">shift_matrix</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">ys</span>
+    <span class="n">shift_matrix</span><span class="p">[:,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]]</span> <span class="o">=</span> <span class="mf">1.0</span>
+    <span class="k">if</span> <span class="n">inv</span><span class="p">:</span>
+        <span class="n">mat</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;...ij, ...jk&#39;</span><span class="p">,</span> <span class="n">rot_matrix</span><span class="p">,</span> <span class="n">shift_matrix</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">mat</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;...ij, ...jk&#39;</span><span class="p">,</span> <span class="n">shift_matrix</span><span class="p">,</span> <span class="n">rot_matrix</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">mat</span><span class="p">,</span> <span class="n">rot_matrix</span><span class="p">,</span> <span class="n">shift_matrix</span></div>
+
+
+<div class="viewcode-block" id="rotation_mat2euler_torch"><a class="viewcode-back" href="../../../cosense3d.utils.html#cosense3d.utils.pclib.rotation_mat2euler_torch">[docs]</a><span class="k">def</span> <span class="nf">rotation_mat2euler_torch</span><span class="p">(</span><span class="n">mat</span><span class="p">):</span>
+    <span class="n">sy</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">mat</span><span class="p">[:,</span> <span class="p">:</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">singular</span> <span class="o">=</span> <span class="n">sy</span> <span class="o">&lt;</span> <span class="mf">1e-6</span>
+    <span class="n">not_singular</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">logical_not</span><span class="p">(</span><span class="n">singular</span><span class="p">)</span>
+    <span class="n">euler</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">mat</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">])</span>
+
+    <span class="k">if</span> <span class="n">not_singular</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">euler</span><span class="p">[</span><span class="n">not_singular</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">atan2</span><span class="p">(</span><span class="n">mat</span><span class="p">[</span><span class="n">not_singular</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">mat</span><span class="p">[</span><span class="n">not_singular</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>
+        <span class="n">euler</span><span class="p">[</span><span class="n">not_singular</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">atan2</span><span class="p">(</span><span class="o">-</span><span class="n">mat</span><span class="p">[</span><span class="n">not_singular</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">sy</span><span class="p">)</span>
+        <span class="n">euler</span><span class="p">[</span><span class="n">not_singular</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">atan2</span><span class="p">(</span><span class="n">mat</span><span class="p">[</span><span class="n">not_singular</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">mat</span><span class="p">[</span><span class="n">not_singular</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">singular</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">euler</span><span class="p">[</span><span class="n">singular</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">atan2</span><span class="p">(</span><span class="o">-</span><span class="n">mat</span><span class="p">[</span><span class="n">singular</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="n">mat</span><span class="p">[</span><span class="n">singular</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+        <span class="n">euler</span><span class="p">[</span><span class="n">singular</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">atan2</span><span class="p">(</span><span class="o">-</span><span class="n">mat</span><span class="p">[</span><span class="n">singular</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">sy</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">euler</span></div>
+
+
+<div class="viewcode-block" id="pose_err_global2relative_torch"><a class="viewcode-back" href="../../../cosense3d.utils.html#cosense3d.utils.pclib.pose_err_global2relative_torch">[docs]</a><span class="k">def</span> <span class="nf">pose_err_global2relative_torch</span><span class="p">(</span><span class="n">poses</span><span class="p">,</span> <span class="n">errs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculate relative pose transformation based on the errorneous global positioning</span>
+<span class="sd">    :param poses: Nx2 or Nx3, first row is ego pose, other rows are the coop poses</span>
+<span class="sd">    :param errs: Nx3, first row is ego pose error and other rows for coop pose errors</span>
+<span class="sd">    :return: (N-1)x3, relative localization errors between ego and coop vehicles</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">poses</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">==</span><span class="mi">2</span><span class="p">:</span>
+        <span class="n">poses</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">poses</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">poses</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">:</span><span class="mi">1</span><span class="p">])],</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">poses_err</span> <span class="o">=</span> <span class="n">poses</span> <span class="o">+</span> <span class="n">errs</span>
+
+    <span class="n">R01</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">get_tf_matrix_torch</span><span class="p">(</span><span class="o">-</span><span class="n">poses</span><span class="p">[:</span><span class="mi">1</span><span class="p">],</span> <span class="n">inv</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">R10_hat</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">get_tf_matrix_torch</span><span class="p">(</span><span class="n">poses_err</span><span class="p">[:</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">R20</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">get_tf_matrix_torch</span><span class="p">(</span><span class="n">poses</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+    <span class="n">R02_hat</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">get_tf_matrix_torch</span><span class="p">(</span><span class="o">-</span><span class="n">poses_err</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">inv</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="n">delta_R21</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;...ij, ...jk&#39;</span><span class="p">,</span> <span class="n">R01</span><span class="p">,</span> <span class="n">R20</span><span class="p">)</span>
+    <span class="n">delta_R21</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;...ij, ...jk&#39;</span><span class="p">,</span> <span class="n">delta_R21</span><span class="p">,</span> <span class="n">R02_hat</span><span class="p">)</span>
+    <span class="n">delta_R21</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;...ij, ...jk&#39;</span><span class="p">,</span> <span class="n">delta_R21</span><span class="p">,</span> <span class="n">R10_hat</span><span class="p">)</span>
+
+    <span class="n">x</span> <span class="o">=</span> <span class="n">delta_R21</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">delta_R21</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>
+    <span class="n">theta</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">atan2</span><span class="p">(</span><span class="n">delta_R21</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">delta_R21</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">theta</span><span class="p">],</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="project_points_by_matrix_torch"><a class="viewcode-back" href="../../../cosense3d.utils.html#cosense3d.utils.pclib.project_points_by_matrix_torch">[docs]</a><span class="k">def</span> <span class="nf">project_points_by_matrix_torch</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">transformation_matrix</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Project the points to another coordinate system based on the</span>
+<span class="sd">    transformation matrix.</span>
+
+<span class="sd">    :param points: torch.Tensor, 3D points, (N, 3)</span>
+<span class="sd">    :param transformation_matrix: torch.Tensor, Transformation matrix, (4, 4)</span>
+<span class="sd">    :return: projected_points : torch.Tensor, The projected points, (N, 3)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">points</span><span class="p">,</span> <span class="n">is_numpy</span> <span class="o">=</span> \
+        <span class="n">check_numpy_to_torch</span><span class="p">(</span><span class="n">points</span><span class="p">)</span>
+    <span class="n">transformation_matrix</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> \
+        <span class="n">check_numpy_to_torch</span><span class="p">(</span><span class="n">transformation_matrix</span><span class="p">)</span>
+
+    <span class="c1"># convert to homogeneous coordinates via padding 1 at the last dimension.</span>
+    <span class="c1"># (N, 4)</span>
+    <span class="n">points_homogeneous</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">pad</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;constant&quot;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="c1"># (N, 4)</span>
+    <span class="n">projected_points</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s2">&quot;ik, jk-&gt;ij&quot;</span><span class="p">,</span> <span class="n">points_homogeneous</span><span class="p">,</span>
+                                    <span class="n">transformation_matrix</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">projected_points</span><span class="p">[:,</span> <span class="p">:</span><span class="mi">3</span><span class="p">]</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">is_numpy</span> \
+        <span class="k">else</span> <span class="n">projected_points</span><span class="p">[:,</span> <span class="p">:</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span></div>
+
+<span class="k">if</span> <span class="vm">__name__</span><span class="o">==</span><span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">300</span><span class="p">):</span>
+        <span class="n">frame</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">i</span><span class="si">:</span><span class="s2">06d</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="n">ply_file</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;/koko/LUMPI/train/measurement5/lidar/</span><span class="si">{</span><span class="n">frame</span><span class="si">}</span><span class="s2">.ply&quot;</span>
+        <span class="n">bin_file</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;/media/hdd/projects/TAL/data/lumpi_m5/lidar0/</span><span class="si">{</span><span class="n">frame</span><span class="si">}</span><span class="s2">.bin&quot;</span>
+        <span class="n">lidar_ply2bin</span><span class="p">(</span><span class="n">ply_file</span><span class="p">,</span> <span class="n">bin_file</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Anonymous Author.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

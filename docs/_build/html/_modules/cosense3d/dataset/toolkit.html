@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>cosense3d.dataset.toolkit &mdash; OpenCosense3D 1.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js?v=af2ce170"></script>
+        <script src="../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            OpenCosense3D
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../md/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../md/prepare_data.html">Prepare Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../md/structure.html">The Structure of the framework</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">CoSense3d</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">OpenCosense3D</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+          <li class="breadcrumb-item"><a href="../dataset.html">cosense3d.dataset</a></li>
+      <li class="breadcrumb-item active">cosense3d.dataset.toolkit</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for cosense3d.dataset.toolkit</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">open3d</span> <span class="k">as</span> <span class="nn">o3d</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+
+<div class="viewcode-block" id="register_pcds"><a class="viewcode-back" href="../../../cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.register_pcds">[docs]</a><span class="k">def</span> <span class="nf">register_pcds</span><span class="p">(</span><span class="n">source_cloud</span><span class="p">,</span> <span class="n">target_cloud</span><span class="p">,</span> <span class="n">initial_transf</span><span class="p">,</span> <span class="n">thr</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">visualize</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;PCD&quot;</span><span class="p">):</span>
+    <span class="c1"># Load point clouds</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">source_cloud</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">source_cloud</span> <span class="o">=</span> <span class="n">o3d</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">read_point_cloud</span><span class="p">(</span><span class="n">source_cloud</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">target_cloud</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">target_cloud</span> <span class="o">=</span> <span class="n">o3d</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">read_point_cloud</span><span class="p">(</span><span class="n">target_cloud</span><span class="p">)</span>
+
+    <span class="c1"># source_cloud.estimate_normals(search_param=o3d.geometry.KDTreeSearchParamHybrid(radius=2, max_nn=50))</span>
+    <span class="c1"># target_cloud.estimate_normals(search_param=o3d.geometry.KDTreeSearchParamHybrid(radius=2, max_nn=50))</span>
+
+    <span class="c1"># Perform ICP registration</span>
+    <span class="n">icp_result</span> <span class="o">=</span> <span class="n">initial_transf</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">thr</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="n">thr</span> <span class="o">=</span> <span class="p">[</span><span class="n">thr</span><span class="p">]</span>
+
+    <span class="n">icp_result</span> <span class="o">=</span> <span class="n">o3d</span><span class="o">.</span><span class="n">pipelines</span><span class="o">.</span><span class="n">registration</span><span class="o">.</span><span class="n">registration_icp</span><span class="p">(</span>
+        <span class="n">source_cloud</span><span class="p">,</span> <span class="n">target_cloud</span><span class="p">,</span> <span class="n">thr</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">initial_transf</span><span class="p">,</span>
+        <span class="n">o3d</span><span class="o">.</span><span class="n">pipelines</span><span class="o">.</span><span class="n">registration</span><span class="o">.</span><span class="n">TransformationEstimationPointToPoint</span><span class="p">())</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">thr</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">thr</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
+            <span class="n">icp_result</span> <span class="o">=</span> <span class="n">o3d</span><span class="o">.</span><span class="n">pipelines</span><span class="o">.</span><span class="n">registration</span><span class="o">.</span><span class="n">registration_icp</span><span class="p">(</span>
+                            <span class="n">source_cloud</span><span class="p">,</span> <span class="n">target_cloud</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">icp_result</span><span class="o">.</span><span class="n">transformation</span><span class="p">,</span>
+                      <span class="n">o3d</span><span class="o">.</span><span class="n">pipelines</span><span class="o">.</span><span class="n">registration</span><span class="o">.</span><span class="n">TransformationEstimationPointToPoint</span><span class="p">())</span>
+
+    <span class="c1"># Obtain the final transformation matrix</span>
+    <span class="c1"># transformation_matrix = initial_transf</span>
+    <span class="n">transformation_matrix</span> <span class="o">=</span> <span class="n">icp_result</span><span class="o">.</span><span class="n">transformation</span>
+
+    <span class="k">if</span> <span class="n">visualize</span><span class="p">:</span>
+        <span class="c1"># Apply the final transformation to the source point cloud</span>
+        <span class="n">source_aligned0</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">source_cloud</span><span class="p">)</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">initial_transf</span><span class="p">)</span>
+        <span class="n">source_aligned</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">source_cloud</span><span class="p">)</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">transformation_matrix</span><span class="p">)</span>
+    <span class="c1">#</span>
+    <span class="c1">#     src_pts = np.array(source_cloud.points)</span>
+    <span class="c1">#     src_pts_aligned = np.array(source_aligned.points)</span>
+    <span class="c1">#     tgt_pts = np.array(target_cloud.points)</span>
+    <span class="c1">#     src_angles = (np.arctan2(src_pts[:, 1], src_pts[:, 0]) + np.pi * 3 - np.deg2rad(100)) % ( 2 * np.pi)</span>
+    <span class="c1">#     tgt_angles = (np.arctan2(tgt_pts[:, 1], tgt_pts[:, 0]) + np.pi * 3 - np.deg2rad(255)) % ( 2 * np.pi)</span>
+    <span class="c1">#     steps = 10</span>
+    <span class="c1">#     res = 1 / steps</span>
+    <span class="c1">#     pcds = []</span>
+    <span class="c1">#     for i in range(steps):</span>
+    <span class="c1">#         mask_src = (src_angles &gt;= np.pi * 2 * i * res) &amp; (src_angles &lt; np.pi * 2 * (i + 1) * res)</span>
+    <span class="c1">#         mask_tgt = (tgt_angles &gt;= np.pi * 2 * i * res) &amp; (tgt_angles &lt; np.pi * 2 * (i + 1) * res)</span>
+    <span class="c1">#</span>
+    <span class="c1">#         cur_src_cloud = o3d.geometry.PointCloud()</span>
+    <span class="c1">#         cur_tgt_cloud = o3d.geometry.PointCloud()</span>
+    <span class="c1">#         cur_src_cloud.points = o3d.utility.Vector3dVector(src_pts[mask_src])</span>
+    <span class="c1">#         cur_tgt_cloud.points = o3d.utility.Vector3dVector(tgt_pts[mask_tgt])</span>
+    <span class="c1">#         cur_src_cloud.paint_uniform_color([0, 0.0 + i / steps * 1.0, 0])</span>
+    <span class="c1">#         cur_tgt_cloud.paint_uniform_color([0, 0, 0.2 + i / steps * 0.8])</span>
+    <span class="c1">#         pcds += [cur_src_cloud]</span>
+    <span class="c1">#     o3d.visualization.draw_geometries(pcds)</span>
+
+        <span class="c1"># Visualize the aligned point clouds</span>
+        <span class="n">source_aligned0</span><span class="o">.</span><span class="n">paint_uniform_color</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+        <span class="n">source_aligned</span><span class="o">.</span><span class="n">paint_uniform_color</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mf">0.706</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+        <span class="n">target_cloud</span><span class="o">.</span><span class="n">paint_uniform_color</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.651</span><span class="p">,</span> <span class="mf">0.929</span><span class="p">])</span>
+        <span class="n">o3d</span><span class="o">.</span><span class="n">visualization</span><span class="o">.</span><span class="n">draw_geometries</span><span class="p">([</span><span class="n">source_aligned0</span><span class="p">,</span> <span class="n">target_cloud</span><span class="p">],</span> <span class="n">window_name</span><span class="o">=</span><span class="n">title</span><span class="p">)</span>
+        <span class="n">o3d</span><span class="o">.</span><span class="n">visualization</span><span class="o">.</span><span class="n">draw_geometries</span><span class="p">([</span><span class="n">source_aligned</span><span class="p">,</span> <span class="n">target_cloud</span><span class="p">],</span> <span class="n">window_name</span><span class="o">=</span><span class="n">title</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">transformation_matrix</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="callback_registrations"><a class="viewcode-back" href="../../../cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.callback_registrations">[docs]</a><span class="k">def</span> <span class="nf">callback_registrations</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">source_points</span><span class="p">,</span> <span class="n">target_points</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Callback function for point picking. Registers two point clouds using selected corresponding points.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Point picking callback called!&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Corresponding points</span>
+    <span class="n">correspondences</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="n">source_points</span><span class="p">,</span> <span class="n">target_points</span><span class="p">])</span>
+
+    <span class="c1"># Create Open3D point cloud from numpy arrays</span>
+    <span class="n">source_pc</span> <span class="o">=</span> <span class="n">o3d</span><span class="o">.</span><span class="n">geometry</span><span class="o">.</span><span class="n">PointCloud</span><span class="p">()</span>
+    <span class="n">source_pc</span><span class="o">.</span><span class="n">points</span> <span class="o">=</span> <span class="n">o3d</span><span class="o">.</span><span class="n">utility</span><span class="o">.</span><span class="n">Vector3dVector</span><span class="p">(</span><span class="n">source</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="n">source_points</span><span class="p">])</span>
+    <span class="n">target_pc</span> <span class="o">=</span> <span class="n">o3d</span><span class="o">.</span><span class="n">geometry</span><span class="o">.</span><span class="n">PointCloud</span><span class="p">()</span>
+    <span class="n">target_pc</span><span class="o">.</span><span class="n">points</span> <span class="o">=</span> <span class="n">o3d</span><span class="o">.</span><span class="n">utility</span><span class="o">.</span><span class="n">Vector3dVector</span><span class="p">(</span><span class="n">target</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="n">target_points</span><span class="p">])</span>
+
+    <span class="c1"># Perform registration</span>
+    <span class="n">transformation</span> <span class="o">=</span> <span class="n">o3d</span><span class="o">.</span><span class="n">pipelines</span><span class="o">.</span><span class="n">registration</span><span class="o">.</span><span class="n">registration_ransac_based_on_feature_matching</span><span class="p">(</span>
+        <span class="n">source_pc</span><span class="p">,</span> <span class="n">target_pc</span><span class="p">,</span> <span class="n">correspondences</span><span class="p">,</span>
+        <span class="n">o3d</span><span class="o">.</span><span class="n">pipelines</span><span class="o">.</span><span class="n">registration</span><span class="o">.</span><span class="n">TransformationEstimationPointToPoint</span><span class="p">(),</span>
+        <span class="n">o3d</span><span class="o">.</span><span class="n">pipelines</span><span class="o">.</span><span class="n">registration</span><span class="o">.</span><span class="n">RANSACConvergenceCriteria</span><span class="p">(</span><span class="mi">4000000</span><span class="p">,</span> <span class="mi">500</span><span class="p">)</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Apply the transformation to the source point cloud</span>
+    <span class="n">source</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">transformation</span><span class="o">.</span><span class="n">transformation</span><span class="p">)</span>
+
+    <span class="c1"># Visualize the result</span>
+    <span class="n">o3d</span><span class="o">.</span><span class="n">visualization</span><span class="o">.</span><span class="n">draw_geometries</span><span class="p">([</span><span class="n">source</span><span class="p">,</span> <span class="n">target</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">transformation</span></div>
+
+
+<div class="viewcode-block" id="click_register"><a class="viewcode-back" href="../../../cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.click_register">[docs]</a><span class="k">def</span> <span class="nf">click_register</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">target</span><span class="p">):</span>
+    <span class="c1"># Visualize the two point clouds</span>
+    <span class="n">o3d</span><span class="o">.</span><span class="n">visualization</span><span class="o">.</span><span class="n">draw_geometries</span><span class="p">([</span><span class="n">source</span><span class="p">,</span> <span class="n">target</span><span class="p">])</span>
+
+    <span class="c1"># Register point clouds by picking corresponding points</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Pick corresponding points in both point clouds. Press &#39;Q&#39; to finish picking.&quot;</span><span class="p">)</span>
+    <span class="n">source_points</span> <span class="o">=</span> <span class="n">o3d</span><span class="o">.</span><span class="n">visualization</span><span class="o">.</span><span class="n">PointCloudPickPoints</span><span class="p">()</span>
+    <span class="n">target_points</span> <span class="o">=</span> <span class="n">o3d</span><span class="o">.</span><span class="n">visualization</span><span class="o">.</span><span class="n">PointCloudPickPoints</span><span class="p">()</span>
+    <span class="n">transformation</span> <span class="o">=</span> <span class="n">o3d</span><span class="o">.</span><span class="n">visualization</span><span class="o">.</span><span class="n">draw_geometries_with_editing</span><span class="p">(</span>
+        <span class="p">[</span><span class="n">source</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">source_points</span><span class="p">,</span> <span class="n">target_points</span><span class="p">],</span>
+                     <span class="n">callback</span><span class="o">=</span><span class="n">callback_registrations</span><span class="p">,</span>
+                     <span class="n">window_name</span><span class="o">=</span><span class="s2">&quot;Pick corresponding points&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">transformation</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Anonymous Author.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

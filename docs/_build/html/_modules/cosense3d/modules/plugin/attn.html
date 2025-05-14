@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>cosense3d.modules.plugin.attn &mdash; OpenCosense3D 1.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js?v=af2ce170"></script>
+        <script src="../../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            OpenCosense3D
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../md/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../md/prepare_data.html">Prepare Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../md/structure.html">The Structure of the framework</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules.html">CoSense3d</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">OpenCosense3D</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+          <li class="breadcrumb-item"><a href="../../modules.html">cosense3d.modules</a></li>
+          <li class="breadcrumb-item"><a href="../plugin.html">cosense3d.modules.plugin</a></li>
+      <li class="breadcrumb-item active">cosense3d.modules.plugin.attn</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for cosense3d.modules.plugin.attn</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">import</span> <span class="nn">torch.nn.functional</span> <span class="k">as</span> <span class="nn">F</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">nn</span>
+
+<span class="kn">from</span> <span class="nn">cosense3d.modules.utils.misc</span> <span class="kn">import</span> <span class="n">SELayer_Linear</span>
+<span class="kn">from</span> <span class="nn">cosense3d.modules.utils.positional_encoding</span> <span class="kn">import</span> <span class="n">pos2posemb2d</span>
+<span class="kn">from</span> <span class="nn">cosense3d.modules.utils.me_utils</span> <span class="kn">import</span> <span class="n">indices2metric</span><span class="p">,</span> <span class="n">metric2indices</span><span class="p">,</span> <span class="n">update_me_essentials</span>
+
+
+<div class="viewcode-block" id="ScaledDotProductAttention"><a class="viewcode-back" href="../../../../cosense3d.modules.plugin.html#cosense3d.modules.plugin.attn.ScaledDotProductAttention">[docs]</a><span class="k">class</span> <span class="nc">ScaledDotProductAttention</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Scaled Dot-Product Attention proposed in &quot;Attention Is All You Need&quot;</span>
+<span class="sd">    Compute the dot products of the query with all keys, divide each by sqrt(dim),</span>
+<span class="sd">    and apply a softmax function to obtain the weights on the values</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dim</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :param dim: imention of attention</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">ScaledDotProductAttention</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sqrt_dim</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">dim</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ScaledDotProductAttention.forward"><a class="viewcode-back" href="../../../../cosense3d.modules.plugin.html#cosense3d.modules.plugin.attn.ScaledDotProductAttention.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :param query: (batch, q_len, d_model) tensor containing projection vector for decoder.</span>
+<span class="sd">        :param key: (batch, k_len, d_model) tensor containing projection vector for encoder.</span>
+<span class="sd">        :param value: (batch, v_len, d_model) tensor containing features of the encoded input sequence.</span>
+<span class="sd">        :return: context, attn</span>
+<span class="sd">                - **context**: tensor containing the context vector from attention mechanism.</span>
+<span class="sd">                - **attn**: tensor containing the attention (alignment) from the encoder outputs.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">score</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">bmm</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">key</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">sqrt_dim</span>
+        <span class="n">attn</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">softmax</span><span class="p">(</span><span class="n">score</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">context</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">bmm</span><span class="p">(</span><span class="n">attn</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">context</span></div></div>
+
+
+<div class="viewcode-block" id="NeighborhoodAttention"><a class="viewcode-back" href="../../../../cosense3d.modules.plugin.html#cosense3d.modules.plugin.attn.NeighborhoodAttention">[docs]</a><span class="k">class</span> <span class="nc">NeighborhoodAttention</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_info</span><span class="p">,</span> <span class="n">stride</span><span class="p">,</span> <span class="n">emb_dim</span><span class="o">=</span><span class="mi">128</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stride</span> <span class="o">=</span> <span class="n">stride</span>
+        <span class="n">update_me_essentials</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_info</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">stride</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lr</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Parameter</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lidar_range</span><span class="p">),</span> <span class="n">requires_grad</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">vs</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Parameter</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">voxel_size</span><span class="p">),</span> <span class="n">requires_grad</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="c1"># self.grid_size = (</span>
+        <span class="c1">#     round((lr[3] - lr[0]) / vs[0] / stride),</span>
+        <span class="c1">#     round((lr[4] - lr[1]) / vs[1] / stride),</span>
+        <span class="c1"># )</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">emb_dim</span> <span class="o">=</span> <span class="n">emb_dim</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_pos_feat</span> <span class="o">=</span> <span class="n">emb_dim</span> <span class="o">//</span> <span class="mi">2</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sqrt_dim</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">emb_dim</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nbrs</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">indexing</span><span class="o">=</span><span class="s1">&#39;ij&#39;</span><span class="p">),</span>
+                                <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nbrs</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Parameter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nbrs</span><span class="p">,</span> <span class="n">requires_grad</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_nbrs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nbrs</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">query_pos_encoder</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span>
+            <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">emb_dim</span><span class="p">,</span> <span class="n">emb_dim</span> <span class="o">*</span> <span class="mi">2</span><span class="p">),</span>
+            <span class="n">nn</span><span class="o">.</span><span class="n">ReLU</span><span class="p">(),</span>
+            <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">emb_dim</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span> <span class="n">emb_dim</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">value_pos_encoder</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span>
+            <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">emb_dim</span><span class="p">,</span> <span class="n">emb_dim</span> <span class="o">*</span> <span class="mi">2</span><span class="p">),</span>
+            <span class="n">nn</span><span class="o">.</span><span class="n">ReLU</span><span class="p">(),</span>
+            <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">emb_dim</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span> <span class="n">emb_dim</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">featurized_pe</span> <span class="o">=</span> <span class="n">SELayer_Linear</span><span class="p">(</span><span class="n">emb_dim</span><span class="p">)</span>
+
+<div class="viewcode-block" id="NeighborhoodAttention.coor_to_indices"><a class="viewcode-back" href="../../../../cosense3d.modules.plugin.html#cosense3d.modules.plugin.attn.NeighborhoodAttention.coor_to_indices">[docs]</a>    <span class="k">def</span> <span class="nf">coor_to_indices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coor</span><span class="p">):</span>
+        <span class="n">inds</span> <span class="o">=</span> <span class="n">coor</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span>
+        <span class="n">inds</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">inds</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">stride</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">offset_sz_x</span>
+        <span class="n">inds</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">inds</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">stride</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">offset_sz_y</span>
+        <span class="k">return</span> <span class="n">inds</span><span class="o">.</span><span class="n">long</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="NeighborhoodAttention.forward"><a class="viewcode-back" href="../../../../cosense3d.modules.plugin.html#cosense3d.modules.plugin.attn.NeighborhoodAttention.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ref_pts</span><span class="p">,</span> <span class="n">ctr_coor</span><span class="p">,</span> <span class="n">ctr_feat</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        ref_pts LongTensor(Q, 3): 2d coordinates in metrics(batch_idx, x, y)</span>
+<span class="sd">        ctr_coor LongTensor(V, 3): 2d coordinates in indices (batch_idx, x, y)</span>
+<span class="sd">        ctr_feat FloatTensor(V, d): bev grid center point features</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">            out_features FloatTensor(Q, d): attended features</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">Q</span> <span class="o">=</span> <span class="n">ref_pts</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">V</span><span class="p">,</span> <span class="n">Vd</span> <span class="o">=</span> <span class="n">ctr_feat</span><span class="o">.</span><span class="n">shape</span>
+
+        <span class="n">ctr_pts</span> <span class="o">=</span> <span class="n">indices2metric</span><span class="p">(</span><span class="n">ctr_coor</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">vs</span><span class="p">)</span>
+        <span class="n">ctr_inds</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">coor_to_indices</span><span class="p">(</span><span class="n">ctr_coor</span><span class="p">)</span>
+        <span class="n">ref_coor</span> <span class="o">=</span> <span class="n">metric2indices</span><span class="p">(</span><span class="n">ref_pts</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">vs</span><span class="p">)</span>
+        <span class="n">ref_inds</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">coor_to_indices</span><span class="p">(</span><span class="n">ref_coor</span><span class="p">)</span>
+        <span class="n">query_pos</span> <span class="o">=</span> <span class="p">(</span><span class="n">ref_pts</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">lr</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">])</span> <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lr</span><span class="p">[</span><span class="mi">3</span><span class="p">:</span><span class="mi">5</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">lr</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">])</span>
+        <span class="n">value_pos</span> <span class="o">=</span> <span class="p">(</span><span class="n">ctr_pts</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">lr</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">])</span> <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lr</span><span class="p">[</span><span class="mi">3</span><span class="p">:</span><span class="mi">5</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">lr</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">])</span>
+
+        <span class="n">qpos_emb</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">query_pos_encoder</span><span class="p">(</span>
+            <span class="n">pos2posemb2d</span><span class="p">(</span><span class="n">query_pos</span><span class="p">,</span> <span class="n">num_pos_feats</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">num_pos_feat</span><span class="p">))</span>
+        <span class="n">vpos_emb</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">value_pos_encoder</span><span class="p">(</span>
+            <span class="n">pos2posemb2d</span><span class="p">(</span><span class="n">value_pos</span><span class="p">,</span> <span class="n">num_pos_feats</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">num_pos_feat</span><span class="p">))</span>
+        <span class="n">vpos_emb</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">featurized_pe</span><span class="p">(</span><span class="n">vpos_emb</span><span class="p">,</span> <span class="n">ctr_feat</span><span class="p">)</span>
+
+        <span class="n">q_inds</span><span class="p">,</span> <span class="n">v_inds</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_nbr_mapping</span><span class="p">(</span><span class="n">ref_inds</span><span class="p">,</span> <span class="n">ctr_inds</span><span class="p">)</span>
+        <span class="c1"># pad pos_embs with zeros at the 1st entry</span>
+        <span class="c1"># points outside the grid will retrieve the embedding in the 1st padded row</span>
+        <span class="n">qpos_emb</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">torch</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">qpos_emb</span><span class="p">[:</span><span class="mi">1</span><span class="p">]),</span> <span class="n">qpos_emb</span><span class="p">],</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">vpos_emb</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">torch</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">vpos_emb</span><span class="p">[:</span><span class="mi">1</span><span class="p">]),</span> <span class="n">vpos_emb</span><span class="p">],</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">ctr_feat</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">torch</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">ctr_feat</span><span class="p">[:</span><span class="mi">1</span><span class="p">]),</span> <span class="n">ctr_feat</span><span class="p">],</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="n">score</span> <span class="o">=</span> <span class="p">(</span><span class="n">qpos_emb</span><span class="p">[</span><span class="n">q_inds</span><span class="p">]</span> <span class="o">*</span> <span class="n">vpos_emb</span><span class="p">[</span><span class="n">v_inds</span><span class="p">])</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">sqrt_dim</span>
+        <span class="n">attn</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">softmax</span><span class="p">(</span><span class="n">score</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_nbrs</span><span class="p">),</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">context</span> <span class="o">=</span> <span class="n">attn</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">ctr_feat</span><span class="p">[</span><span class="n">v_inds</span><span class="p">]</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_nbrs</span><span class="p">,</span> <span class="n">Vd</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">context</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="NeighborhoodAttention.get_nbr_mapping"><a class="viewcode-back" href="../../../../cosense3d.modules.plugin.html#cosense3d.modules.plugin.attn.NeighborhoodAttention.get_nbr_mapping">[docs]</a>    <span class="k">def</span> <span class="nf">get_nbr_mapping</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query_pos</span><span class="p">,</span> <span class="n">value_pos</span><span class="p">):</span>
+        <span class="n">B</span> <span class="o">=</span> <span class="n">query_pos</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="n">pad_width</span> <span class="o">=</span> <span class="mi">2</span>
+        <span class="n">query_pos</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:]</span> <span class="o">+=</span> <span class="n">pad_width</span>
+        <span class="n">value_pos</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:]</span> <span class="o">+=</span> <span class="n">pad_width</span>
+        <span class="n">query_inds</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">query_pos</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">long</span><span class="p">)</span>
+        <span class="n">value_inds</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">value_pos</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">long</span><span class="p">)</span>
+
+        <span class="c1"># index -1 indicates that this nbr is outside the grid range</span>
+        <span class="n">value_map</span> <span class="o">=</span> <span class="o">-</span> <span class="n">torch</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">B</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">size_x</span> <span class="o">+</span> <span class="n">pad_width</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span>
+                                  <span class="bp">self</span><span class="o">.</span><span class="n">size_y</span> <span class="o">+</span> <span class="n">pad_width</span> <span class="o">*</span> <span class="mi">2</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">long</span><span class="p">)</span>
+        <span class="n">value_map</span><span class="p">[</span><span class="n">value_pos</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span>
+                  <span class="n">value_pos</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span>
+                  <span class="n">value_pos</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]]</span> <span class="o">=</span> <span class="n">value_inds</span>
+
+        <span class="n">query_inds_nbrs</span> <span class="o">=</span> <span class="n">query_pos</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_nbrs</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">query_inds_nbrs</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">:]</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nbrs</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">query_inds_nbrs</span> <span class="o">=</span> <span class="n">query_inds_nbrs</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="p">((</span><span class="n">query_inds_nbrs</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span> <span class="o">&amp;</span>
+                <span class="p">(</span><span class="n">query_inds_nbrs</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">size_x</span> <span class="o">+</span> <span class="n">pad_width</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)</span> <span class="o">&amp;</span>
+                <span class="p">(</span><span class="n">query_inds_nbrs</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">size_y</span> <span class="o">+</span> <span class="n">pad_width</span> <span class="o">*</span> <span class="mi">2</span><span class="p">))</span>
+        <span class="k">assert</span> <span class="n">torch</span><span class="o">.</span><span class="n">logical_not</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span>
+        <span class="n">query_inds_mapped</span> <span class="o">=</span> <span class="n">query_inds</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_nbrs</span><span class="p">)</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">value_inds_mapped</span> <span class="o">=</span> <span class="n">value_map</span><span class="p">[</span><span class="n">query_inds_nbrs</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span>
+                                      <span class="n">query_inds_nbrs</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span>
+                                      <span class="n">query_inds_nbrs</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]]</span>
+        <span class="c1"># shift the overall indices by 1 step, index -1 will then become 0</span>
+        <span class="k">return</span> <span class="n">query_inds_mapped</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">value_inds_mapped</span> <span class="o">+</span> <span class="mi">1</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Anonymous Author.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

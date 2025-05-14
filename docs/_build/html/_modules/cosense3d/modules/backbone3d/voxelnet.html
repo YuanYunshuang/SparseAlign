@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>cosense3d.modules.backbone3d.voxelnet &mdash; OpenCosense3D 1.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js?v=af2ce170"></script>
+        <script src="../../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            OpenCosense3D
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../md/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../md/prepare_data.html">Prepare Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../md/structure.html">The Structure of the framework</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules.html">CoSense3d</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">OpenCosense3D</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+          <li class="breadcrumb-item"><a href="../../modules.html">cosense3d.modules</a></li>
+      <li class="breadcrumb-item active">cosense3d.modules.backbone3d.voxelnet</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for cosense3d.modules.backbone3d.voxelnet</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">nn</span>
+<span class="kn">from</span> <span class="nn">cosense3d.modules</span> <span class="kn">import</span> <span class="n">BaseModule</span><span class="p">,</span> <span class="n">plugin</span>
+<span class="kn">from</span> <span class="nn">cosense3d.modules.utils.common</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">cosense3d.modules.utils.me_utils</span> <span class="kn">import</span> <span class="o">*</span>
+
+
+<div class="viewcode-block" id="VoxelNet"><a class="viewcode-back" href="../../../../cosense3d.modules.backbone3d.html#cosense3d.modules.backbone3d.voxelnet.VoxelNet">[docs]</a><span class="k">class</span> <span class="nc">VoxelNet</span><span class="p">(</span><span class="n">BaseModule</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">voxel_generator</span><span class="p">,</span>
+                 <span class="n">voxel_encoder</span><span class="p">,</span>
+                 <span class="n">cml</span><span class="p">,</span>
+                 <span class="n">neck</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">bev_compressor</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">VoxelNet</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">voxel_generator</span> <span class="o">=</span> <span class="n">plugin</span><span class="o">.</span><span class="n">build_plugin_module</span><span class="p">(</span><span class="n">voxel_generator</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">voxel_encoder</span> <span class="o">=</span> <span class="n">plugin</span><span class="o">.</span><span class="n">build_plugin_module</span><span class="p">(</span><span class="n">voxel_encoder</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">grid_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">voxel_generator</span><span class="o">.</span><span class="n">grid_size</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cml</span> <span class="o">=</span> <span class="n">plugin</span><span class="o">.</span><span class="n">build_plugin_module</span><span class="p">(</span><span class="n">cml</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">neck</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">neck</span> <span class="o">=</span> <span class="n">plugin</span><span class="o">.</span><span class="n">build_plugin_module</span><span class="p">(</span><span class="n">neck</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">bev_compressor</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">bev_compressor</span> <span class="o">=</span> <span class="n">plugin</span><span class="o">.</span><span class="n">build_plugin_module</span><span class="p">(</span><span class="n">bev_compressor</span><span class="p">)</span>
+
+<div class="viewcode-block" id="VoxelNet.forward"><a class="viewcode-back" href="../../../../cosense3d.modules.backbone3d.html#cosense3d.modules.backbone3d.voxelnet.VoxelNet.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">points</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">N</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">points</span><span class="p">)</span>
+        <span class="n">voxels</span><span class="p">,</span> <span class="n">coords</span><span class="p">,</span> <span class="n">num_points</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">voxel_generator</span><span class="p">(</span><span class="n">points</span><span class="p">)</span>
+        <span class="n">coords</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cat_data_from_list</span><span class="p">(</span><span class="n">coords</span><span class="p">,</span> <span class="n">pad_idx</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">voxels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cat_data_from_list</span><span class="p">(</span><span class="n">voxels</span><span class="p">)</span>
+        <span class="n">num_points</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cat_data_from_list</span><span class="p">(</span><span class="n">num_points</span><span class="p">)</span>
+        <span class="n">voxel_features</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">voxel_encoder</span><span class="p">(</span><span class="n">voxels</span><span class="p">,</span> <span class="n">coords</span><span class="p">,</span> <span class="n">num_points</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cml</span><span class="o">.</span><span class="n">dense</span><span class="p">:</span>
+            <span class="n">voxel_features</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_dense</span><span class="p">(</span><span class="n">coords</span><span class="p">,</span> <span class="n">voxel_features</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span>
+            <span class="n">voxel_features</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cml</span><span class="p">(</span><span class="n">voxel_features</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">voxel_features</span><span class="p">,</span> <span class="n">voxel_coords</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cml</span><span class="p">(</span><span class="n">voxel_features</span><span class="p">,</span> <span class="n">coords</span><span class="p">)</span>
+            <span class="n">voxel_features</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_dense</span><span class="p">(</span><span class="n">voxel_coords</span><span class="p">,</span> <span class="n">voxel_features</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">filter_range</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="c1"># 3d to 2d feature</span>
+        <span class="n">bev_feat</span> <span class="o">=</span> <span class="n">voxel_features</span><span class="o">.</span><span class="n">flatten</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">bev_feat</span>
+        <span class="n">ret_dict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;neck&#39;</span><span class="p">):</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">neck</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">res</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">):</span>
+                <span class="n">x</span> <span class="o">=</span> <span class="n">res</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">x</span> <span class="o">=</span> <span class="n">res</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">ret_dict</span> <span class="o">=</span> <span class="n">res</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;bev_compressor&#39;</span><span class="p">):</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bev_compressor</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+        <span class="n">out</span> <span class="o">=</span> <span class="p">{</span><span class="bp">self</span><span class="o">.</span><span class="n">scatter_keys</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span> <span class="n">x</span><span class="p">}</span>
+        <span class="k">if</span> <span class="s1">&#39;multi_scale_bev_feat&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">scatter_keys</span><span class="p">:</span>
+            <span class="n">stride</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">bev_feat</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">/</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+            <span class="n">ret_dict</span><span class="p">[</span><span class="sa">f</span><span class="s1">&#39;p</span><span class="si">{</span><span class="n">stride</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">x</span>
+            <span class="n">out</span><span class="p">[</span><span class="s1">&#39;multi_scale_bev_feat&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">ret_dict</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">)]</span>
+
+        <span class="k">return</span> <span class="n">out</span></div>
+
+<div class="viewcode-block" id="VoxelNet.to_dense"><a class="viewcode-back" href="../../../../cosense3d.modules.backbone3d.html#cosense3d.modules.backbone3d.voxelnet.VoxelNet.to_dense">[docs]</a>    <span class="k">def</span> <span class="nf">to_dense</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coor</span><span class="p">,</span> <span class="n">feat</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">filter_range</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">filter_range</span><span class="p">:</span>
+            <span class="n">strides</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cml</span><span class="o">.</span><span class="n">out_strides</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span>
+            <span class="n">grid_size</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">grid_size</span><span class="p">[[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]]</span> <span class="o">/</span> <span class="n">strides</span><span class="p">)</span><span class="o">.</span><span class="n">int</span><span class="p">()</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+            <span class="n">mask</span> <span class="o">=</span> <span class="p">(</span><span class="n">coor</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">coor</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">grid_size</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">&amp;</span> \
+                   <span class="p">(</span><span class="n">coor</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">coor</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">grid_size</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">&amp;</span> \
+                   <span class="p">(</span><span class="n">coor</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">coor</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">grid_size</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+            <span class="n">coor</span><span class="p">,</span> <span class="n">feat</span> <span class="o">=</span> <span class="n">coor</span><span class="p">[</span><span class="n">mask</span><span class="p">],</span> <span class="n">feat</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">grid_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">grid_size</span><span class="p">[[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+        <span class="n">bev_feat</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">N</span><span class="p">,</span>
+                               <span class="n">grid_size</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                               <span class="n">grid_size</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                               <span class="n">grid_size</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span>
+                               <span class="n">feat</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+                               <span class="n">dtype</span><span class="o">=</span><span class="n">feat</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span>
+                               <span class="n">device</span><span class="o">=</span><span class="n">feat</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+        <span class="n">coor</span> <span class="o">=</span> <span class="n">coor</span><span class="o">.</span><span class="n">long</span><span class="p">()</span>
+        <span class="n">bev_feat</span><span class="p">[</span><span class="n">coor</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">coor</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">coor</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">],</span> <span class="n">coor</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">]]</span> <span class="o">=</span> <span class="n">feat</span>
+
+        <span class="k">return</span> <span class="n">bev_feat</span><span class="o">.</span><span class="n">permute</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span></div></div>
+
+
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Anonymous Author.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

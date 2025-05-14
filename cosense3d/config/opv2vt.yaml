@@ -1,0 +1,18 @@
+DATASET: 'pycfg.base.opv2vt.seq4_vox04_lat2'
+
+
+CONTROLLER:
+  num_loss_frame: 1
+  data_manager: 'pycfg.base.opv2vt.data_manager'
+  shared_modules: {}
+  cav_manager:
+    prototype: base_cav.OPV2VtCAV
+    memory_len: 1
+
+VISUALIZATION:
+  output_viewer:
+    plots: []
+
+
+
+

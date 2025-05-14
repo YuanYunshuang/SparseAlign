@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>cosense3d.dataset package &mdash; Cosense3D 1.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=af2ce170"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="cosense3d.dataset.pipeline package" href="cosense3d.dataset.pipeline.html" />
+    <link rel="prev" title="cosense3d.agents.viewer.items package" href="cosense3d.agents.viewer.items.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Cosense3D
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="md/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="md/prepare_data.html">Prepare Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="md/structure.html">The Structure of the framework</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">CoSense3D</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="cosense3d.agents.html">cosense3d.agents package</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">cosense3d.dataset package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#subpackages">Subpackages</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="cosense3d.dataset.pipeline.html">cosense3d.dataset.pipeline package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="cosense3d.dataset.toolkit.html">cosense3d.dataset.toolkit package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#submodules">Submodules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-cosense3d.dataset.const">cosense3d.dataset.const module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-cosense3d.dataset.cosense_dataset">cosense3d.dataset.cosense_dataset module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#cosense3d.dataset.cosense_dataset.CosenseDataset"><code class="docutils literal notranslate"><span class="pre">CosenseDataset</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-cosense3d.dataset.temporal_cosense_dataset">cosense3d.dataset.temporal_cosense_dataset module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#cosense3d.dataset.temporal_cosense_dataset.TemporalCosenseDataset"><code class="docutils literal notranslate"><span class="pre">TemporalCosenseDataset</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-cosense3d.dataset">Module contents</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#cosense3d.dataset.get_dataloader"><code class="docutils literal notranslate"><span class="pre">get_dataloader()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="cosense3d.modules.html">cosense3d.modules package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cosense3d.utils.html">cosense3d.utils package</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Cosense3D</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">CoSense3D</a></li>
+      <li class="breadcrumb-item active">cosense3d.dataset package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/cosense3d.dataset.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="cosense3d-dataset-package">
+<h1>cosense3d.dataset package<a class="headerlink" href="#cosense3d-dataset-package" title="Permalink to this heading"></a></h1>
+<section id="subpackages">
+<h2>Subpackages<a class="headerlink" href="#subpackages" title="Permalink to this heading"></a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="cosense3d.dataset.pipeline.html">cosense3d.dataset.pipeline package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="cosense3d.dataset.pipeline.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cosense3d.dataset.pipeline.html#module-cosense3d.dataset.pipeline.loading">cosense3d.dataset.pipeline.loading module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="cosense3d.dataset.pipeline.html#cosense3d.dataset.pipeline.loading.LoadAnnotations"><code class="docutils literal notranslate"><span class="pre">LoadAnnotations</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="cosense3d.dataset.pipeline.html#cosense3d.dataset.pipeline.loading.LoadAnnotations.get_lidar2img_transform"><code class="docutils literal notranslate"><span class="pre">LoadAnnotations.get_lidar2img_transform()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="cosense3d.dataset.pipeline.html#cosense3d.dataset.pipeline.loading.LoadLidarPoints"><code class="docutils literal notranslate"><span class="pre">LoadLidarPoints</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="cosense3d.dataset.pipeline.html#cosense3d.dataset.pipeline.loading.LoadLidarPoints.read_pcd"><code class="docutils literal notranslate"><span class="pre">LoadLidarPoints.read_pcd()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="cosense3d.dataset.pipeline.html#cosense3d.dataset.pipeline.loading.LoadMultiViewImg"><code class="docutils literal notranslate"><span class="pre">LoadMultiViewImg</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="cosense3d.dataset.pipeline.html#cosense3d.dataset.pipeline.loading.LoadOPV2VBevMaps"><code class="docutils literal notranslate"><span class="pre">LoadOPV2VBevMaps</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="cosense3d.dataset.pipeline.html#cosense3d.dataset.pipeline.loading.LoadOPV2VBevMaps.crop_map_for_pose"><code class="docutils literal notranslate"><span class="pre">LoadOPV2VBevMaps.crop_map_for_pose()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cosense3d.dataset.pipeline.html#cosense3d.dataset.pipeline.loading.LoadOPV2VBevMaps.load_single"><code class="docutils literal notranslate"><span class="pre">LoadOPV2VBevMaps.load_single()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="cosense3d.dataset.pipeline.html#cosense3d.dataset.pipeline.loading.LoadSparseBevTargetPoints"><code class="docutils literal notranslate"><span class="pre">LoadSparseBevTargetPoints</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="cosense3d.dataset.pipeline.html#cosense3d.dataset.pipeline.loading.LoadSparseBevTargetPoints.generate_sparse_bev_pts"><code class="docutils literal notranslate"><span class="pre">LoadSparseBevTargetPoints.generate_sparse_bev_pts()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="cosense3d.dataset.pipeline.html#module-cosense3d.dataset.pipeline.transform">cosense3d.dataset.pipeline.transform module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="cosense3d.dataset.pipeline.html#cosense3d.dataset.pipeline.transform.ResizeCropFlipRotImage"><code class="docutils literal notranslate"><span class="pre">ResizeCropFlipRotImage</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="cosense3d.dataset.pipeline.html#cosense3d.dataset.pipeline.transform.ResizeImage"><code class="docutils literal notranslate"><span class="pre">ResizeImage</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="cosense3d.dataset.pipeline.html#module-cosense3d.dataset.pipeline">Module contents</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="cosense3d.dataset.pipeline.html#cosense3d.dataset.pipeline.Pipeline"><code class="docutils literal notranslate"><span class="pre">Pipeline</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="cosense3d.dataset.pipeline.html#cosense3d.dataset.pipeline.Pipeline.build_process"><code class="docutils literal notranslate"><span class="pre">Pipeline.build_process()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="cosense3d.dataset.toolkit.html">cosense3d.dataset.toolkit package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="cosense3d.dataset.toolkit.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cosense3d.dataset.toolkit.html#module-cosense3d.dataset.toolkit.cosense">cosense3d.dataset.toolkit.cosense module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.cosense.CoSenseDataConverter"><code class="docutils literal notranslate"><span class="pre">CoSenseDataConverter</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.cosense.CoSenseDataConverter.OBJ_ID2NAME"><code class="docutils literal notranslate"><span class="pre">CoSenseDataConverter.OBJ_ID2NAME</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.cosense.CoSenseDataConverter.OBJ_LIST"><code class="docutils literal notranslate"><span class="pre">CoSenseDataConverter.OBJ_LIST</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.cosense.CoSenseDataConverter.OBJ_NAME2ID"><code class="docutils literal notranslate"><span class="pre">CoSenseDataConverter.OBJ_NAME2ID</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.cosense.CoSenseDataConverter.add_cam_to_fdict"><code class="docutils literal notranslate"><span class="pre">CoSenseDataConverter.add_cam_to_fdict()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.cosense.CoSenseDataConverter.cal_vbbx_mean_dim"><code class="docutils literal notranslate"><span class="pre">CoSenseDataConverter.cal_vbbx_mean_dim()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.cosense.CoSenseDataConverter.draw_sample_distributions"><code class="docutils literal notranslate"><span class="pre">CoSenseDataConverter.draw_sample_distributions()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.cosense.CoSenseDataConverter.fdict_template"><code class="docutils literal notranslate"><span class="pre">CoSenseDataConverter.fdict_template()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.cosense.CoSenseDataConverter.global_boxes_to_local"><code class="docutils literal notranslate"><span class="pre">CoSenseDataConverter.global_boxes_to_local()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.cosense.CoSenseDataConverter.load_meta"><code class="docutils literal notranslate"><span class="pre">CoSenseDataConverter.load_meta()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.cosense.CoSenseDataConverter.obj_from_sustech"><code class="docutils literal notranslate"><span class="pre">CoSenseDataConverter.obj_from_sustech()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.cosense.CoSenseDataConverter.obj_to_opv2v"><code class="docutils literal notranslate"><span class="pre">CoSenseDataConverter.obj_to_opv2v()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.cosense.CoSenseDataConverter.obj_to_sustech"><code class="docutils literal notranslate"><span class="pre">CoSenseDataConverter.obj_to_sustech()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.cosense.CoSenseDataConverter.parse_global_bbox_velo"><code class="docutils literal notranslate"><span class="pre">CoSenseDataConverter.parse_global_bbox_velo()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.cosense.CoSenseDataConverter.remove_lidar_info"><code class="docutils literal notranslate"><span class="pre">CoSenseDataConverter.remove_lidar_info()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.cosense.CoSenseDataConverter.supervison_full_to_sparse"><code class="docutils literal notranslate"><span class="pre">CoSenseDataConverter.supervison_full_to_sparse()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.cosense.CoSenseDataConverter.to_kitti"><code class="docutils literal notranslate"><span class="pre">CoSenseDataConverter.to_kitti()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.cosense.CoSenseDataConverter.to_opv2v"><code class="docutils literal notranslate"><span class="pre">CoSenseDataConverter.to_opv2v()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.cosense.CoSenseDataConverter.to_sustech"><code class="docutils literal notranslate"><span class="pre">CoSenseDataConverter.to_sustech()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.cosense.CoSenseDataConverter.update_agent"><code class="docutils literal notranslate"><span class="pre">CoSenseDataConverter.update_agent()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.cosense.CoSenseDataConverter.update_agent_gt_boxes"><code class="docutils literal notranslate"><span class="pre">CoSenseDataConverter.update_agent_gt_boxes()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.cosense.CoSenseDataConverter.update_agent_lidar"><code class="docutils literal notranslate"><span class="pre">CoSenseDataConverter.update_agent_lidar()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.cosense.CoSenseDataConverter.update_frame_bbx"><code class="docutils literal notranslate"><span class="pre">CoSenseDataConverter.update_frame_bbx()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.cosense.CoSenseDataConverter.update_from_sustech"><code class="docutils literal notranslate"><span class="pre">CoSenseDataConverter.update_from_sustech()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="cosense3d.dataset.toolkit.html#module-cosense3d.dataset.toolkit.dairv2x">cosense3d.dataset.toolkit.dairv2x module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.dairv2x.calib_to_tf_matrix"><code class="docutils literal notranslate"><span class="pre">calib_to_tf_matrix()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.dairv2x.convert_v2x_c"><code class="docutils literal notranslate"><span class="pre">convert_v2x_c()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.dairv2x.convert_v2x_seq"><code class="docutils literal notranslate"><span class="pre">convert_v2x_seq()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.dairv2x.load_info_to_dict"><code class="docutils literal notranslate"><span class="pre">load_info_to_dict()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.dairv2x.load_label"><code class="docutils literal notranslate"><span class="pre">load_label()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.dairv2x.optimize_poses"><code class="docutils literal notranslate"><span class="pre">optimize_poses()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.dairv2x.optimize_trajectory"><code class="docutils literal notranslate"><span class="pre">optimize_trajectory()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.dairv2x.parse_global_bboxes"><code class="docutils literal notranslate"><span class="pre">parse_global_bboxes()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.dairv2x.parse_static_pcd"><code class="docutils literal notranslate"><span class="pre">parse_static_pcd()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.dairv2x.parse_timestamped_boxes"><code class="docutils literal notranslate"><span class="pre">parse_timestamped_boxes()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.dairv2x.register_pcds_to_blocks"><code class="docutils literal notranslate"><span class="pre">register_pcds_to_blocks()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.dairv2x.register_sequence"><code class="docutils literal notranslate"><span class="pre">register_sequence()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.dairv2x.register_step_one"><code class="docutils literal notranslate"><span class="pre">register_step_one()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.dairv2x.register_step_two"><code class="docutils literal notranslate"><span class="pre">register_step_two()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.dairv2x.remove_ego_boxes"><code class="docutils literal notranslate"><span class="pre">remove_ego_boxes()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.dairv2x.select_sub_scenes"><code class="docutils literal notranslate"><span class="pre">select_sub_scenes()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="cosense3d.dataset.toolkit.html#module-cosense3d.dataset.toolkit.opv2v">cosense3d.dataset.toolkit.opv2v module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.opv2v.boxes_3d_to_2d"><code class="docutils literal notranslate"><span class="pre">boxes_3d_to_2d()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.opv2v.convert_bev_semantic_map_to_road_height_map"><code class="docutils literal notranslate"><span class="pre">convert_bev_semantic_map_to_road_height_map()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.opv2v.corner_to_center"><code class="docutils literal notranslate"><span class="pre">corner_to_center()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.opv2v.create_bbx"><code class="docutils literal notranslate"><span class="pre">create_bbx()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.opv2v.generate_bevmaps"><code class="docutils literal notranslate"><span class="pre">generate_bevmaps()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.opv2v.generate_roadline"><code class="docutils literal notranslate"><span class="pre">generate_roadline()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.opv2v.opv2v_pose_to_cosense"><code class="docutils literal notranslate"><span class="pre">opv2v_pose_to_cosense()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.opv2v.opv2v_to_cosense"><code class="docutils literal notranslate"><span class="pre">opv2v_to_cosense()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.opv2v.pose_to_transformation"><code class="docutils literal notranslate"><span class="pre">pose_to_transformation()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.opv2v.project_points"><code class="docutils literal notranslate"><span class="pre">project_points()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.opv2v.project_world_objects"><code class="docutils literal notranslate"><span class="pre">project_world_objects()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.opv2v.update_2d_bboxes"><code class="docutils literal notranslate"><span class="pre">update_2d_bboxes()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.opv2v.update_cam_params"><code class="docutils literal notranslate"><span class="pre">update_cam_params()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.opv2v.update_global_bboxes_num_pts"><code class="docutils literal notranslate"><span class="pre">update_global_bboxes_num_pts()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.opv2v.update_local_boxes3d"><code class="docutils literal notranslate"><span class="pre">update_local_boxes3d()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.opv2v.x1_to_x2"><code class="docutils literal notranslate"><span class="pre">x1_to_x2()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.opv2v.x_to_world"><code class="docutils literal notranslate"><span class="pre">x_to_world()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="cosense3d.dataset.toolkit.html#module-cosense3d.dataset.toolkit.opv2v_t">cosense3d.dataset.toolkit.opv2v_t module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.opv2v_t.gen_time_offsets"><code class="docutils literal notranslate"><span class="pre">gen_time_offsets()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.opv2v_t.get_box_velo"><code class="docutils literal notranslate"><span class="pre">get_box_velo()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.opv2v_t.get_local_boxes3d"><code class="docutils literal notranslate"><span class="pre">get_local_boxes3d()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.opv2v_t.get_velos"><code class="docutils literal notranslate"><span class="pre">get_velos()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.opv2v_t.load_frame_data"><code class="docutils literal notranslate"><span class="pre">load_frame_data()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.opv2v_t.load_vehicles_gframe"><code class="docutils literal notranslate"><span class="pre">load_vehicles_gframe()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.opv2v_t.opv2vt_to_cosense"><code class="docutils literal notranslate"><span class="pre">opv2vt_to_cosense()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.opv2v_t.pad_box_result"><code class="docutils literal notranslate"><span class="pre">pad_box_result()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.opv2v_t.parse_speed_from_yamls"><code class="docutils literal notranslate"><span class="pre">parse_speed_from_yamls()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.opv2v_t.parse_sub_frame"><code class="docutils literal notranslate"><span class="pre">parse_sub_frame()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.opv2v_t.read_frame_plys_boxes"><code class="docutils literal notranslate"><span class="pre">read_frame_plys_boxes()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.opv2v_t.read_ply"><code class="docutils literal notranslate"><span class="pre">read_ply()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.opv2v_t.read_ply_to_dict"><code class="docutils literal notranslate"><span class="pre">read_ply_to_dict()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.opv2v_t.read_sub_frame"><code class="docutils literal notranslate"><span class="pre">read_sub_frame()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.opv2v_t.transform_boxes_global_to_ref"><code class="docutils literal notranslate"><span class="pre">transform_boxes_global_to_ref()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.opv2v_t.update_bev_map"><code class="docutils literal notranslate"><span class="pre">update_bev_map()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.opv2v_t.update_global_boxes"><code class="docutils literal notranslate"><span class="pre">update_global_boxes()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.opv2v_t.update_velo"><code class="docutils literal notranslate"><span class="pre">update_velo()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.opv2v_t.vis_cosense_scenario"><code class="docutils literal notranslate"><span class="pre">vis_cosense_scenario()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.opv2v_t.vis_frame_data"><code class="docutils literal notranslate"><span class="pre">vis_frame_data()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="cosense3d.dataset.toolkit.html#module-cosense3d.dataset.toolkit">Module contents</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.callback_registrations"><code class="docutils literal notranslate"><span class="pre">callback_registrations()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.click_register"><code class="docutils literal notranslate"><span class="pre">click_register()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="cosense3d.dataset.toolkit.html#cosense3d.dataset.toolkit.register_pcds"><code class="docutils literal notranslate"><span class="pre">register_pcds()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this heading"></a></h2>
+</section>
+<section id="module-cosense3d.dataset.const">
+<span id="cosense3d-dataset-const-module"></span><h2>cosense3d.dataset.const module<a class="headerlink" href="#module-cosense3d.dataset.const" title="Permalink to this heading"></a></h2>
+</section>
+<section id="module-cosense3d.dataset.cosense_dataset">
+<span id="cosense3d-dataset-cosense-dataset-module"></span><h2>cosense3d.dataset.cosense_dataset module<a class="headerlink" href="#module-cosense3d.dataset.cosense_dataset" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="cosense3d.dataset.cosense_dataset.CosenseDataset">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cosense3d.dataset.cosense_dataset.</span></span><span class="sig-name descname"><span class="pre">CosenseDataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cfgs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/dataset/cosense_dataset.html#CosenseDataset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.dataset.cosense_dataset.CosenseDataset" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Dataset</span></code></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cosense3d.dataset.cosense_dataset.CosenseDataset.LABEL_COLORS">
+<span class="sig-name descname"><span class="pre">LABEL_COLORS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{}</span></em><a class="headerlink" href="#cosense3d.dataset.cosense_dataset.CosenseDataset.LABEL_COLORS" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cosense3d.dataset.cosense_dataset.CosenseDataset.VALID_CLS">
+<span class="sig-name descname"><span class="pre">VALID_CLS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[]</span></em><a class="headerlink" href="#cosense3d.dataset.cosense_dataset.CosenseDataset.VALID_CLS" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.dataset.cosense_dataset.CosenseDataset.collate_batch">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">collate_batch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch_list</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/dataset/cosense_dataset.html#CosenseDataset.collate_batch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.dataset.cosense_dataset.CosenseDataset.collate_batch" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.dataset.cosense_dataset.CosenseDataset.get_valid_agents">
+<span class="sig-name descname"><span class="pre">get_valid_agents</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sample_info</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prev_agents</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span></span></span><a class="reference internal" href="_modules/cosense3d/dataset/cosense_dataset.html#CosenseDataset.get_valid_agents"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.dataset.cosense_dataset.CosenseDataset.get_valid_agents" title="Permalink to this definition"></a></dt>
+<dd><dl class="simple">
+<dt>Return prev_agents if given else select the given number of agents in the communication range</dt><dd><p>which includes the ego agent.</p>
+</dd>
+</dl>
+<section id="parameters">
+<h3>Parameters<a class="headerlink" href="#parameters" title="Permalink to this heading"></a></h3>
+<p>sample_info: meta info the one sample.
+prev_agents: list of the agent ids loader last time.</p>
+</section>
+<section id="returns">
+<h3>Returns<a class="headerlink" href="#returns" title="Permalink to this heading"></a></h3>
+<p>agents_ids: list of valid agent for the current sample</p>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.dataset.cosense_dataset.CosenseDataset.init_dataset">
+<span class="sig-name descname"><span class="pre">init_dataset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/dataset/cosense_dataset.html#CosenseDataset.init_dataset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.dataset.cosense_dataset.CosenseDataset.init_dataset" title="Permalink to this definition"></a></dt>
+<dd><p>Load all necessary meta information</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.dataset.cosense_dataset.CosenseDataset.load_frame_data">
+<span class="sig-name descname"><span class="pre">load_frame_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">item</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prev_agents</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prev_item</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">omit_gt</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="reference internal" href="_modules/cosense3d/dataset/cosense_dataset.html#CosenseDataset.load_frame_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.dataset.cosense_dataset.CosenseDataset.load_frame_data" title="Permalink to this definition"></a></dt>
+<dd><p>Load all data and annotations from one frame to standard CoSense format.</p>
+<section id="id1">
+<h3>Parameters<a class="headerlink" href="#id1" title="Permalink to this heading"></a></h3>
+<p>item: sample index.
+prev_agents: only load data the previous agents if given, this is used for temporal data loading.
+prev_item: the index of the previous loaded sample.</p>
+</section>
+<section id="id2">
+<h3>Returns<a class="headerlink" href="#id2" title="Permalink to this heading"></a></h3>
+<p>data_dict:</p>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.dataset.cosense_dataset.CosenseDataset.load_meta">
+<span class="sig-name descname"><span class="pre">load_meta</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/dataset/cosense_dataset.html#CosenseDataset.load_meta"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.dataset.cosense_dataset.CosenseDataset.load_meta" title="Permalink to this definition"></a></dt>
+<dd><p>Load meta data from CoSense json files</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.dataset.cosense_dataset.CosenseDataset.load_sample_info">
+<span class="sig-name descname"><span class="pre">load_sample_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">item</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prev_agents</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prev_item</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="reference internal" href="_modules/cosense3d/dataset/cosense_dataset.html#CosenseDataset.load_sample_info"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.dataset.cosense_dataset.CosenseDataset.load_sample_info" title="Permalink to this definition"></a></dt>
+<dd><p>Load meta info of the <code class="docutils literal notranslate"><span class="pre">`item`</span></code>’th sample.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>item</strong> – sample index.</p></li>
+<li><p><strong>prev_agents</strong> – only load data the previous agents if given, this is used for temporal data loading.</p></li>
+<li><p><strong>prev_item</strong> – the index of the previous loaded sample.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>batch_dict: dict(scenario: str, frame: str, sample_info: dict)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.dataset.cosense_dataset.CosenseDataset.parse_samples">
+<span class="sig-name descname"><span class="pre">parse_samples</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/dataset/cosense_dataset.html#CosenseDataset.parse_samples"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.dataset.cosense_dataset.CosenseDataset.parse_samples" title="Permalink to this definition"></a></dt>
+<dd><p>List all frame-wise instances</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-cosense3d.dataset.temporal_cosense_dataset">
+<span id="cosense3d-dataset-temporal-cosense-dataset-module"></span><h2>cosense3d.dataset.temporal_cosense_dataset module<a class="headerlink" href="#module-cosense3d.dataset.temporal_cosense_dataset" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="cosense3d.dataset.temporal_cosense_dataset.TemporalCosenseDataset">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cosense3d.dataset.temporal_cosense_dataset.</span></span><span class="sig-name descname"><span class="pre">TemporalCosenseDataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cfgs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/dataset/temporal_cosense_dataset.html#TemporalCosenseDataset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.dataset.temporal_cosense_dataset.TemporalCosenseDataset" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#cosense3d.dataset.cosense_dataset.CosenseDataset" title="cosense3d.dataset.cosense_dataset.CosenseDataset"><code class="xref py py-class docutils literal notranslate"><span class="pre">CosenseDataset</span></code></a></p>
+<p>Sequential Cosense data loader.</p>
+</dd></dl>
+
+</section>
+<section id="module-cosense3d.dataset">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-cosense3d.dataset" title="Permalink to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.dataset.get_dataloader">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.dataset.</span></span><span class="sig-name descname"><span class="pre">get_dataloader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cfgs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'train'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">distributed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/dataset.html#get_dataloader"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.dataset.get_dataloader" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="cosense3d.agents.viewer.items.html" class="btn btn-neutral float-left" title="cosense3d.agents.viewer.items package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="cosense3d.dataset.pipeline.html" class="btn btn-neutral float-right" title="cosense3d.dataset.pipeline package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Anonymous Author.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

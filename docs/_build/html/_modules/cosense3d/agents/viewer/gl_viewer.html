@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>cosense3d.agents.viewer.gl_viewer &mdash; OpenCosense3D 1.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js?v=af2ce170"></script>
+        <script src="../../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            OpenCosense3D
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../md/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../md/prepare_data.html">Prepare Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../md/structure.html">The Structure of the framework</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules.html">CoSense3d</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">OpenCosense3D</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">cosense3d.agents.viewer.gl_viewer</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for cosense3d.agents.viewer.gl_viewer</h1><div class="highlight"><pre>
+<span></span>
+
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
+
+<span class="n">Color4f</span> <span class="o">=</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span>  <span class="c1"># type alias for type hinting</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">queue</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">PyQt5.QtCore</span> <span class="kn">import</span> <span class="n">Qt</span><span class="p">,</span> <span class="n">QEvent</span><span class="p">,</span> <span class="n">QPointF</span><span class="p">,</span> <span class="n">QRectF</span>
+<span class="kn">from</span> <span class="nn">PyQt5</span> <span class="kn">import</span> <span class="n">QtWidgets</span><span class="p">,</span> <span class="n">QtGui</span><span class="p">,</span> <span class="n">QtCore</span>
+<span class="kn">import</span> <span class="nn">pyqtgraph</span> <span class="k">as</span> <span class="nn">pg</span>
+<span class="kn">from</span> <span class="nn">PyQt5.QtGui</span> <span class="kn">import</span> <span class="n">QPen</span><span class="p">,</span> <span class="n">QBrush</span><span class="p">,</span> <span class="n">QColor</span>
+<span class="kn">import</span> <span class="nn">pyqtgraph.opengl</span> <span class="k">as</span> <span class="nn">gl</span>
+<span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">colormaps</span>
+<span class="kn">from</span> <span class="nn">OpenGL.GL</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">OpenGL</span> <span class="kn">import</span> <span class="n">GLU</span>
+<span class="kn">from</span> <span class="nn">cosense3d.agents.viewer.utils</span> <span class="kn">import</span> <span class="n">depth_min</span>
+<span class="kn">from</span> <span class="nn">cosense3d.agents.viewer.items.graph_items</span> <span class="kn">import</span> <span class="n">LineBoxItem</span>
+
+<span class="n">SIZE_OF_FLOAT</span> <span class="o">=</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">sizeof</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_float</span><span class="p">)</span>
+<span class="n">TRANSLATION_FACTOR</span> <span class="o">=</span> <span class="mf">0.03</span>
+<span class="n">jet</span> <span class="o">=</span> <span class="n">colormaps</span><span class="p">[</span><span class="s1">&#39;jet&#39;</span><span class="p">]</span>
+
+
+<span class="c1"># Main widget for presenting the point cloud and bounding boxes</span>
+<div class="viewcode-block" id="GLViewer"><a class="viewcode-back" href="../../../../cosense3d.agents.viewer.html#cosense3d.agents.viewer.gl_viewer.GLViewer">[docs]</a><span class="k">class</span> <span class="nc">GLViewer</span><span class="p">(</span><span class="n">gl</span><span class="o">.</span><span class="n">GLViewWidget</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">GLViewer</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">parent</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setObjectName</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">controller</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">setCameraPosition</span><span class="p">(</span><span class="n">distance</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span> <span class="n">elevation</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span> <span class="n">azimuth</span><span class="o">=-</span><span class="mi">90</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pan</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">draw_axes</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">tasks</span> <span class="o">=</span> <span class="n">queue</span><span class="o">.</span><span class="n">Queue</span><span class="p">()</span>
+
+        <span class="c1"># point cloud data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pcd</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">boxes</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">local_boxes</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pcd_items</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">visibility</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="c1"># drag window control</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dragging</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">start_pos</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">end_pos</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="c1"># box control</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rectangle</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># (pos1, pos2)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">center</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># evt pose</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">highlight_mode</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">highlighted_item</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">activate_item</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="GLViewer.initializeGL"><a class="viewcode-back" href="../../../../cosense3d.agents.viewer.html#cosense3d.agents.viewer.gl_viewer.GLViewer.initializeGL">[docs]</a>    <span class="k">def</span> <span class="nf">initializeGL</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">glEnable</span><span class="p">(</span><span class="n">GL_DEPTH_TEST</span><span class="p">)</span>  <span class="c1"># for visualization of depth</span>
+        <span class="n">glDepthFunc</span><span class="p">(</span><span class="n">GL_LESS</span><span class="p">)</span>  <span class="c1"># drawn if depth is less than the existing depth</span>
+        <span class="n">glEnable</span><span class="p">(</span><span class="n">GL_BLEND</span><span class="p">)</span>  <span class="c1"># enable transparency</span>
+        <span class="n">glBlendFunc</span><span class="p">(</span><span class="n">GL_SRC_ALPHA</span><span class="p">,</span> <span class="n">GL_ONE_MINUS_SRC_ALPHA</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">initializeGL</span><span class="p">()</span>
+
+        <span class="n">depth_enabled</span> <span class="o">=</span> <span class="n">glGetBooleanv</span><span class="p">(</span><span class="n">GL_DEPTH_TEST</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;viwer init:&#39;</span><span class="p">,</span> <span class="n">depth_enabled</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="GLViewer.paintGL"><a class="viewcode-back" href="../../../../cosense3d.agents.viewer.html#cosense3d.agents.viewer.gl_viewer.GLViewer.paintGL">[docs]</a>    <span class="k">def</span> <span class="nf">paintGL</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">region</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">viewport</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">useItemNames</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">paintGL</span><span class="p">(</span><span class="n">region</span><span class="p">,</span> <span class="n">viewport</span><span class="p">,</span> <span class="n">useItemNames</span><span class="p">)</span>
+        <span class="c1"># self.draw_depth_buffer()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addBox</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">paintRect</span><span class="p">()</span></div>
+        <span class="c1"># depth_enabled = glGetBooleanv(GL_DEPTH_TEST)</span>
+        <span class="c1"># print(&quot;paintGL&quot;, depth_enabled)</span>
+
+<div class="viewcode-block" id="GLViewer.draw_axes"><a class="viewcode-back" href="../../../../cosense3d.agents.viewer.html#cosense3d.agents.viewer.gl_viewer.GLViewer.draw_axes">[docs]</a>    <span class="k">def</span> <span class="nf">draw_axes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">axis</span> <span class="o">=</span> <span class="n">gl</span><span class="o">.</span><span class="n">GLAxisItem</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="n">QtGui</span><span class="o">.</span><span class="n">QVector3D</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addItem</span><span class="p">(</span><span class="n">axis</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="GLViewer.updatePCDs"><a class="viewcode-back" href="../../../../cosense3d.agents.viewer.html#cosense3d.agents.viewer.gl_viewer.GLViewer.updatePCDs">[docs]</a>    <span class="k">def</span> <span class="nf">updatePCDs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pcds</span><span class="p">,</span> <span class="n">color_mode</span><span class="o">=</span><span class="s1">&#39;united&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pcds</span> <span class="o">=</span> <span class="n">pcds</span>
+        <span class="k">if</span> <span class="n">color_mode</span>  <span class="o">==</span> <span class="s1">&#39;height&#39;</span><span class="p">:</span>
+            <span class="n">points_all</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">pcd</span> <span class="k">for</span> <span class="n">pcd</span> <span class="ow">in</span> <span class="n">pcds</span><span class="o">.</span><span class="n">values</span><span class="p">()],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">global_min</span> <span class="o">=</span> <span class="n">points_all</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+            <span class="n">global_max</span> <span class="o">=</span> <span class="n">points_all</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="n">color_mode</span>  <span class="o">==</span> <span class="s1">&#39;time&#39;</span><span class="p">:</span>
+            <span class="n">points_all</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">pcd</span> <span class="k">for</span> <span class="n">pcd</span> <span class="ow">in</span> <span class="n">pcds</span><span class="o">.</span><span class="n">values</span><span class="p">()],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">global_min</span> <span class="o">=</span> <span class="n">points_all</span><span class="p">[:,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+            <span class="n">global_max</span> <span class="o">=</span> <span class="n">points_all</span><span class="p">[:,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">global_min</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">global_max</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">for</span> <span class="n">lidar_id</span><span class="p">,</span> <span class="n">pcd</span> <span class="ow">in</span> <span class="n">pcds</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">color_mode</span> <span class="o">==</span> <span class="s1">&#39;united&#39;</span><span class="p">:</span>
+                <span class="n">colors</span> <span class="o">=</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">]</span>
+            <span class="k">elif</span> <span class="n">color_mode</span> <span class="o">==</span> <span class="s1">&#39;height&#39;</span><span class="p">:</span>
+                <span class="n">height_norm</span> <span class="o">=</span> <span class="p">(</span><span class="n">pcd</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">global_min</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">global_max</span> <span class="o">-</span> <span class="n">global_min</span><span class="p">)</span>
+                <span class="n">colors</span> <span class="o">=</span> <span class="n">jet</span><span class="p">(</span><span class="n">height_norm</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">color_mode</span> <span class="o">==</span> <span class="s1">&#39;cav&#39;</span><span class="p">:</span>
+                <span class="n">colors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+                <span class="n">colors</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.5</span>
+                <span class="n">colors</span> <span class="o">=</span> <span class="n">colors</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">pcd</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">color_mode</span> <span class="o">==</span> <span class="s1">&#39;time&#39;</span><span class="p">:</span>
+                <span class="n">time_norm</span> <span class="o">=</span> <span class="p">(</span><span class="n">pcd</span><span class="p">[:,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">global_min</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">global_max</span> <span class="o">-</span> <span class="n">global_min</span><span class="p">)</span>
+                <span class="n">colors</span> <span class="o">=</span> <span class="n">jet</span><span class="p">(</span><span class="n">time_norm</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+            <span class="n">item</span> <span class="o">=</span> <span class="n">gl</span><span class="o">.</span><span class="n">GLScatterPlotItem</span><span class="p">(</span>
+                <span class="n">pos</span><span class="o">=</span><span class="n">pcd</span><span class="p">[:,</span> <span class="p">:</span><span class="mi">3</span><span class="p">],</span> <span class="n">size</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">glOptions</span><span class="o">=</span><span class="s1">&#39;opaque&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">colors</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">lidar_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">visibility</span><span class="p">:</span>
+                <span class="n">item</span><span class="o">.</span><span class="n">setVisible</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">visibility</span><span class="p">[</span><span class="n">lidar_id</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">visibility</span><span class="p">[</span><span class="n">lidar_id</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pcd_items</span><span class="p">[</span><span class="n">lidar_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">item</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">addItem</span><span class="p">(</span><span class="n">item</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="GLViewer.updateLabel"><a class="viewcode-back" href="../../../../cosense3d.agents.viewer.html#cosense3d.agents.viewer.gl_viewer.GLViewer.updateLabel">[docs]</a>    <span class="k">def</span> <span class="nf">updateLabel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">local_labels</span><span class="p">,</span> <span class="n">global_labels</span><span class="p">,</span> <span class="n">local_det</span><span class="p">,</span> <span class="n">global_det</span><span class="p">,</span>
+                    <span class="n">successor</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">successor_gt</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">predecessor</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">boxes</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="n">local_labels</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">agent_id</span><span class="p">,</span> <span class="n">labels</span> <span class="ow">in</span> <span class="n">local_labels</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">local_boxes</span><span class="p">[</span><span class="n">agent_id</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">for</span> <span class="nb">id</span><span class="p">,</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">labels</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="n">item</span> <span class="o">=</span> <span class="n">LineBoxItem</span><span class="p">(</span><span class="n">box</span><span class="o">=</span><span class="p">[</span><span class="nb">id</span><span class="p">,</span> <span class="p">]</span> <span class="o">+</span> <span class="n">label</span><span class="p">,</span> <span class="n">last_pose</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                                       <span class="n">status</span><span class="o">=</span><span class="s1">&#39;local_gt&#39;</span><span class="p">,</span> <span class="n">line_width</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+                    <span class="n">item</span><span class="o">.</span><span class="n">setVisible</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">visibility</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">agent_id</span><span class="si">}</span><span class="s1">.0&#39;</span><span class="p">,</span> <span class="kc">True</span><span class="p">))</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">local_boxes</span><span class="p">[</span><span class="n">agent_id</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">addItem</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">global_labels</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">for</span> <span class="nb">id</span><span class="p">,</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">global_labels</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">prev_label</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">predecessor</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">predecessor</span><span class="p">[</span><span class="nb">id</span><span class="p">]</span>
+                <span class="n">item</span> <span class="o">=</span> <span class="n">LineBoxItem</span><span class="p">(</span><span class="n">box</span><span class="o">=</span><span class="p">[</span><span class="nb">id</span><span class="p">,</span> <span class="p">]</span> <span class="o">+</span> <span class="n">label</span><span class="p">,</span> <span class="n">last_pose</span><span class="o">=</span><span class="n">prev_label</span><span class="p">,</span>
+                                   <span class="n">status</span><span class="o">=</span><span class="s1">&#39;global_gt&#39;</span><span class="p">,</span> <span class="n">line_width</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">boxes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">addItem</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">local_det</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">agent_id</span><span class="p">,</span> <span class="n">labels</span> <span class="ow">in</span> <span class="n">local_det</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">local_boxes</span><span class="p">[</span><span class="n">agent_id</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">for</span> <span class="nb">id</span><span class="p">,</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">labels</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="n">item</span> <span class="o">=</span> <span class="n">LineBoxItem</span><span class="p">(</span><span class="n">box</span><span class="o">=</span><span class="p">[</span><span class="nb">id</span><span class="p">,</span> <span class="p">]</span> <span class="o">+</span> <span class="n">label</span><span class="p">,</span> <span class="n">last_pose</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                                       <span class="n">status</span><span class="o">=</span><span class="s1">&#39;det&#39;</span><span class="p">,</span> <span class="n">line_width</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+                    <span class="n">item</span><span class="o">.</span><span class="n">setVisible</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">visibility</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">agent_id</span><span class="si">}</span><span class="s1">.0&#39;</span><span class="p">,</span> <span class="kc">True</span><span class="p">))</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">local_boxes</span><span class="p">[</span><span class="n">agent_id</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">addItem</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">global_det</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">for</span> <span class="nb">id</span><span class="p">,</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">global_det</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">item</span> <span class="o">=</span> <span class="n">LineBoxItem</span><span class="p">(</span><span class="n">box</span><span class="o">=</span><span class="p">[</span><span class="nb">id</span><span class="p">,</span> <span class="p">]</span> <span class="o">+</span> <span class="n">label</span><span class="p">,</span> <span class="n">last_pose</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                                   <span class="n">status</span><span class="o">=</span><span class="s1">&#39;det&#39;</span><span class="p">,</span> <span class="n">line_width</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">boxes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">addItem</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">successor</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">for</span> <span class="nb">id</span><span class="p">,</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">successor</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">item</span> <span class="o">=</span> <span class="n">LineBoxItem</span><span class="p">(</span><span class="n">box</span><span class="o">=</span><span class="p">[</span><span class="nb">id</span><span class="p">,</span> <span class="p">]</span> <span class="o">+</span> <span class="n">label</span><span class="p">,</span> <span class="n">last_pose</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                                   <span class="n">status</span><span class="o">=</span><span class="s1">&#39;successor&#39;</span><span class="p">,</span> <span class="n">line_width</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">boxes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">addItem</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">successor_gt</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">for</span> <span class="nb">id</span><span class="p">,</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">successor_gt</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">item</span> <span class="o">=</span> <span class="n">LineBoxItem</span><span class="p">(</span><span class="n">box</span><span class="o">=</span><span class="p">[</span><span class="nb">id</span><span class="p">,</span> <span class="p">]</span> <span class="o">+</span> <span class="n">label</span><span class="p">,</span> <span class="n">last_pose</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                                   <span class="n">status</span><span class="o">=</span><span class="s1">&#39;successor_gt&#39;</span><span class="p">,</span> <span class="n">line_width</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">boxes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">addItem</span><span class="p">(</span><span class="n">item</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="GLViewer.updateFrameData"><a class="viewcode-back" href="../../../../cosense3d.agents.viewer.html#cosense3d.agents.viewer.gl_viewer.GLViewer.updateFrameData">[docs]</a>    <span class="k">def</span> <span class="nf">updateFrameData</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pcds</span><span class="p">,</span>
+                        <span class="n">local_label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                        <span class="n">global_label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                        <span class="n">local_det</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                        <span class="n">global_det</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                        <span class="n">predecessor</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                        <span class="n">successor</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                        <span class="n">successor_gt</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                        <span class="n">pcd_color</span><span class="o">=</span><span class="s1">&#39;united&#39;</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">draw_axes</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">updatePCDs</span><span class="p">(</span><span class="n">pcds</span><span class="p">,</span> <span class="n">color_mode</span><span class="o">=</span><span class="n">pcd_color</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">updateLabel</span><span class="p">(</span><span class="n">local_label</span><span class="p">,</span>
+                         <span class="n">global_label</span><span class="p">,</span>
+                         <span class="n">local_det</span><span class="p">,</span>
+                         <span class="n">global_det</span><span class="p">,</span>
+                         <span class="n">successor</span><span class="p">,</span>
+                         <span class="n">successor_gt</span><span class="p">,</span>
+                         <span class="n">predecessor</span><span class="p">,)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="GLViewer.refresh"><a class="viewcode-back" href="../../../../cosense3d.agents.viewer.html#cosense3d.agents.viewer.gl_viewer.GLViewer.refresh">[docs]</a>    <span class="k">def</span> <span class="nf">refresh</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_dict</span><span class="p">,</span> <span class="n">visible_keys</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;globalGT&#39;</span><span class="p">],</span> <span class="n">color_mode</span><span class="o">=</span><span class="s1">&#39;united&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">pcds</span> <span class="o">=</span> <span class="n">data_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;points&#39;</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="n">ego_id</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">data_dict</span><span class="p">[</span><span class="s1">&#39;scenario&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">())[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">local_labels</span><span class="p">,</span> <span class="n">global_labels</span><span class="p">,</span> <span class="n">local_det</span><span class="p">,</span> <span class="n">global_det</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+        <span class="n">global_pred_gt</span><span class="p">,</span> <span class="n">global_pred</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="s1">&#39;globalGT&#39;</span> <span class="ow">in</span> <span class="n">visible_keys</span><span class="p">:</span>
+            <span class="n">global_labels</span> <span class="o">=</span> <span class="n">data_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;global_labels&#39;</span><span class="p">,</span> <span class="p">{})</span>
+            <span class="n">global_labels</span> <span class="o">=</span> <span class="n">global_labels</span><span class="p">[</span><span class="n">ego_id</span><span class="p">]</span>
+        <span class="k">if</span> <span class="s1">&#39;localGT&#39;</span> <span class="ow">in</span> <span class="n">visible_keys</span><span class="p">:</span>
+            <span class="n">local_labels</span> <span class="o">=</span> <span class="n">data_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;local_labels&#39;</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="k">if</span> <span class="n">pcds</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">global_labels</span> <span class="ow">is</span> <span class="p">{}</span> <span class="ow">and</span> <span class="n">local_labels</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="k">if</span> <span class="s1">&#39;localDet&#39;</span> <span class="ow">in</span> <span class="n">visible_keys</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s1">&#39;detection_local&#39;</span> <span class="ow">in</span> <span class="n">data_dict</span><span class="p">:</span>
+                <span class="n">local_det</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;labels&#39;</span><span class="p">,</span> <span class="p">{})</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">data_dict</span><span class="p">[</span><span class="s1">&#39;detection_local&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+        <span class="k">if</span> <span class="s1">&#39;globalDet&#39;</span> <span class="ow">in</span> <span class="n">visible_keys</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s1">&#39;detection&#39;</span> <span class="ow">in</span> <span class="n">data_dict</span><span class="p">:</span>
+                <span class="n">global_det</span> <span class="o">=</span> <span class="n">data_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;detection&#39;</span><span class="p">,</span> <span class="p">{})</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">global_det</span> <span class="o">=</span> <span class="n">data_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;detection_global&#39;</span><span class="p">,</span> <span class="p">{})</span>
+            <span class="n">global_det</span> <span class="o">=</span> <span class="n">global_det</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">ego_id</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;labels&#39;</span><span class="p">:</span> <span class="p">{}})[</span><span class="s1">&#39;labels&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="s1">&#39;globalPredGT&#39;</span> <span class="ow">in</span> <span class="n">visible_keys</span><span class="p">:</span>
+            <span class="n">global_pred_gt</span> <span class="o">=</span> <span class="n">data_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;global_pred_gt&#39;</span><span class="p">,</span> <span class="p">{})</span>
+            <span class="n">global_pred_gt</span> <span class="o">=</span> <span class="n">global_pred_gt</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">ego_id</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="k">if</span> <span class="s1">&#39;globalPred&#39;</span> <span class="ow">in</span> <span class="n">visible_keys</span><span class="p">:</span>
+            <span class="n">global_pred</span> <span class="o">=</span> <span class="n">data_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;global_pred&#39;</span><span class="p">,</span> <span class="p">{})</span>
+            <span class="n">global_pred</span> <span class="o">=</span> <span class="n">global_pred</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">ego_id</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;labels&#39;</span><span class="p">:</span> <span class="p">{}})[</span><span class="s1">&#39;labels&#39;</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">updateFrameData</span><span class="p">(</span><span class="n">pcds</span><span class="p">,</span>
+                             <span class="n">local_label</span><span class="o">=</span><span class="n">local_labels</span><span class="p">,</span>
+                             <span class="n">global_label</span><span class="o">=</span><span class="n">global_labels</span><span class="p">,</span>
+                             <span class="n">local_det</span><span class="o">=</span><span class="n">local_det</span><span class="p">,</span>
+                             <span class="n">global_det</span><span class="o">=</span><span class="n">global_det</span><span class="p">,</span>
+                             <span class="n">successor</span><span class="o">=</span><span class="n">global_pred</span><span class="p">,</span>
+                             <span class="n">successor_gt</span><span class="o">=</span><span class="n">global_pred_gt</span><span class="p">,</span>
+                             <span class="n">pcd_color</span><span class="o">=</span><span class="n">color_mode</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="GLViewer.addBox"><a class="viewcode-back" href="../../../../cosense3d.agents.viewer.html#cosense3d.agents.viewer.gl_viewer.GLViewer.addBox">[docs]</a>    <span class="k">def</span> <span class="nf">addBox</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">rectangle</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">world_pos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">evt_pos_to_world</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">rectangle</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">rectangle</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">if</span> <span class="n">world_pos</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">box</span> <span class="o">=</span> <span class="n">LineBoxItem</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">controller</span><span class="o">.</span><span class="n">curr_box_type</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mf">1.7</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+                <span class="n">azi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">opts</span><span class="p">[</span><span class="s1">&#39;azimuth&#39;</span><span class="p">]</span>
+                <span class="n">box</span><span class="o">.</span><span class="n">rotate</span><span class="p">(</span><span class="n">azi</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="n">box</span><span class="o">.</span><span class="n">translate</span><span class="p">(</span><span class="o">*</span><span class="n">world_pos</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">boxes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">box</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">addItem</span><span class="p">(</span><span class="n">box</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">controller</span><span class="o">.</span><span class="n">save_frame_labels</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">boxes</span><span class="p">)</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Add box: &quot;</span><span class="p">,</span> <span class="n">box</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">center</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">world_pos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">evt_pos_to_world</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">center</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">center</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">if</span> <span class="n">world_pos</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">controller</span><span class="o">.</span><span class="n">track_singleton</span><span class="p">(</span><span class="n">world_pos</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="GLViewer.highlightBox"><a class="viewcode-back" href="../../../../cosense3d.agents.viewer.html#cosense3d.agents.viewer.gl_viewer.GLViewer.highlightBox">[docs]</a>    <span class="k">def</span> <span class="nf">highlightBox</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pos</span><span class="p">):</span>
+        <span class="n">w</span> <span class="o">=</span> <span class="mi">30</span>
+        <span class="n">h</span> <span class="o">=</span> <span class="mi">30</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">pos</span><span class="o">.</span><span class="n">x</span><span class="p">()</span> <span class="o">-</span> <span class="n">w</span> <span class="o">/</span> <span class="mi">2</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">pos</span><span class="o">.</span><span class="n">y</span><span class="p">()</span> <span class="o">-</span> <span class="n">h</span> <span class="o">/</span> <span class="mi">2</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">removeHeilight</span><span class="p">()</span>
+        <span class="n">items</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">itemsAt</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">h</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">items</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">LineBoxItem</span><span class="p">):</span>
+                <span class="n">item</span><span class="o">.</span><span class="n">highlight</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">highlighted_item</span> <span class="o">=</span> <span class="n">item</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+                <span class="k">return</span></div>
+
+<div class="viewcode-block" id="GLViewer.removeHeilight"><a class="viewcode-back" href="../../../../cosense3d.agents.viewer.html#cosense3d.agents.viewer.gl_viewer.GLViewer.removeHeilight">[docs]</a>    <span class="k">def</span> <span class="nf">removeHeilight</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">highlighted_item</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">highlighted_item</span><span class="o">.</span><span class="n">deactivate</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">highlighted_item</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">update</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="GLViewer.selectHeilight"><a class="viewcode-back" href="../../../../cosense3d.agents.viewer.html#cosense3d.agents.viewer.gl_viewer.GLViewer.selectHeilight">[docs]</a>    <span class="k">def</span> <span class="nf">selectHeilight</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># remove previous activate item if exists</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">removeActivate</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">highlighted_item</span><span class="o">.</span><span class="n">activate</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">activate_item</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">highlighted_item</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">highlighted_item</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">controller</span><span class="o">.</span><span class="n">show_obj_info</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">activate_item</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="GLViewer.removeActivate"><a class="viewcode-back" href="../../../../cosense3d.agents.viewer.html#cosense3d.agents.viewer.gl_viewer.GLViewer.removeActivate">[docs]</a>    <span class="k">def</span> <span class="nf">removeActivate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">activate_item</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">activate_item</span><span class="o">.</span><span class="n">deactivate</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">controller</span><span class="o">.</span><span class="n">hide_obj_info</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">update</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="GLViewer.mousePressEvent"><a class="viewcode-back" href="../../../../cosense3d.agents.viewer.html#cosense3d.agents.viewer.gl_viewer.GLViewer.mousePressEvent">[docs]</a>    <span class="k">def</span> <span class="nf">mousePressEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">evt</span><span class="p">:</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QMouseEvent</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">depth_enabled</span> <span class="o">=</span> <span class="n">glGetBooleanv</span><span class="p">(</span><span class="n">GL_DEPTH_TEST</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;mousePressEvent:&#39;</span><span class="p">,</span> <span class="n">depth_enabled</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mousePos</span> <span class="o">=</span> <span class="n">evt</span><span class="o">.</span><span class="n">pos</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">evt</span><span class="o">.</span><span class="n">button</span><span class="p">()</span> <span class="o">==</span> <span class="n">Qt</span><span class="o">.</span><span class="n">LeftButton</span> <span class="ow">and</span> \
+                <span class="n">evt</span><span class="o">.</span><span class="n">modifiers</span><span class="p">()</span> <span class="o">==</span> <span class="n">Qt</span><span class="o">.</span><span class="n">ShiftModifier</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;mousePress+Shift: drag box&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">start_pos</span> <span class="o">=</span> <span class="n">evt</span><span class="o">.</span><span class="n">pos</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">end_pos</span> <span class="o">=</span> <span class="n">evt</span><span class="o">.</span><span class="n">pos</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dragging</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">elif</span> <span class="n">evt</span><span class="o">.</span><span class="n">button</span><span class="p">()</span> <span class="o">==</span> <span class="n">Qt</span><span class="o">.</span><span class="n">LeftButton</span> <span class="ow">and</span> \
+                <span class="bp">self</span><span class="o">.</span><span class="n">highlighted_item</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Select Highlighted box&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">selectHeilight</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="n">evt</span><span class="o">.</span><span class="n">button</span><span class="p">()</span> <span class="o">==</span> <span class="n">Qt</span><span class="o">.</span><span class="n">LeftButton</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">highlight_mode</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">removeActivate</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">mousePressEvent</span><span class="p">(</span><span class="n">evt</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="GLViewer.mouseDoubleClickEvent"><a class="viewcode-back" href="../../../../cosense3d.agents.viewer.html#cosense3d.agents.viewer.gl_viewer.GLViewer.mouseDoubleClickEvent">[docs]</a>    <span class="k">def</span> <span class="nf">mouseDoubleClickEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">evt</span><span class="p">:</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QMouseEvent</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">evt</span><span class="o">.</span><span class="n">button</span><span class="p">()</span> <span class="o">==</span> <span class="n">Qt</span><span class="o">.</span><span class="n">LeftButton</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">center</span> <span class="o">=</span> <span class="n">evt</span><span class="o">.</span><span class="n">pos</span><span class="p">()</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Double click left mouse button.&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="GLViewer.mouseMoveEvent"><a class="viewcode-back" href="../../../../cosense3d.agents.viewer.html#cosense3d.agents.viewer.gl_viewer.GLViewer.mouseMoveEvent">[docs]</a>    <span class="k">def</span> <span class="nf">mouseMoveEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">evt</span><span class="p">:</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QMouseEvent</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">evt</span><span class="o">.</span><span class="n">buttons</span><span class="p">()</span> <span class="o">==</span> <span class="n">Qt</span><span class="o">.</span><span class="n">LeftButton</span> <span class="ow">and</span> \
+                <span class="n">evt</span><span class="o">.</span><span class="n">modifiers</span><span class="p">()</span> <span class="o">==</span> <span class="n">Qt</span><span class="o">.</span><span class="n">ShiftModifier</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;mousePress+Shift+mouseMove&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dragging</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">end_pos</span> <span class="o">=</span> <span class="n">evt</span><span class="o">.</span><span class="n">pos</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">highlight_mode</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Highlight box&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">highlightBox</span><span class="p">(</span><span class="n">evt</span><span class="o">.</span><span class="n">pos</span><span class="p">())</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">mouseMoveEvent</span><span class="p">(</span><span class="n">evt</span><span class="p">)</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;mouseMove-super&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="GLViewer.mouseReleaseEvent"><a class="viewcode-back" href="../../../../cosense3d.agents.viewer.html#cosense3d.agents.viewer.gl_viewer.GLViewer.mouseReleaseEvent">[docs]</a>    <span class="k">def</span> <span class="nf">mouseReleaseEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">evt</span><span class="p">:</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QMouseEvent</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">evt</span><span class="o">.</span><span class="n">button</span><span class="p">()</span> <span class="o">==</span> <span class="n">Qt</span><span class="o">.</span><span class="n">LeftButton</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">dragging</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dragging</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">rectangle</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">start_pos</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">end_pos</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">start_pos</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">end_pos</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">mouseReleaseEvent</span><span class="p">(</span><span class="n">evt</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="GLViewer.keyPressEvent"><a class="viewcode-back" href="../../../../cosense3d.agents.viewer.html#cosense3d.agents.viewer.gl_viewer.GLViewer.keyPressEvent">[docs]</a>    <span class="k">def</span> <span class="nf">keyPressEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">evt</span><span class="p">:</span> <span class="n">QEvent</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">evt</span><span class="o">.</span><span class="n">isAutoRepeat</span><span class="p">():</span>
+            <span class="k">return</span>
+        <span class="k">if</span> <span class="n">evt</span><span class="o">.</span><span class="n">key</span><span class="p">()</span> <span class="o">==</span> <span class="n">Qt</span><span class="o">.</span><span class="n">Key_Shift</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;keyShiftPressed&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">key_shift</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">elif</span> <span class="n">evt</span><span class="o">.</span><span class="n">key</span><span class="p">()</span> <span class="o">==</span> <span class="n">Qt</span><span class="o">.</span><span class="n">Key_C</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;keyCressed: highlight mode&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">highlight_mode</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">setMouseTracking</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">evt</span><span class="o">.</span><span class="n">key</span><span class="p">()</span> <span class="o">==</span> <span class="n">Qt</span><span class="o">.</span><span class="n">Key_3</span><span class="p">:</span>
+            <span class="n">evt</span><span class="o">.</span><span class="n">accept</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">controller</span><span class="o">.</span><span class="n">last_frame</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="n">evt</span><span class="o">.</span><span class="n">key</span><span class="p">()</span> <span class="o">==</span> <span class="n">Qt</span><span class="o">.</span><span class="n">Key_4</span><span class="p">:</span>
+            <span class="n">evt</span><span class="o">.</span><span class="n">accept</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">controller</span><span class="o">.</span><span class="n">next_frame</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="n">evt</span><span class="o">.</span><span class="n">key</span><span class="p">()</span> <span class="o">==</span> <span class="n">Qt</span><span class="o">.</span><span class="n">Key_T</span><span class="p">:</span>
+            <span class="n">evt</span><span class="o">.</span><span class="n">accept</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">controller</span><span class="o">.</span><span class="n">track</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="n">evt</span><span class="o">.</span><span class="n">key</span><span class="p">()</span> <span class="o">==</span> <span class="n">Qt</span><span class="o">.</span><span class="n">Key_2</span><span class="p">:</span>
+            <span class="n">evt</span><span class="o">.</span><span class="n">accept</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">controller</span><span class="o">.</span><span class="n">next_frame</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">controller</span><span class="o">.</span><span class="n">track</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">keyPressEvent</span><span class="p">(</span><span class="n">evt</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="GLViewer.keyReleaseEvent"><a class="viewcode-back" href="../../../../cosense3d.agents.viewer.html#cosense3d.agents.viewer.gl_viewer.GLViewer.keyReleaseEvent">[docs]</a>    <span class="k">def</span> <span class="nf">keyReleaseEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="n">QEvent</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">isAutoRepeat</span><span class="p">():</span>
+            <span class="k">return</span>
+        <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">key</span><span class="p">()</span> <span class="o">==</span> <span class="n">Qt</span><span class="o">.</span><span class="n">Key_C</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;key C released:  deactivate highlighted box&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">highlight_mode</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">setMouseTracking</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">removeHeilight</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="GLViewer.model_pose_to_world"><a class="viewcode-back" href="../../../../cosense3d.agents.viewer.html#cosense3d.agents.viewer.gl_viewer.GLViewer.model_pose_to_world">[docs]</a>    <span class="k">def</span> <span class="nf">model_pose_to_world</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">):</span>
+        <span class="n">modelview</span> <span class="o">=</span> <span class="n">glGetDoublev</span><span class="p">(</span><span class="n">GL_MODELVIEW_MATRIX</span><span class="p">)</span>
+        <span class="n">projection</span> <span class="o">=</span> <span class="n">glGetDoublev</span><span class="p">(</span><span class="n">GL_PROJECTION_MATRIX</span><span class="p">)</span>
+        <span class="n">viewport</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getViewport</span><span class="p">()</span>
+        <span class="n">world_pos</span> <span class="o">=</span> <span class="n">GLU</span><span class="o">.</span><span class="n">gluUnProject</span><span class="p">(</span>
+            <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">modelview</span><span class="p">,</span> <span class="n">projection</span><span class="p">,</span> <span class="n">viewport</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">world_pos</span></div>
+
+<div class="viewcode-block" id="GLViewer.evt_pos_to_world"><a class="viewcode-back" href="../../../../cosense3d.agents.viewer.html#cosense3d.agents.viewer.gl_viewer.GLViewer.evt_pos_to_world">[docs]</a>    <span class="k">def</span> <span class="nf">evt_pos_to_world</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pos1</span><span class="p">,</span> <span class="n">pos2</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Args:</span>
+<span class="sd">            pos1: center pos if pos2 is None else start post of a region</span>
+<span class="sd">            pos2: end pos of a region</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">pos2</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">pos1</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">QPoint</span><span class="p">(</span><span class="n">pos1</span><span class="o">.</span><span class="n">x</span><span class="p">()</span> <span class="o">-</span> <span class="mi">20</span><span class="p">,</span> <span class="n">pos1</span><span class="o">.</span><span class="n">y</span><span class="p">()</span> <span class="o">-</span> <span class="mi">20</span><span class="p">)</span>
+            <span class="n">pos2</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">QPoint</span><span class="p">(</span><span class="n">pos1</span><span class="o">.</span><span class="n">x</span><span class="p">()</span> <span class="o">+</span> <span class="mi">20</span><span class="p">,</span> <span class="n">pos1</span><span class="o">.</span><span class="n">y</span><span class="p">()</span> <span class="o">+</span> <span class="mi">20</span><span class="p">)</span>
+        <span class="n">depths</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_region_depth</span><span class="p">(</span><span class="n">pos1</span><span class="p">,</span> <span class="n">pos2</span><span class="p">)</span>
+        <span class="n">valid</span> <span class="o">=</span> <span class="n">depths</span> <span class="o">&lt;</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="n">valid</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;No point found, skip drawing box&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">z</span> <span class="o">=</span> <span class="n">depths</span><span class="p">[</span><span class="n">valid</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="p">(</span><span class="n">pos1</span><span class="o">.</span><span class="n">y</span><span class="p">()</span> <span class="o">+</span> <span class="n">pos2</span><span class="o">.</span><span class="n">y</span><span class="p">())</span> <span class="o">/</span> <span class="mi">2</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="p">(</span><span class="n">pos1</span><span class="o">.</span><span class="n">x</span><span class="p">()</span> <span class="o">+</span> <span class="n">pos2</span><span class="o">.</span><span class="n">x</span><span class="p">())</span> <span class="o">/</span> <span class="mi">2</span>
+            <span class="n">real_y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">height</span><span class="p">()</span> <span class="o">-</span> <span class="n">y</span>
+            <span class="n">world_pos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_pose_to_world</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">real_y</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">world_pos</span></div>
+
+<div class="viewcode-block" id="GLViewer.get_point_depth"><a class="viewcode-back" href="../../../../cosense3d.agents.viewer.html#cosense3d.agents.viewer.gl_viewer.GLViewer.get_point_depth">[docs]</a>    <span class="k">def</span> <span class="nf">get_point_depth</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+        <span class="n">buffer_size</span> <span class="o">=</span> <span class="mi">201</span>
+        <span class="n">center</span> <span class="o">=</span> <span class="n">buffer_size</span> <span class="o">//</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="n">depths</span> <span class="o">=</span> <span class="n">glReadPixels</span><span class="p">(</span>
+            <span class="n">x</span> <span class="o">-</span> <span class="n">center</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+            <span class="n">y</span> <span class="o">-</span> <span class="n">center</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+            <span class="n">buffer_size</span><span class="p">,</span>
+            <span class="n">buffer_size</span><span class="p">,</span>
+            <span class="n">GL_DEPTH_COMPONENT</span><span class="p">,</span>
+            <span class="n">GL_FLOAT</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="n">depths</span><span class="p">[</span><span class="n">center</span><span class="p">][</span><span class="n">center</span><span class="p">]</span>  <span class="c1"># Read selected pixel from depth buffer</span>
+
+        <span class="k">if</span> <span class="n">z</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">z</span> <span class="o">=</span> <span class="n">depth_min</span><span class="p">(</span><span class="n">depths</span><span class="p">,</span> <span class="n">center</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">z</span></div>
+
+<div class="viewcode-block" id="GLViewer.get_region_depth"><a class="viewcode-back" href="../../../../cosense3d.agents.viewer.html#cosense3d.agents.viewer.gl_viewer.GLViewer.get_region_depth">[docs]</a>    <span class="k">def</span> <span class="nf">get_region_depth</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p1</span><span class="p">:</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">QPoint</span><span class="p">,</span> <span class="n">p2</span><span class="p">:</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">QPoint</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Args:</span>
+<span class="sd">            p1: start point of region.</span>
+<span class="sd">            p2: end point of region</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">buffer_size_x</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">p2</span><span class="o">.</span><span class="n">x</span><span class="p">()</span> <span class="o">-</span> <span class="n">p1</span><span class="o">.</span><span class="n">x</span><span class="p">())</span>
+        <span class="n">buffer_size_y</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">p2</span><span class="o">.</span><span class="n">y</span><span class="p">()</span> <span class="o">-</span> <span class="n">p1</span><span class="o">.</span><span class="n">y</span><span class="p">())</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">p1</span><span class="o">.</span><span class="n">x</span><span class="p">(),</span> <span class="n">p2</span><span class="o">.</span><span class="n">x</span><span class="p">())</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">height</span><span class="p">()</span> <span class="o">-</span> <span class="nb">max</span><span class="p">(</span><span class="n">p1</span><span class="o">.</span><span class="n">y</span><span class="p">(),</span> <span class="n">p2</span><span class="o">.</span><span class="n">y</span><span class="p">())</span>
+
+        <span class="c1"># Create a buffer to hold the depth values</span>
+        <span class="n">depth_buffer</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">buffer_size_y</span><span class="p">,</span> <span class="n">buffer_size_x</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+
+        <span class="n">glReadPixels</span><span class="p">(</span>
+            <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span>
+            <span class="n">buffer_size_x</span><span class="p">,</span>
+            <span class="n">buffer_size_y</span><span class="p">,</span>
+            <span class="n">GL_DEPTH_COMPONENT</span><span class="p">,</span>
+            <span class="n">GL_FLOAT</span><span class="p">,</span>
+            <span class="n">depth_buffer</span>
+        <span class="p">)</span>
+        <span class="n">depth_buffer</span> <span class="o">=</span> <span class="n">depth_buffer</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="p">:]</span>
+
+        <span class="k">return</span> <span class="n">depth_buffer</span></div>
+
+<div class="viewcode-block" id="GLViewer.draw_depth_buffer"><a class="viewcode-back" href="../../../../cosense3d.agents.viewer.html#cosense3d.agents.viewer.gl_viewer.GLViewer.draw_depth_buffer">[docs]</a>    <span class="k">def</span> <span class="nf">draw_depth_buffer</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;!!!!</span>
+<span class="sd">        Remember the depth buffer is only available under paintGL loop.</span>
+<span class="sd">        Only in this loop the gl context is active.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Get the OpenGL extensions string</span>
+        <span class="n">depth_enabled</span> <span class="o">=</span> <span class="n">glGetBooleanv</span><span class="p">(</span><span class="n">GL_DEPTH_TEST</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">depth_enabled</span><span class="p">)</span>
+        <span class="c1"># Retrieve the dimensions of the framebuffer</span>
+        <span class="n">viewport</span> <span class="o">=</span> <span class="n">glGetIntegerv</span><span class="p">(</span><span class="n">GL_VIEWPORT</span><span class="p">)</span>
+        <span class="n">width</span><span class="p">,</span> <span class="n">height</span> <span class="o">=</span> <span class="n">viewport</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">viewport</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+
+        <span class="c1"># Create a buffer to hold the depth values</span>
+        <span class="n">depth_buffer</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">height</span><span class="p">,</span> <span class="n">width</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+
+        <span class="c1"># Read the depth buffer into the buffer</span>
+        <span class="n">glReadPixels</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">,</span> <span class="n">GL_DEPTH_COMPONENT</span><span class="p">,</span> <span class="n">GL_FLOAT</span><span class="p">,</span> <span class="n">depth_buffer</span><span class="p">)</span>
+        <span class="n">depth_buffer</span> <span class="o">=</span> <span class="n">depth_buffer</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="p">:]</span>
+
+        <span class="c1"># Convert the depth buffer to an image</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;min depth value:&quot;</span><span class="p">,</span> <span class="n">depth_buffer</span><span class="o">.</span><span class="n">min</span><span class="p">())</span>
+        <span class="n">depth_image</span> <span class="o">=</span> <span class="p">((</span><span class="mi">1</span> <span class="o">-</span> <span class="n">depth_buffer</span><span class="p">)</span> <span class="o">*</span> <span class="mi">500</span><span class="p">)</span> <span class="o">*</span> <span class="mi">255</span>
+        <span class="n">depth_image</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">depth_image</span><span class="p">[:,</span> <span class="p">:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">],</span> <span class="mi">3</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+
+        <span class="c1"># Save the image to a file</span>
+        <span class="kn">import</span> <span class="nn">imageio</span>
+        <span class="n">imageio</span><span class="o">.</span><span class="n">imwrite</span><span class="p">(</span><span class="s1">&#39;/media/hdd/tmp/depth_image.png&#39;</span><span class="p">,</span> <span class="n">depth_image</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="GLViewer.box"><a class="viewcode-back" href="../../../../cosense3d.agents.viewer.html#cosense3d.agents.viewer.gl_viewer.GLViewer.box">[docs]</a>    <span class="k">def</span> <span class="nf">box</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">p1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">box_start_pos</span>
+        <span class="n">p2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">box_end_pos</span>
+        <span class="n">new_lines</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span>
+            <span class="p">[</span><span class="n">p1</span><span class="o">.</span><span class="n">x</span><span class="p">(),</span> <span class="n">p1</span><span class="o">.</span><span class="n">y</span><span class="p">(),</span> <span class="n">p1</span><span class="o">.</span><span class="n">z</span><span class="p">()],</span>
+            <span class="p">[</span><span class="n">p2</span><span class="o">.</span><span class="n">x</span><span class="p">(),</span> <span class="n">p2</span><span class="o">.</span><span class="n">y</span><span class="p">(),</span> <span class="n">p2</span><span class="o">.</span><span class="n">z</span><span class="p">()],</span>
+        <span class="p">])</span>
+
+        <span class="c1"># create a GLLinePlotItem for the axes</span>
+        <span class="n">line_item</span> <span class="o">=</span> <span class="n">gl</span><span class="o">.</span><span class="n">GLLinePlotItem</span><span class="p">(</span><span class="n">pos</span><span class="o">=</span><span class="n">new_lines</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">QtGui</span><span class="o">.</span><span class="n">QColor</span><span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">),</span>
+                                      <span class="n">width</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+
+        <span class="c1"># add the axes to the view</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addItem</span><span class="p">(</span><span class="n">line_item</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="GLViewer.drawRectangle"><a class="viewcode-back" href="../../../../cosense3d.agents.viewer.html#cosense3d.agents.viewer.gl_viewer.GLViewer.drawRectangle">[docs]</a>    <span class="k">def</span> <span class="nf">drawRectangle</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">rectItem</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">rectItem</span> <span class="o">=</span> <span class="n">pg</span><span class="o">.</span><span class="n">QtGui</span><span class="o">.</span><span class="n">QGraphicsRectItem</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">scene</span><span class="o">.</span><span class="n">addItem</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rectItem</span><span class="p">)</span>
+        <span class="n">x1</span><span class="p">,</span> <span class="n">y1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">startPoint</span><span class="o">.</span><span class="n">x</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">startPoint</span><span class="o">.</span><span class="n">y</span><span class="p">()</span>
+        <span class="n">x2</span><span class="p">,</span> <span class="n">y2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">endPoint</span><span class="o">.</span><span class="n">x</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">endPoint</span><span class="o">.</span><span class="n">y</span><span class="p">()</span>
+        <span class="n">rect</span> <span class="o">=</span> <span class="n">QRectF</span><span class="p">(</span><span class="n">QPointF</span><span class="p">(</span><span class="n">x1</span><span class="p">,</span> <span class="n">y1</span><span class="p">),</span> <span class="n">QPointF</span><span class="p">(</span><span class="n">x2</span><span class="p">,</span> <span class="n">y2</span><span class="p">))</span>
+        <span class="n">pen</span> <span class="o">=</span> <span class="n">QPen</span><span class="p">(</span><span class="n">QColor</span><span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+        <span class="n">brush</span> <span class="o">=</span> <span class="n">QBrush</span><span class="p">(</span><span class="n">QColor</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rectItem</span><span class="o">.</span><span class="n">setPen</span><span class="p">(</span><span class="n">pen</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rectItem</span><span class="o">.</span><span class="n">setBrush</span><span class="p">(</span><span class="n">brush</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rectItem</span><span class="o">.</span><span class="n">setRect</span><span class="p">(</span><span class="n">rect</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="GLViewer.removeRectangle"><a class="viewcode-back" href="../../../../cosense3d.agents.viewer.html#cosense3d.agents.viewer.gl_viewer.GLViewer.removeRectangle">[docs]</a>    <span class="k">def</span> <span class="nf">removeRectangle</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">rectItem</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">scene</span><span class="o">.</span><span class="n">removeItem</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rectItem</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">rectItem</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">update</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="GLViewer.paintRect"><a class="viewcode-back" href="../../../../cosense3d.agents.viewer.html#cosense3d.agents.viewer.gl_viewer.GLViewer.paintRect">[docs]</a>    <span class="k">def</span> <span class="nf">paintRect</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dragging</span><span class="p">:</span>
+            <span class="n">painter</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QPainter</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+            <span class="n">painter</span><span class="o">.</span><span class="n">setRenderHint</span><span class="p">(</span><span class="n">QtGui</span><span class="o">.</span><span class="n">QPainter</span><span class="o">.</span><span class="n">Antialiasing</span><span class="p">)</span>
+            <span class="n">glDisable</span><span class="p">(</span><span class="n">GL_DEPTH_TEST</span><span class="p">)</span>
+            <span class="n">glDisable</span><span class="p">(</span><span class="n">GL_BLEND</span><span class="p">)</span>
+            <span class="c1"># draw the rectangle</span>
+            <span class="n">painter</span><span class="o">.</span><span class="n">setPen</span><span class="p">(</span><span class="n">QtGui</span><span class="o">.</span><span class="n">QPen</span><span class="p">(</span><span class="n">QtGui</span><span class="o">.</span><span class="n">QColor</span><span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)))</span>
+            <span class="n">painter</span><span class="o">.</span><span class="n">setBrush</span><span class="p">(</span><span class="n">QtGui</span><span class="o">.</span><span class="n">QBrush</span><span class="p">(</span><span class="n">QtGui</span><span class="o">.</span><span class="n">QColor</span><span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">80</span><span class="p">)))</span>
+            <span class="n">painter</span><span class="o">.</span><span class="n">drawRect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">start_pos</span><span class="o">.</span><span class="n">x</span><span class="p">(),</span>
+                             <span class="bp">self</span><span class="o">.</span><span class="n">start_pos</span><span class="o">.</span><span class="n">y</span><span class="p">(),</span>
+                             <span class="bp">self</span><span class="o">.</span><span class="n">end_pos</span><span class="o">.</span><span class="n">x</span><span class="p">()</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">start_pos</span><span class="o">.</span><span class="n">x</span><span class="p">(),</span>
+                             <span class="bp">self</span><span class="o">.</span><span class="n">end_pos</span><span class="o">.</span><span class="n">y</span><span class="p">()</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">start_pos</span><span class="o">.</span><span class="n">y</span><span class="p">())</span>
+
+            <span class="n">glEnable</span><span class="p">(</span><span class="n">GL_DEPTH_TEST</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="GLViewer.change_visibility"><a class="viewcode-back" href="../../../../cosense3d.agents.viewer.html#cosense3d.agents.viewer.gl_viewer.GLViewer.change_visibility">[docs]</a>    <span class="k">def</span> <span class="nf">change_visibility</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">visible</span><span class="p">):</span>
+        <span class="n">ai</span><span class="p">,</span> <span class="n">li</span> <span class="o">=</span> <span class="n">key</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">visibility</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">visible</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pcd_items</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">setVisible</span><span class="p">(</span><span class="n">visible</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">local_boxes</span><span class="p">[</span><span class="n">ai</span><span class="p">]:</span>
+            <span class="n">item</span><span class="o">.</span><span class="n">setVisible</span><span class="p">(</span><span class="n">visible</span><span class="p">)</span></div></div>
+
+
+
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Anonymous Author.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

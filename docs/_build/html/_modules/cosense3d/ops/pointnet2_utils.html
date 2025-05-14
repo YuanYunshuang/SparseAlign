@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>cosense3d.ops.pointnet2_utils &mdash; OpenCosense3D 1.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js?v=af2ce170"></script>
+        <script src="../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            OpenCosense3D
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../md/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../md/prepare_data.html">Prepare Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../md/structure.html">The Structure of the framework</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">CoSense3d</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">OpenCosense3D</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">cosense3d.ops.pointnet2_utils</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for cosense3d.ops.pointnet2_utils</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span>
+
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">import</span> <span class="nn">torch.nn</span> <span class="k">as</span> <span class="nn">nn</span>
+<span class="kn">import</span> <span class="nn">torch.nn.functional</span> <span class="k">as</span> <span class="nn">F</span>
+<span class="kn">from</span> <span class="nn">torch.autograd</span> <span class="kn">import</span> <span class="n">Function</span><span class="p">,</span> <span class="n">Variable</span>
+
+<span class="kn">import</span> <span class="nn">cuda_ops</span> <span class="k">as</span> <span class="nn">pointnet2</span>
+
+
+<div class="viewcode-block" id="BallQuery"><a class="viewcode-back" href="../../../cosense3d.ops.html#cosense3d.ops.pointnet2_utils.BallQuery">[docs]</a><span class="k">class</span> <span class="nc">BallQuery</span><span class="p">(</span><span class="n">Function</span><span class="p">):</span>
+
+<div class="viewcode-block" id="BallQuery.forward"><a class="viewcode-back" href="../../../cosense3d.ops.html#cosense3d.ops.pointnet2_utils.BallQuery.forward">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">radius</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">nsample</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">xyz</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">xyz_batch_cnt</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+                <span class="n">new_xyz</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">new_xyz_batch_cnt</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Args:</span>
+<span class="sd">            ctx:</span>
+<span class="sd">            radius: float, radius of the balls</span>
+<span class="sd">            nsample: int, maximum number of features in the balls</span>
+<span class="sd">            xyz: (N1 + N2 ..., 3) xyz coordinates of the features</span>
+<span class="sd">            xyz_batch_cnt: (batch_size), [N1, N2, ...]</span>
+<span class="sd">            new_xyz: (M1 + M2 ..., 3) centers of the ball query</span>
+<span class="sd">            new_xyz_batch_cnt: (batch_size), [M1, M2, ...]</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            idx: (M1 + M2, nsample) tensor with the indicies of the features that form the query balls</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="n">new_xyz</span><span class="o">.</span><span class="n">is_contiguous</span><span class="p">()</span>
+        <span class="k">assert</span> <span class="n">new_xyz_batch_cnt</span><span class="o">.</span><span class="n">is_contiguous</span><span class="p">()</span>
+        <span class="k">assert</span> <span class="n">xyz</span><span class="o">.</span><span class="n">is_contiguous</span><span class="p">()</span>
+        <span class="k">assert</span> <span class="n">xyz_batch_cnt</span><span class="o">.</span><span class="n">is_contiguous</span><span class="p">()</span>
+
+        <span class="n">B</span> <span class="o">=</span> <span class="n">xyz_batch_cnt</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">M</span> <span class="o">=</span> <span class="n">new_xyz</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">IntTensor</span><span class="p">(</span><span class="n">M</span><span class="p">,</span> <span class="n">nsample</span><span class="p">)</span><span class="o">.</span><span class="n">zero_</span><span class="p">()</span>
+
+        <span class="n">pointnet2</span><span class="o">.</span><span class="n">ball_query_wrapper</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">M</span><span class="p">,</span> <span class="n">radius</span><span class="p">,</span> <span class="n">nsample</span><span class="p">,</span> <span class="n">new_xyz</span><span class="p">,</span> <span class="n">new_xyz_batch_cnt</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">xyz_batch_cnt</span><span class="p">,</span> <span class="n">idx</span><span class="p">)</span>
+        <span class="n">empty_ball_mask</span> <span class="o">=</span> <span class="p">(</span><span class="n">idx</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">idx</span><span class="p">[</span><span class="n">empty_ball_mask</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">return</span> <span class="n">idx</span><span class="p">,</span> <span class="n">empty_ball_mask</span></div>
+
+<div class="viewcode-block" id="BallQuery.backward"><a class="viewcode-back" href="../../../cosense3d.ops.html#cosense3d.ops.pointnet2_utils.BallQuery.backward">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">backward</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span></div></div>
+
+
+<span class="n">ball_query</span> <span class="o">=</span> <span class="n">BallQuery</span><span class="o">.</span><span class="n">apply</span>
+
+
+<div class="viewcode-block" id="GroupingOperation"><a class="viewcode-back" href="../../../cosense3d.ops.html#cosense3d.ops.pointnet2_utils.GroupingOperation">[docs]</a><span class="k">class</span> <span class="nc">GroupingOperation</span><span class="p">(</span><span class="n">Function</span><span class="p">):</span>
+
+<div class="viewcode-block" id="GroupingOperation.forward"><a class="viewcode-back" href="../../../cosense3d.ops.html#cosense3d.ops.pointnet2_utils.GroupingOperation.forward">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">features</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">features_batch_cnt</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+                <span class="n">idx</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">idx_batch_cnt</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Args:</span>
+<span class="sd">            ctx:</span>
+<span class="sd">            features: (N1 + N2 ..., C) tensor of features to group</span>
+<span class="sd">            features_batch_cnt: (batch_size) [N1 + N2 ...] tensor containing the indicies of features to group with</span>
+<span class="sd">            idx: (M1 + M2 ..., nsample) tensor containing the indicies of features to group with</span>
+<span class="sd">            idx_batch_cnt: (batch_size) [M1 + M2 ...] tensor containing the indicies of features to group with</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            output: (M1 + M2, C, nsample) tensor</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="n">features</span><span class="o">.</span><span class="n">is_contiguous</span><span class="p">()</span>
+        <span class="k">assert</span> <span class="n">features_batch_cnt</span><span class="o">.</span><span class="n">is_contiguous</span><span class="p">()</span>
+        <span class="k">assert</span> <span class="n">idx</span><span class="o">.</span><span class="n">is_contiguous</span><span class="p">()</span>
+        <span class="k">assert</span> <span class="n">idx_batch_cnt</span><span class="o">.</span><span class="n">is_contiguous</span><span class="p">()</span>
+
+        <span class="k">assert</span> <span class="n">features</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">features_batch_cnt</span><span class="o">.</span><span class="n">sum</span><span class="p">(),</span> \
+            <span class="s1">&#39;features: </span><span class="si">%s</span><span class="s1">, features_batch_cnt: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">features</span><span class="o">.</span><span class="n">shape</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">features_batch_cnt</span><span class="p">))</span>
+        <span class="k">assert</span> <span class="n">idx</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">idx_batch_cnt</span><span class="o">.</span><span class="n">sum</span><span class="p">(),</span> \
+            <span class="s1">&#39;idx: </span><span class="si">%s</span><span class="s1">, idx_batch_cnt: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">idx</span><span class="o">.</span><span class="n">shape</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">idx_batch_cnt</span><span class="p">))</span>
+
+        <span class="n">M</span><span class="p">,</span> <span class="n">nsample</span> <span class="o">=</span> <span class="n">idx</span><span class="o">.</span><span class="n">size</span><span class="p">()</span>
+        <span class="n">N</span><span class="p">,</span> <span class="n">C</span> <span class="o">=</span> <span class="n">features</span><span class="o">.</span><span class="n">size</span><span class="p">()</span>
+        <span class="n">B</span> <span class="o">=</span> <span class="n">idx_batch_cnt</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">FloatTensor</span><span class="p">(</span><span class="n">M</span><span class="p">,</span> <span class="n">C</span><span class="p">,</span> <span class="n">nsample</span><span class="p">)</span>
+
+        <span class="n">pointnet2</span><span class="o">.</span><span class="n">group_points_wrapper</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">M</span><span class="p">,</span> <span class="n">C</span><span class="p">,</span> <span class="n">nsample</span><span class="p">,</span> <span class="n">features</span><span class="p">,</span> <span class="n">features_batch_cnt</span><span class="p">,</span> <span class="n">idx</span><span class="p">,</span> <span class="n">idx_batch_cnt</span><span class="p">,</span> <span class="n">output</span><span class="p">)</span>
+
+        <span class="n">ctx</span><span class="o">.</span><span class="n">for_backwards</span> <span class="o">=</span> <span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">idx</span><span class="p">,</span> <span class="n">features_batch_cnt</span><span class="p">,</span> <span class="n">idx_batch_cnt</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">output</span></div>
+
+<div class="viewcode-block" id="GroupingOperation.backward"><a class="viewcode-back" href="../../../cosense3d.ops.html#cosense3d.ops.pointnet2_utils.GroupingOperation.backward">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">backward</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">grad_out</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Args:</span>
+<span class="sd">            ctx:</span>
+<span class="sd">            grad_out: (M1 + M2 ..., C, nsample) tensor of the gradients of the output from forward</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            grad_features: (N1 + N2 ..., C) gradient of the features</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">B</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">idx</span><span class="p">,</span> <span class="n">features_batch_cnt</span><span class="p">,</span> <span class="n">idx_batch_cnt</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">for_backwards</span>
+
+        <span class="n">M</span><span class="p">,</span> <span class="n">C</span><span class="p">,</span> <span class="n">nsample</span> <span class="o">=</span> <span class="n">grad_out</span><span class="o">.</span><span class="n">size</span><span class="p">()</span>
+        <span class="n">grad_features</span> <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">FloatTensor</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">C</span><span class="p">)</span><span class="o">.</span><span class="n">zero_</span><span class="p">())</span>
+
+        <span class="n">grad_out_data</span> <span class="o">=</span> <span class="n">grad_out</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">contiguous</span><span class="p">()</span>
+        <span class="n">pointnet2</span><span class="o">.</span><span class="n">group_points_grad_wrapper</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">M</span><span class="p">,</span> <span class="n">C</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">nsample</span><span class="p">,</span> <span class="n">grad_out_data</span><span class="p">,</span> <span class="n">idx</span><span class="p">,</span>
+                                            <span class="n">idx_batch_cnt</span><span class="p">,</span> <span class="n">features_batch_cnt</span><span class="p">,</span> <span class="n">grad_features</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">grad_features</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span></div></div>
+
+
+<span class="n">grouping_operation</span> <span class="o">=</span> <span class="n">GroupingOperation</span><span class="o">.</span><span class="n">apply</span>
+
+
+<div class="viewcode-block" id="QueryAndGroup"><a class="viewcode-back" href="../../../cosense3d.ops.html#cosense3d.ops.pointnet2_utils.QueryAndGroup">[docs]</a><span class="k">class</span> <span class="nc">QueryAndGroup</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">radius</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">nsample</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">use_xyz</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Args:</span>
+<span class="sd">            radius: float, radius of ball</span>
+<span class="sd">            nsample: int, maximum number of features to gather in the ball</span>
+<span class="sd">            use_xyz:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">radius</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nsample</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_xyz</span> <span class="o">=</span> <span class="n">radius</span><span class="p">,</span> <span class="n">nsample</span><span class="p">,</span> <span class="n">use_xyz</span>
+
+<div class="viewcode-block" id="QueryAndGroup.forward"><a class="viewcode-back" href="../../../cosense3d.ops.html#cosense3d.ops.pointnet2_utils.QueryAndGroup.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">xyz</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">xyz_batch_cnt</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+                <span class="n">new_xyz</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">new_xyz_batch_cnt</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+                <span class="n">features</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Args:</span>
+<span class="sd">            xyz: (N1 + N2 ..., 3) xyz coordinates of the features</span>
+<span class="sd">            xyz_batch_cnt: (batch_size), [N1, N2, ...]</span>
+<span class="sd">            new_xyz: (M1 + M2 ..., 3) centers of the ball query</span>
+<span class="sd">            new_xyz_batch_cnt: (batch_size), [M1, M2, ...]</span>
+<span class="sd">            features: (N1 + N2 ..., C) tensor of features to group</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            new_features: (M1 + M2, C, nsample) tensor</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="n">xyz</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">xyz_batch_cnt</span><span class="o">.</span><span class="n">sum</span><span class="p">(),</span> <span class="s1">&#39;xyz: </span><span class="si">%s</span><span class="s1">, xyz_batch_cnt: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">xyz</span><span class="o">.</span><span class="n">shape</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">new_xyz_batch_cnt</span><span class="p">))</span>
+        <span class="k">assert</span> <span class="n">new_xyz</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">new_xyz_batch_cnt</span><span class="o">.</span><span class="n">sum</span><span class="p">(),</span> \
+            <span class="s1">&#39;new_xyz: </span><span class="si">%s</span><span class="s1">, new_xyz_batch_cnt: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">new_xyz</span><span class="o">.</span><span class="n">shape</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">new_xyz_batch_cnt</span><span class="p">))</span>
+
+        <span class="c1"># idx: (M1 + M2 ..., nsample), empty_ball_mask: (M1 + M2 ...)</span>
+        <span class="n">idx</span><span class="p">,</span> <span class="n">empty_ball_mask</span> <span class="o">=</span> <span class="n">ball_query</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">radius</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nsample</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">xyz_batch_cnt</span><span class="p">,</span> <span class="n">new_xyz</span><span class="p">,</span> <span class="n">new_xyz_batch_cnt</span><span class="p">)</span>
+        <span class="n">grouped_xyz</span> <span class="o">=</span> <span class="n">grouping_operation</span><span class="p">(</span><span class="n">xyz</span><span class="p">,</span> <span class="n">xyz_batch_cnt</span><span class="p">,</span> <span class="n">idx</span><span class="p">,</span> <span class="n">new_xyz_batch_cnt</span><span class="p">)</span>  <span class="c1"># (M1 + M2, 3, nsample)</span>
+        <span class="n">grouped_xyz</span> <span class="o">-=</span> <span class="n">new_xyz</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">grouped_xyz</span><span class="p">[</span><span class="n">empty_ball_mask</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="k">if</span> <span class="n">features</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">grouped_features</span> <span class="o">=</span> <span class="n">grouping_operation</span><span class="p">(</span><span class="n">features</span><span class="p">,</span> <span class="n">xyz_batch_cnt</span><span class="p">,</span> <span class="n">idx</span><span class="p">,</span> <span class="n">new_xyz_batch_cnt</span><span class="p">)</span>  <span class="c1"># (M1 + M2, C, nsample)</span>
+            <span class="n">grouped_features</span><span class="p">[</span><span class="n">empty_ball_mask</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_xyz</span><span class="p">:</span>
+                <span class="n">new_features</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">grouped_xyz</span><span class="p">,</span> <span class="n">grouped_features</span><span class="p">],</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># (M1 + M2 ..., C + 3, nsample)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">new_features</span> <span class="o">=</span> <span class="n">grouped_features</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_xyz</span><span class="p">,</span> <span class="s2">&quot;Cannot have not features and not use xyz as a feature!&quot;</span>
+            <span class="n">new_features</span> <span class="o">=</span> <span class="n">grouped_xyz</span>
+
+        <span class="k">return</span> <span class="n">new_features</span><span class="p">,</span> <span class="n">idx</span></div></div>
+
+
+<div class="viewcode-block" id="FurthestPointSampling"><a class="viewcode-back" href="../../../cosense3d.ops.html#cosense3d.ops.pointnet2_utils.FurthestPointSampling">[docs]</a><span class="k">class</span> <span class="nc">FurthestPointSampling</span><span class="p">(</span><span class="n">Function</span><span class="p">):</span>
+<div class="viewcode-block" id="FurthestPointSampling.forward"><a class="viewcode-back" href="../../../cosense3d.ops.html#cosense3d.ops.pointnet2_utils.FurthestPointSampling.forward">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">xyz</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">npoint</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Args:</span>
+<span class="sd">            ctx:</span>
+<span class="sd">            xyz: (B, N, 3) where N &gt; npoint</span>
+<span class="sd">            npoint: int, number of features in the sampled set</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            output: (B, npoint) tensor containing the set</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="n">xyz</span><span class="o">.</span><span class="n">is_contiguous</span><span class="p">()</span>
+
+        <span class="n">B</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">xyz</span><span class="o">.</span><span class="n">size</span><span class="p">()</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">IntTensor</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">npoint</span><span class="p">)</span>
+        <span class="n">temp</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">FloatTensor</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span><span class="o">.</span><span class="n">fill_</span><span class="p">(</span><span class="mf">1e10</span><span class="p">)</span>
+
+        <span class="n">pointnet2</span><span class="o">.</span><span class="n">furthest_point_sampling_wrapper</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">npoint</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">temp</span><span class="p">,</span> <span class="n">output</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">output</span></div>
+
+<div class="viewcode-block" id="FurthestPointSampling.backward"><a class="viewcode-back" href="../../../cosense3d.ops.html#cosense3d.ops.pointnet2_utils.FurthestPointSampling.backward">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">backward</span><span class="p">(</span><span class="n">xyz</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span></div></div>
+
+
+<span class="n">furthest_point_sample</span> <span class="o">=</span> <span class="n">FurthestPointSampling</span><span class="o">.</span><span class="n">apply</span>
+
+
+<div class="viewcode-block" id="ThreeNN"><a class="viewcode-back" href="../../../cosense3d.ops.html#cosense3d.ops.pointnet2_utils.ThreeNN">[docs]</a><span class="k">class</span> <span class="nc">ThreeNN</span><span class="p">(</span><span class="n">Function</span><span class="p">):</span>
+<div class="viewcode-block" id="ThreeNN.forward"><a class="viewcode-back" href="../../../cosense3d.ops.html#cosense3d.ops.pointnet2_utils.ThreeNN.forward">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">unknown</span><span class="p">,</span> <span class="n">unknown_batch_cnt</span><span class="p">,</span> <span class="n">known</span><span class="p">,</span> <span class="n">known_batch_cnt</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Args:</span>
+<span class="sd">            ctx:</span>
+<span class="sd">            unknown: (N1 + N2..., 3)</span>
+<span class="sd">            unknown_batch_cnt: (batch_size), [N1, N2, ...]</span>
+<span class="sd">            known: (M1 + M2..., 3)</span>
+<span class="sd">            known_batch_cnt: (batch_size), [M1, M2, ...]</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            dist: (N1 + N2 ..., 3)  l2 distance to the three nearest neighbors</span>
+<span class="sd">            idx: (N1 + N2 ..., 3)  index of the three nearest neighbors, range [0, M1+M2+...]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="n">unknown</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="fm">__len__</span><span class="p">()</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">and</span> <span class="n">unknown</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">3</span>
+        <span class="k">assert</span> <span class="n">known</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="fm">__len__</span><span class="p">()</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">and</span> <span class="n">known</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">3</span>
+        <span class="k">assert</span> <span class="n">unknown_batch_cnt</span><span class="o">.</span><span class="fm">__len__</span><span class="p">()</span> <span class="o">==</span> <span class="n">known_batch_cnt</span><span class="o">.</span><span class="fm">__len__</span><span class="p">()</span>
+
+        <span class="n">dist2</span> <span class="o">=</span> <span class="n">unknown</span><span class="o">.</span><span class="n">new_zeros</span><span class="p">(</span><span class="n">unknown</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="n">unknown_batch_cnt</span><span class="o">.</span><span class="n">new_zeros</span><span class="p">(</span><span class="n">unknown</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span><span class="o">.</span><span class="n">int</span><span class="p">()</span>
+
+        <span class="n">pointnet2</span><span class="o">.</span><span class="n">three_nn_wrapper</span><span class="p">(</span>
+            <span class="n">unknown</span><span class="o">.</span><span class="n">contiguous</span><span class="p">(),</span> <span class="n">unknown_batch_cnt</span><span class="o">.</span><span class="n">contiguous</span><span class="p">(),</span>
+            <span class="n">known</span><span class="o">.</span><span class="n">contiguous</span><span class="p">(),</span> <span class="n">known_batch_cnt</span><span class="o">.</span><span class="n">contiguous</span><span class="p">(),</span> <span class="n">dist2</span><span class="p">,</span> <span class="n">idx</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">dist2</span><span class="p">),</span> <span class="n">idx</span></div>
+
+<div class="viewcode-block" id="ThreeNN.backward"><a class="viewcode-back" href="../../../cosense3d.ops.html#cosense3d.ops.pointnet2_utils.ThreeNN.backward">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">backward</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span></div></div>
+
+
+<span class="n">three_nn</span> <span class="o">=</span> <span class="n">ThreeNN</span><span class="o">.</span><span class="n">apply</span>
+
+
+<div class="viewcode-block" id="ThreeInterpolate"><a class="viewcode-back" href="../../../cosense3d.ops.html#cosense3d.ops.pointnet2_utils.ThreeInterpolate">[docs]</a><span class="k">class</span> <span class="nc">ThreeInterpolate</span><span class="p">(</span><span class="n">Function</span><span class="p">):</span>
+
+<div class="viewcode-block" id="ThreeInterpolate.forward"><a class="viewcode-back" href="../../../cosense3d.ops.html#cosense3d.ops.pointnet2_utils.ThreeInterpolate.forward">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">features</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">idx</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">weight</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Args:</span>
+<span class="sd">            ctx:</span>
+<span class="sd">            features: (M1 + M2 ..., C)</span>
+<span class="sd">            idx: [N1 + N2 ..., 3]</span>
+<span class="sd">            weight: [N1 + N2 ..., 3]</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            out_tensor: (N1 + N2 ..., C)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="n">idx</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">weight</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">and</span> <span class="n">idx</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">weight</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">3</span>
+
+        <span class="n">ctx</span><span class="o">.</span><span class="n">three_interpolate_for_backward</span> <span class="o">=</span> <span class="p">(</span><span class="n">idx</span><span class="p">,</span> <span class="n">weight</span><span class="p">,</span> <span class="n">features</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="n">features</span><span class="o">.</span><span class="n">new_zeros</span><span class="p">((</span><span class="n">idx</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">features</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+        <span class="n">pointnet2</span><span class="o">.</span><span class="n">three_interpolate_wrapper</span><span class="p">(</span><span class="n">features</span><span class="o">.</span><span class="n">contiguous</span><span class="p">(),</span> <span class="n">idx</span><span class="o">.</span><span class="n">contiguous</span><span class="p">(),</span> <span class="n">weight</span><span class="o">.</span><span class="n">contiguous</span><span class="p">(),</span> <span class="n">output</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">output</span></div>
+
+<div class="viewcode-block" id="ThreeInterpolate.backward"><a class="viewcode-back" href="../../../cosense3d.ops.html#cosense3d.ops.pointnet2_utils.ThreeInterpolate.backward">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">backward</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">grad_out</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Args:</span>
+<span class="sd">            ctx:</span>
+<span class="sd">            grad_out: (N1 + N2 ..., C)</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            grad_features: (M1 + M2 ..., C)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">idx</span><span class="p">,</span> <span class="n">weight</span><span class="p">,</span> <span class="n">M</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">three_interpolate_for_backward</span>
+        <span class="n">grad_features</span> <span class="o">=</span> <span class="n">grad_out</span><span class="o">.</span><span class="n">new_zeros</span><span class="p">((</span><span class="n">M</span><span class="p">,</span> <span class="n">grad_out</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+        <span class="n">pointnet2</span><span class="o">.</span><span class="n">three_interpolate_grad_wrapper</span><span class="p">(</span>
+            <span class="n">grad_out</span><span class="o">.</span><span class="n">contiguous</span><span class="p">(),</span> <span class="n">idx</span><span class="o">.</span><span class="n">contiguous</span><span class="p">(),</span> <span class="n">weight</span><span class="o">.</span><span class="n">contiguous</span><span class="p">(),</span> <span class="n">grad_features</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">grad_features</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span></div></div>
+
+
+<span class="n">three_interpolate</span> <span class="o">=</span> <span class="n">ThreeInterpolate</span><span class="o">.</span><span class="n">apply</span>
+
+
+<div class="viewcode-block" id="StackSAModuleMSG"><a class="viewcode-back" href="../../../cosense3d.ops.html#cosense3d.ops.pointnet2_utils.StackSAModuleMSG">[docs]</a><span class="k">class</span> <span class="nc">StackSAModuleMSG</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">radii</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span> <span class="n">nsamples</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">mlps</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]],</span>
+                 <span class="n">use_xyz</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">pool_method</span><span class="o">=</span><span class="s1">&#39;max_pool&#39;</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Args:</span>
+<span class="sd">            radii: list of float, list of radii to group with</span>
+<span class="sd">            nsamples: list of int, number of samples in each ball query</span>
+<span class="sd">            mlps: list of list of int, spec of the pointnet before the global pooling for each scale</span>
+<span class="sd">            use_xyz:</span>
+<span class="sd">            pool_method: max_pool / avg_pool</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">radii</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">nsamples</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">mlps</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">groupers</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">ModuleList</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mlps</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">ModuleList</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">radii</span><span class="p">)):</span>
+            <span class="n">radius</span> <span class="o">=</span> <span class="n">radii</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="n">nsample</span> <span class="o">=</span> <span class="n">nsamples</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">groupers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">QueryAndGroup</span><span class="p">(</span><span class="n">radius</span><span class="p">,</span> <span class="n">nsample</span><span class="p">,</span> <span class="n">use_xyz</span><span class="o">=</span><span class="n">use_xyz</span><span class="p">))</span>
+            <span class="n">mlp_spec</span> <span class="o">=</span> <span class="n">mlps</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">use_xyz</span><span class="p">:</span>
+                <span class="n">mlp_spec</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">3</span>
+
+            <span class="n">shared_mlps</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">mlp_spec</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
+                <span class="n">shared_mlps</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span>
+                    <span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">(</span><span class="n">mlp_spec</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="n">mlp_spec</span><span class="p">[</span><span class="n">k</span> <span class="o">+</span> <span class="mi">1</span><span class="p">],</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
+                    <span class="n">nn</span><span class="o">.</span><span class="n">BatchNorm2d</span><span class="p">(</span><span class="n">mlp_spec</span><span class="p">[</span><span class="n">k</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]),</span>
+                    <span class="n">nn</span><span class="o">.</span><span class="n">ReLU</span><span class="p">()</span>
+                <span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mlps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span><span class="o">*</span><span class="n">shared_mlps</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pool_method</span> <span class="o">=</span> <span class="n">pool_method</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">init_weights</span><span class="p">()</span>
+
+<div class="viewcode-block" id="StackSAModuleMSG.init_weights"><a class="viewcode-back" href="../../../cosense3d.ops.html#cosense3d.ops.pointnet2_utils.StackSAModuleMSG.init_weights">[docs]</a>    <span class="k">def</span> <span class="nf">init_weights</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">modules</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">):</span>
+                <span class="n">nn</span><span class="o">.</span><span class="n">init</span><span class="o">.</span><span class="n">kaiming_normal_</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">weight</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">m</span><span class="o">.</span><span class="n">bias</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">nn</span><span class="o">.</span><span class="n">init</span><span class="o">.</span><span class="n">constant_</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">bias</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">BatchNorm2d</span><span class="p">):</span>
+                <span class="n">nn</span><span class="o">.</span><span class="n">init</span><span class="o">.</span><span class="n">constant_</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">weight</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+                <span class="n">nn</span><span class="o">.</span><span class="n">init</span><span class="o">.</span><span class="n">constant_</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">bias</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="StackSAModuleMSG.forward"><a class="viewcode-back" href="../../../cosense3d.ops.html#cosense3d.ops.pointnet2_utils.StackSAModuleMSG.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">xyz_batch_cnt</span><span class="p">,</span> <span class="n">new_xyz</span><span class="p">,</span> <span class="n">new_xyz_batch_cnt</span><span class="p">,</span> <span class="n">features</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">empty_voxel_set_zeros</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :param xyz: (N1 + N2 ..., 3) tensor of the xyz coordinates of the features</span>
+<span class="sd">        :param xyz_batch_cnt: (batch_size), [N1, N2, ...]</span>
+<span class="sd">        :param new_xyz: (M1 + M2 ..., 3)</span>
+<span class="sd">        :param new_xyz_batch_cnt: (batch_size), [M1, M2, ...]</span>
+<span class="sd">        :param features: (N1 + N2 ..., C) tensor of the descriptors of the the features</span>
+<span class="sd">        :return:</span>
+<span class="sd">            new_xyz: (M1 + M2 ..., 3) tensor of the new features&#39; xyz</span>
+<span class="sd">            new_features: (M1 + M2 ..., \sum_k(mlps[k][-1])) tensor of the new_features descriptors</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">new_features_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">groupers</span><span class="p">)):</span>
+            <span class="n">new_features</span><span class="p">,</span> <span class="n">ball_idxs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">groupers</span><span class="p">[</span><span class="n">k</span><span class="p">](</span>
+                <span class="n">xyz</span><span class="p">,</span> <span class="n">xyz_batch_cnt</span><span class="p">,</span> <span class="n">new_xyz</span><span class="p">,</span> <span class="n">new_xyz_batch_cnt</span><span class="p">,</span> <span class="n">features</span>
+            <span class="p">)</span>  <span class="c1"># (M1 + M2, C, nsample)</span>
+            <span class="n">new_features</span> <span class="o">=</span> <span class="n">new_features</span><span class="o">.</span><span class="n">permute</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>  <span class="c1"># (1, C, M1 + M2 ..., nsample)</span>
+            <span class="n">new_features</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mlps</span><span class="p">[</span><span class="n">k</span><span class="p">](</span><span class="n">new_features</span><span class="p">)</span>  <span class="c1"># (1, C, M1 + M2 ..., nsample)</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pool_method</span> <span class="o">==</span> <span class="s1">&#39;max_pool&#39;</span><span class="p">:</span>
+                <span class="n">new_features</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">max_pool2d</span><span class="p">(</span>
+                    <span class="n">new_features</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="n">new_features</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">3</span><span class="p">)]</span>
+                <span class="p">)</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># (1, C, M1 + M2 ...)</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">pool_method</span> <span class="o">==</span> <span class="s1">&#39;avg_pool&#39;</span><span class="p">:</span>
+                <span class="n">new_features</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">avg_pool2d</span><span class="p">(</span>
+                    <span class="n">new_features</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="n">new_features</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">3</span><span class="p">)]</span>
+                <span class="p">)</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># (1, C, M1 + M2 ...)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+            <span class="n">new_features</span> <span class="o">=</span> <span class="n">new_features</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">permute</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>  <span class="c1"># (M1 + M2 ..., C)</span>
+            <span class="n">new_features_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_features</span><span class="p">)</span>
+
+        <span class="n">new_features</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">new_features_list</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># (M1 + M2 ..., C)</span>
+
+        <span class="k">return</span> <span class="n">new_xyz</span><span class="p">,</span> <span class="n">new_features</span></div></div>
+
+
+<div class="viewcode-block" id="StackPointnetFPModule"><a class="viewcode-back" href="../../../cosense3d.ops.html#cosense3d.ops.pointnet2_utils.StackPointnetFPModule">[docs]</a><span class="k">class</span> <span class="nc">StackPointnetFPModule</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">mlp</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Args:</span>
+<span class="sd">            mlp: list of int</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="n">shared_mlps</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">mlp</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="n">shared_mlps</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span>
+                <span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">(</span><span class="n">mlp</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="n">mlp</span><span class="p">[</span><span class="n">k</span> <span class="o">+</span> <span class="mi">1</span><span class="p">],</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
+                <span class="n">nn</span><span class="o">.</span><span class="n">BatchNorm2d</span><span class="p">(</span><span class="n">mlp</span><span class="p">[</span><span class="n">k</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]),</span>
+                <span class="n">nn</span><span class="o">.</span><span class="n">ReLU</span><span class="p">()</span>
+            <span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mlp</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span><span class="o">*</span><span class="n">shared_mlps</span><span class="p">)</span>
+
+<div class="viewcode-block" id="StackPointnetFPModule.forward"><a class="viewcode-back" href="../../../cosense3d.ops.html#cosense3d.ops.pointnet2_utils.StackPointnetFPModule.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">unknown</span><span class="p">,</span> <span class="n">unknown_batch_cnt</span><span class="p">,</span> <span class="n">known</span><span class="p">,</span> <span class="n">known_batch_cnt</span><span class="p">,</span> <span class="n">unknown_feats</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">known_feats</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Args:</span>
+<span class="sd">            unknown: (N1 + N2 ..., 3)</span>
+<span class="sd">            known: (M1 + M2 ..., 3)</span>
+<span class="sd">            unknow_feats: (N1 + N2 ..., C1)</span>
+<span class="sd">            known_feats: (M1 + M2 ..., C2)</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            new_features: (N1 + N2 ..., C_out)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">dist</span><span class="p">,</span> <span class="n">idx</span> <span class="o">=</span> <span class="n">three_nn</span><span class="p">(</span><span class="n">unknown</span><span class="p">,</span> <span class="n">unknown_batch_cnt</span><span class="p">,</span> <span class="n">known</span><span class="p">,</span> <span class="n">known_batch_cnt</span><span class="p">)</span>
+        <span class="n">dist_recip</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="p">(</span><span class="n">dist</span> <span class="o">+</span> <span class="mf">1e-8</span><span class="p">)</span>
+        <span class="n">norm</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dist_recip</span><span class="p">,</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdim</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">weight</span> <span class="o">=</span> <span class="n">dist_recip</span> <span class="o">/</span> <span class="n">norm</span>
+
+        <span class="n">interpolated_feats</span> <span class="o">=</span> <span class="n">three_interpolate</span><span class="p">(</span><span class="n">known_feats</span><span class="p">,</span> <span class="n">idx</span><span class="p">,</span> <span class="n">weight</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">unknown_feats</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">new_features</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">interpolated_feats</span><span class="p">,</span> <span class="n">unknown_feats</span><span class="p">],</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># (N1 + N2 ..., C2 + C1)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">new_features</span> <span class="o">=</span> <span class="n">interpolated_feats</span>
+        <span class="n">new_features</span> <span class="o">=</span> <span class="n">new_features</span><span class="o">.</span><span class="n">permute</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:,</span> <span class="kc">None</span><span class="p">]</span>  <span class="c1"># (1, C, N1 + N2 ..., 1)</span>
+        <span class="n">new_features</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mlp</span><span class="p">(</span><span class="n">new_features</span><span class="p">)</span>
+
+        <span class="n">new_features</span> <span class="o">=</span> <span class="n">new_features</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">permute</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>  <span class="c1"># (N1 + N2 ..., C)</span>
+        <span class="k">return</span> <span class="n">new_features</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Anonymous Author.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

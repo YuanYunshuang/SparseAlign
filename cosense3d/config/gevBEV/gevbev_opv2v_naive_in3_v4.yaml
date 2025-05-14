@@ -1,0 +1,41 @@
+DATASET: 'pycfg.base.opv2v.seq1_vox04_bevmap'
+
+TRAIN:
+#  project_name: 'centernet'
+  wandb_account: 'opheliayuan'
+  log_every: 10
+  max_epoch: 30
+  gpus: 0
+  hooks: 'pycfg.base.hooks.train_hooks'
+  optimizer:
+    lr: 0.0002
+    weight_decay: 1e-2
+    betas: [0.9, 0.98]
+  lr_scheduler:
+    policy: 'MultiStepLR'
+    milestones: [15, 25]
+    gamma: 0.1
+
+TEST:
+  hooks: 'pycfg.nets.gevBEV.test_hooks_opv2v_bev'
+
+
+CONTROLLER:
+  num_loss_frame: 1
+  data_manager: 'pycfg.base.opv2v.data_manager'
+  shared_modules: 'pycfg.nets.gevBEV.shared_modules_gevbev_opv2v_naive_in3_v4'
+  cav_manager:
+    prototype: gevBEV_collection.GevBEV
+    dataset: opv2v
+    all_grad: true
+
+VISUALIZATION:
+  output_viewer:
+    plots: 'pycfg.nets.gevBEV.plots_opv2v'
+
+
+
+
+
+
+

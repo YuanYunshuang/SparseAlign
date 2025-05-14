@@ -1,0 +1,11 @@
+logs
+wandb
+*__pycache__*
+*.egg-info
+.idea
+*.pyc
+dataset/metas/
+data
+*.so
+*/build/
+cosense3d/ops/build

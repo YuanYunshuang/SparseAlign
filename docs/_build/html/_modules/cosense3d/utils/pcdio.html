@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>cosense3d.utils.pcdio &mdash; OpenCosense3D 1.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js?v=af2ce170"></script>
+        <script src="../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            OpenCosense3D
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../md/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../md/prepare_data.html">Prepare Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../md/structure.html">The Structure of the framework</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">CoSense3d</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">OpenCosense3D</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">cosense3d.utils.pcdio</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for cosense3d.utils.pcdio</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Read and write PCL .pcd files in python.</span>
+<span class="sd">dimatura@cmu.edu, 2013-2018</span>
+
+<span class="sd">- TODO better API for wacky operations.</span>
+<span class="sd">- TODO add a cli for common operations.</span>
+<span class="sd">- TODO deal properly with padding</span>
+<span class="sd">- TODO deal properly with multicount fields</span>
+<span class="sd">- TODO better support for rgb nonsense</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">struct</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">from</span> <span class="nn">io</span> <span class="kn">import</span> <span class="n">StringIO</span> <span class="k">as</span> <span class="n">sio</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">import</span> <span class="nn">lzf</span>
+
+<span class="n">HAS_SENSOR_MSGS</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">sensor_msgs.msg</span> <span class="kn">import</span> <span class="n">PointField</span>
+    <span class="kn">import</span> <span class="nn">numpy_pc2</span>  <span class="c1"># needs sensor_msgs</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="n">HAS_SENSOR_MSGS</span> <span class="o">=</span> <span class="kc">False</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;PointCloud&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;point_cloud_to_path&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;point_cloud_to_buffer&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;point_cloud_to_fileobj&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;point_cloud_from_path&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;point_cloud_from_buffer&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;point_cloud_from_fileobj&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;make_xyz_point_cloud&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;make_xyz_rgb_point_cloud&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;make_xyz_label_point_cloud&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;save_txt&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;cat_point_clouds&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;add_fields&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;update_field&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;build_ascii_fmtstr&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;encode_rgb_for_pcl&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;decode_rgb_from_pcl&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;save_point_cloud&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;save_point_cloud_bin&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;save_point_cloud_bin_compressed&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;pcd_type_to_numpy_type&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;numpy_type_to_pcd_type&#39;</span><span class="p">,</span>
+           <span class="p">]</span>
+
+<span class="k">if</span> <span class="n">HAS_SENSOR_MSGS</span><span class="p">:</span>
+    <span class="n">pc2_pcd_type_mappings</span> <span class="o">=</span> <span class="p">[(</span><span class="n">PointField</span><span class="o">.</span><span class="n">INT8</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;I&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)),</span>
+                             <span class="p">(</span><span class="n">PointField</span><span class="o">.</span><span class="n">UINT8</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;U&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)),</span>
+                             <span class="p">(</span><span class="n">PointField</span><span class="o">.</span><span class="n">INT16</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;I&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">)),</span>
+                             <span class="p">(</span><span class="n">PointField</span><span class="o">.</span><span class="n">UINT16</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;U&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">)),</span>
+                             <span class="p">(</span><span class="n">PointField</span><span class="o">.</span><span class="n">INT32</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;I&#39;</span><span class="p">,</span> <span class="mi">4</span><span class="p">)),</span>
+                             <span class="p">(</span><span class="n">PointField</span><span class="o">.</span><span class="n">UINT32</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;U&#39;</span><span class="p">,</span> <span class="mi">4</span><span class="p">)),</span>
+                             <span class="p">(</span><span class="n">PointField</span><span class="o">.</span><span class="n">FLOAT32</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;F&#39;</span><span class="p">,</span> <span class="mi">4</span><span class="p">)),</span>
+                             <span class="p">(</span><span class="n">PointField</span><span class="o">.</span><span class="n">FLOAT64</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;F&#39;</span><span class="p">,</span> <span class="mi">8</span><span class="p">))]</span>
+    <span class="n">pc2_type_to_pcd_type</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">pc2_pcd_type_mappings</span><span class="p">)</span>
+    <span class="n">pcd_type_to_pc2_type</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">((</span><span class="n">q</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">q</span><span class="p">)</span> <span class="ow">in</span> <span class="n">pc2_pcd_type_mappings</span><span class="p">)</span>
+    <span class="n">__all__</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="s1">&#39;pcd_type_to_pc2_type&#39;</span><span class="p">,</span> <span class="s1">&#39;pc2_type_to_pcd_type&#39;</span><span class="p">])</span>
+
+<span class="n">numpy_pcd_type_mappings</span> <span class="o">=</span> <span class="p">[(</span><span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s1">&#39;float32&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;F&#39;</span><span class="p">,</span> <span class="mi">4</span><span class="p">)),</span>
+                           <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s1">&#39;float64&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;F&#39;</span><span class="p">,</span> <span class="mi">8</span><span class="p">)),</span>
+                           <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s1">&#39;uint8&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;U&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)),</span>
+                           <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s1">&#39;uint16&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;U&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">)),</span>
+                           <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s1">&#39;uint32&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;U&#39;</span><span class="p">,</span> <span class="mi">4</span><span class="p">)),</span>
+                           <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s1">&#39;uint64&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;U&#39;</span><span class="p">,</span> <span class="mi">8</span><span class="p">)),</span>
+                           <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s1">&#39;int16&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;I&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">)),</span>
+                           <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s1">&#39;int32&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;I&#39;</span><span class="p">,</span> <span class="mi">4</span><span class="p">)),</span>
+                           <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s1">&#39;int64&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;I&#39;</span><span class="p">,</span> <span class="mi">8</span><span class="p">))]</span>
+<span class="n">numpy_type_to_pcd_type</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">numpy_pcd_type_mappings</span><span class="p">)</span>
+<span class="n">pcd_type_to_numpy_type</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">((</span><span class="n">q</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">q</span><span class="p">)</span> <span class="ow">in</span> <span class="n">numpy_pcd_type_mappings</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">parse_header</span><span class="p">(</span><span class="n">lines</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Parse header of PCD files.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">metadata</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">ln</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">ln</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="sa">b</span><span class="s1">&#39;#&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">ln</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="s1">&#39;(\w+)\s+([\w\s\.]+)&#39;</span><span class="p">,</span> <span class="n">ln</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;ascii&#39;</span><span class="p">))</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">match</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;warning: can&#39;t understand line: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">ln</span><span class="p">)</span>
+            <span class="k">continue</span>
+        <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="o">=</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s1">&#39;version&#39;</span><span class="p">:</span>
+            <span class="n">metadata</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="k">elif</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;fields&#39;</span><span class="p">,</span> <span class="s1">&#39;type&#39;</span><span class="p">):</span>
+            <span class="n">metadata</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;size&#39;</span><span class="p">,</span> <span class="s1">&#39;count&#39;</span><span class="p">):</span>
+            <span class="n">metadata</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">value</span><span class="o">.</span><span class="n">split</span><span class="p">()))</span>
+        <span class="k">elif</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;width&#39;</span><span class="p">,</span> <span class="s1">&#39;height&#39;</span><span class="p">,</span> <span class="s1">&#39;points&#39;</span><span class="p">):</span>
+            <span class="n">metadata</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">key</span> <span class="o">==</span> <span class="s1">&#39;viewpoint&#39;</span><span class="p">:</span>
+            <span class="n">metadata</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="n">value</span><span class="o">.</span><span class="n">split</span><span class="p">()))</span>
+        <span class="k">elif</span> <span class="n">key</span> <span class="o">==</span> <span class="s1">&#39;data&#39;</span><span class="p">:</span>
+            <span class="n">metadata</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+        <span class="c1"># TODO apparently count is not required?</span>
+    <span class="c1"># add some reasonable defaults</span>
+    <span class="k">if</span> <span class="s1">&#39;count&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">metadata</span><span class="p">:</span>
+        <span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;count&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;fields&#39;</span><span class="p">])</span>
+    <span class="k">if</span> <span class="s1">&#39;viewpoint&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">metadata</span><span class="p">:</span>
+        <span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;viewpoint&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]</span>
+    <span class="k">if</span> <span class="s1">&#39;version&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">metadata</span><span class="p">:</span>
+        <span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;version&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;.7&#39;</span>
+    <span class="k">return</span> <span class="n">metadata</span>
+
+
+<span class="k">def</span> <span class="nf">write_header</span><span class="p">(</span><span class="n">metadata</span><span class="p">,</span> <span class="n">rename_padding</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Given metadata as dictionary, return a string header.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">template</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span><span class="se">\</span>
+<span class="s2">VERSION </span><span class="si">{version}</span>
+<span class="s2">FIELDS </span><span class="si">{fields}</span>
+<span class="s2">SIZE </span><span class="si">{size}</span>
+<span class="s2">TYPE </span><span class="si">{type}</span>
+<span class="s2">COUNT </span><span class="si">{count}</span>
+<span class="s2">WIDTH </span><span class="si">{width}</span>
+<span class="s2">HEIGHT </span><span class="si">{height}</span>
+<span class="s2">VIEWPOINT </span><span class="si">{viewpoint}</span>
+<span class="s2">POINTS </span><span class="si">{points}</span>
+<span class="s2">DATA </span><span class="si">{data}</span>
+<span class="s2">&quot;&quot;&quot;</span>
+    <span class="n">str_metadata</span> <span class="o">=</span> <span class="n">metadata</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">rename_padding</span><span class="p">:</span>
+        <span class="n">str_metadata</span><span class="p">[</span><span class="s1">&#39;fields&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;fields&#39;</span><span class="p">])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">new_fields</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;fields&#39;</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="n">f</span> <span class="o">==</span> <span class="s1">&#39;_&#39;</span><span class="p">:</span>
+                <span class="n">new_fields</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;padding&#39;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">new_fields</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+        <span class="n">str_metadata</span><span class="p">[</span><span class="s1">&#39;fields&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">new_fields</span><span class="p">)</span>
+    <span class="n">str_metadata</span><span class="p">[</span><span class="s1">&#39;size&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;size&#39;</span><span class="p">]))</span>
+    <span class="n">str_metadata</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">])</span>
+    <span class="n">str_metadata</span><span class="p">[</span><span class="s1">&#39;count&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;count&#39;</span><span class="p">]))</span>
+    <span class="n">str_metadata</span><span class="p">[</span><span class="s1">&#39;width&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;width&#39;</span><span class="p">])</span>
+    <span class="n">str_metadata</span><span class="p">[</span><span class="s1">&#39;height&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;height&#39;</span><span class="p">])</span>
+    <span class="n">str_metadata</span><span class="p">[</span><span class="s1">&#39;viewpoint&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;viewpoint&#39;</span><span class="p">]))</span>
+    <span class="n">str_metadata</span><span class="p">[</span><span class="s1">&#39;points&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;points&#39;</span><span class="p">])</span>
+    <span class="n">tmpl</span> <span class="o">=</span> <span class="n">template</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">**</span><span class="n">str_metadata</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">tmpl</span>
+
+
+<span class="k">def</span> <span class="nf">_metadata_is_consistent</span><span class="p">(</span><span class="n">metadata</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Sanity check for metadata. Just some basic checks.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">checks</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">required</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;version&#39;</span><span class="p">,</span> <span class="s1">&#39;fields&#39;</span><span class="p">,</span> <span class="s1">&#39;size&#39;</span><span class="p">,</span> <span class="s1">&#39;width&#39;</span><span class="p">,</span> <span class="s1">&#39;height&#39;</span><span class="p">,</span> <span class="s1">&#39;points&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;viewpoint&#39;</span><span class="p">,</span> <span class="s1">&#39;data&#39;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">required</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">f</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">metadata</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1"> required&#39;</span> <span class="o">%</span> <span class="n">f</span><span class="p">)</span>
+    <span class="n">checks</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="k">lambda</span> <span class="n">m</span><span class="p">:</span> <span class="nb">all</span><span class="p">([</span><span class="n">k</span> <span class="ow">in</span> <span class="n">m</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">required</span><span class="p">]),</span>
+                   <span class="s1">&#39;missing field&#39;</span><span class="p">))</span>
+    <span class="n">checks</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="k">lambda</span> <span class="n">m</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">m</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">])</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">m</span><span class="p">[</span><span class="s1">&#39;count&#39;</span><span class="p">])</span> <span class="o">==</span>
+                   <span class="nb">len</span><span class="p">(</span><span class="n">m</span><span class="p">[</span><span class="s1">&#39;fields&#39;</span><span class="p">]),</span>
+                   <span class="s1">&#39;length of type, count and fields must be equal&#39;</span><span class="p">))</span>
+    <span class="n">checks</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="k">lambda</span> <span class="n">m</span><span class="p">:</span> <span class="n">m</span><span class="p">[</span><span class="s1">&#39;height&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span>
+                   <span class="s1">&#39;height must be greater than 0&#39;</span><span class="p">))</span>
+    <span class="n">checks</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="k">lambda</span> <span class="n">m</span><span class="p">:</span> <span class="n">m</span><span class="p">[</span><span class="s1">&#39;width&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span>
+                   <span class="s1">&#39;width must be greater than 0&#39;</span><span class="p">))</span>
+    <span class="n">checks</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="k">lambda</span> <span class="n">m</span><span class="p">:</span> <span class="n">m</span><span class="p">[</span><span class="s1">&#39;points&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span>
+                   <span class="s1">&#39;points must be greater than 0&#39;</span><span class="p">))</span>
+    <span class="n">checks</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="k">lambda</span> <span class="n">m</span><span class="p">:</span> <span class="n">m</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;ascii&#39;</span><span class="p">,</span> <span class="s1">&#39;binary&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;binary_compressed&#39;</span><span class="p">),</span>
+                   <span class="s1">&#39;unknown data type:&#39;</span>
+                   <span class="s1">&#39;should be ascii/binary/binary_compressed&#39;</span><span class="p">))</span>
+    <span class="n">ok</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="k">for</span> <span class="n">check</span><span class="p">,</span> <span class="n">msg</span> <span class="ow">in</span> <span class="n">checks</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">check</span><span class="p">(</span><span class="n">metadata</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;error:&#39;</span><span class="p">,</span> <span class="n">msg</span><span class="p">)</span>
+            <span class="n">ok</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="k">return</span> <span class="n">ok</span>
+
+<span class="c1"># def pcd_type_to_numpy(pcd_type, pcd_sz):</span>
+<span class="c1">#     &quot;&quot;&quot; convert from a pcd type string and size to numpy dtype.&quot;&quot;&quot;</span>
+<span class="c1">#     typedict = {&#39;F&#39; : { 4:np.float32, 8:np.float64 },</span>
+<span class="c1">#                 &#39;I&#39; : { 1:np.int8, 2:np.int16, 4:np.int32, 8:np.int64 },</span>
+<span class="c1">#                 &#39;U&#39; : { 1:np.uint8, 2:np.uint16, 4:np.uint32 , 8:np.uint64 }}</span>
+<span class="c1">#     return typedict[pcd_type][pcd_sz]</span>
+
+
+<span class="k">def</span> <span class="nf">_build_dtype</span><span class="p">(</span><span class="n">metadata</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Build numpy structured array dtype from pcl metadata.</span>
+
+<span class="sd">    Note that fields with count &gt; 1 are &#39;flattened&#39; by creating multiple</span>
+<span class="sd">    single-count fields.</span>
+
+<span class="sd">    *TODO* allow &#39;proper&#39; multi-count fields.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">types</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">f</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;fields&#39;</span><span class="p">],</span>
+                          <span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;count&#39;</span><span class="p">],</span>
+                          <span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">],</span>
+                          <span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;size&#39;</span><span class="p">]):</span>
+        <span class="n">np_type</span> <span class="o">=</span> <span class="n">pcd_type_to_numpy_type</span><span class="p">[(</span><span class="n">t</span><span class="p">,</span> <span class="n">s</span><span class="p">)]</span>
+        <span class="k">if</span> <span class="n">c</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">types</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">f</span><span class="p">,</span> <span class="n">np_type</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">c</span><span class="p">):</span>
+                <span class="n">types</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">_</span><span class="si">%04d</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">i</span><span class="p">),</span> <span class="n">np_type</span><span class="p">))</span>
+    <span class="n">dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">types</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">dtype</span>
+
+
+<div class="viewcode-block" id="build_ascii_fmtstr"><a class="viewcode-back" href="../../../cosense3d.utils.html#cosense3d.utils.pcdio.build_ascii_fmtstr">[docs]</a><span class="k">def</span> <span class="nf">build_ascii_fmtstr</span><span class="p">(</span><span class="n">pc</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Make a format string for printing to ascii.</span>
+
+<span class="sd">    Note %.8f is minimum for rgb.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">fmtstr</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">t</span><span class="p">,</span> <span class="n">cnt</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">pc</span><span class="o">.</span><span class="n">type</span><span class="p">,</span> <span class="n">pc</span><span class="o">.</span><span class="n">count</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">t</span> <span class="o">==</span> <span class="s1">&#39;F&#39;</span><span class="p">:</span>
+            <span class="n">fmtstr</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="s1">&#39;</span><span class="si">%.10f</span><span class="s1">&#39;</span><span class="p">]</span><span class="o">*</span><span class="n">cnt</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">t</span> <span class="o">==</span> <span class="s1">&#39;I&#39;</span><span class="p">:</span>
+            <span class="n">fmtstr</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="s1">&#39;</span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">]</span><span class="o">*</span><span class="n">cnt</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">t</span> <span class="o">==</span> <span class="s1">&#39;U&#39;</span><span class="p">:</span>
+            <span class="n">fmtstr</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="s1">&#39;</span><span class="si">%u</span><span class="s1">&#39;</span><span class="p">]</span><span class="o">*</span><span class="n">cnt</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;don&#39;t know about type </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">t</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">fmtstr</span></div>
+
+
+<span class="k">def</span> <span class="nf">parse_ascii_pc_data</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">dtype</span><span class="p">,</span> <span class="n">metadata</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Use numpy to parse ascii pointcloud data.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s1">&#39; &#39;</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">parse_binary_pc_data</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">dtype</span><span class="p">,</span> <span class="n">metadata</span><span class="p">):</span>
+    <span class="n">rowstep</span> <span class="o">=</span> <span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;points&#39;</span><span class="p">]</span><span class="o">*</span><span class="n">dtype</span><span class="o">.</span><span class="n">itemsize</span>
+    <span class="c1"># for some reason pcl adds empty space at the end of files</span>
+    <span class="n">buf</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">rowstep</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">fromstring</span><span class="p">(</span><span class="n">buf</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">parse_binary_compressed_pc_data</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">dtype</span><span class="p">,</span> <span class="n">metadata</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Parse lzf-compressed data.</span>
+<span class="sd">    Format is undocumented but seems to be:</span>
+<span class="sd">    - compressed size of data (uint32)</span>
+<span class="sd">    - uncompressed size of data (uint32)</span>
+<span class="sd">    - compressed data</span>
+<span class="sd">    - junk</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">fmt</span> <span class="o">=</span> <span class="s1">&#39;II&#39;</span>
+    <span class="n">compressed_size</span><span class="p">,</span> <span class="n">uncompressed_size</span> <span class="o">=</span>\
+        <span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="n">fmt</span><span class="p">,</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">struct</span><span class="o">.</span><span class="n">calcsize</span><span class="p">(</span><span class="n">fmt</span><span class="p">)))</span>
+    <span class="n">compressed_data</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">compressed_size</span><span class="p">)</span>
+    <span class="c1"># TODO what to use as second argument? if buf is None</span>
+    <span class="c1"># (compressed &gt; uncompressed)</span>
+    <span class="c1"># should we read buf as raw binary?</span>
+    <span class="n">buf</span> <span class="o">=</span> <span class="n">lzf</span><span class="o">.</span><span class="n">decompress</span><span class="p">(</span><span class="n">compressed_data</span><span class="p">,</span> <span class="n">uncompressed_size</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span> <span class="o">!=</span> <span class="n">uncompressed_size</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s1">&#39;Error decompressing data&#39;</span><span class="p">)</span>
+    <span class="c1"># the data is stored field-by-field</span>
+    <span class="n">pc_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;width&#39;</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
+    <span class="n">ix</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">dti</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">dtype</span><span class="p">)):</span>
+        <span class="n">dt</span> <span class="o">=</span> <span class="n">dtype</span><span class="p">[</span><span class="n">dti</span><span class="p">]</span>
+        <span class="nb">bytes</span> <span class="o">=</span> <span class="n">dt</span><span class="o">.</span><span class="n">itemsize</span> <span class="o">*</span> <span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;width&#39;</span><span class="p">]</span>
+        <span class="n">column</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fromstring</span><span class="p">(</span><span class="n">buf</span><span class="p">[</span><span class="n">ix</span><span class="p">:(</span><span class="n">ix</span><span class="o">+</span><span class="nb">bytes</span><span class="p">)],</span> <span class="n">dt</span><span class="p">)</span>
+        <span class="n">pc_data</span><span class="p">[</span><span class="n">dtype</span><span class="o">.</span><span class="n">names</span><span class="p">[</span><span class="n">dti</span><span class="p">]]</span> <span class="o">=</span> <span class="n">column</span>
+        <span class="n">ix</span> <span class="o">+=</span> <span class="nb">bytes</span>
+    <span class="k">return</span> <span class="n">pc_data</span>
+
+
+<div class="viewcode-block" id="point_cloud_from_fileobj"><a class="viewcode-back" href="../../../cosense3d.utils.html#cosense3d.utils.pcdio.point_cloud_from_fileobj">[docs]</a><span class="k">def</span> <span class="nf">point_cloud_from_fileobj</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Parse pointcloud coming from file object f</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">header</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="n">ln</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="n">header</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ln</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">ln</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="sa">b</span><span class="s1">&#39;DATA&#39;</span><span class="p">):</span>
+            <span class="n">metadata</span> <span class="o">=</span> <span class="n">parse_header</span><span class="p">(</span><span class="n">header</span><span class="p">)</span>
+            <span class="n">dtype</span> <span class="o">=</span> <span class="n">_build_dtype</span><span class="p">(</span><span class="n">metadata</span><span class="p">)</span>
+            <span class="k">break</span>
+    <span class="k">if</span> <span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;ascii&#39;</span><span class="p">:</span>
+        <span class="n">pc_data</span> <span class="o">=</span> <span class="n">parse_ascii_pc_data</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">dtype</span><span class="p">,</span> <span class="n">metadata</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;binary&#39;</span><span class="p">:</span>
+        <span class="n">pc_data</span> <span class="o">=</span> <span class="n">parse_binary_pc_data</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">dtype</span><span class="p">,</span> <span class="n">metadata</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;binary_compressed&#39;</span><span class="p">:</span>
+        <span class="n">pc_data</span> <span class="o">=</span> <span class="n">parse_binary_compressed_pc_data</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">dtype</span><span class="p">,</span> <span class="n">metadata</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;DATA field is neither &quot;ascii&quot; or &quot;binary&quot; or</span><span class="se">\</span>
+<span class="s1">                &quot;binary_compressed&quot;&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">PointCloud</span><span class="p">(</span><span class="n">metadata</span><span class="p">,</span> <span class="n">pc_data</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="point_cloud_from_path"><a class="viewcode-back" href="../../../cosense3d.utils.html#cosense3d.utils.pcdio.point_cloud_from_path">[docs]</a><span class="k">def</span> <span class="nf">point_cloud_from_path</span><span class="p">(</span><span class="n">fname</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; load point cloud in binary format</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">pc</span> <span class="o">=</span> <span class="n">point_cloud_from_fileobj</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">pc</span></div>
+
+
+<div class="viewcode-block" id="point_cloud_from_buffer"><a class="viewcode-back" href="../../../cosense3d.utils.html#cosense3d.utils.pcdio.point_cloud_from_buffer">[docs]</a><span class="k">def</span> <span class="nf">point_cloud_from_buffer</span><span class="p">(</span><span class="n">buf</span><span class="p">):</span>
+    <span class="n">fileobj</span> <span class="o">=</span> <span class="n">sio</span><span class="o">.</span><span class="n">StringIO</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+    <span class="n">pc</span> <span class="o">=</span> <span class="n">point_cloud_from_fileobj</span><span class="p">(</span><span class="n">fileobj</span><span class="p">)</span>
+    <span class="n">fileobj</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>  <span class="c1"># necessary?</span>
+    <span class="k">return</span> <span class="n">pc</span></div>
+
+
+<div class="viewcode-block" id="point_cloud_to_fileobj"><a class="viewcode-back" href="../../../cosense3d.utils.html#cosense3d.utils.pcdio.point_cloud_to_fileobj">[docs]</a><span class="k">def</span> <span class="nf">point_cloud_to_fileobj</span><span class="p">(</span><span class="n">pc</span><span class="p">,</span> <span class="n">fileobj</span><span class="p">,</span> <span class="n">data_compression</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Write pointcloud as .pcd to fileobj.</span>
+<span class="sd">    If data_compression is not None it overrides pc.data.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">metadata</span> <span class="o">=</span> <span class="n">pc</span><span class="o">.</span><span class="n">get_metadata</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">data_compression</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">data_compression</span> <span class="o">=</span> <span class="n">data_compression</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+        <span class="k">assert</span><span class="p">(</span><span class="n">data_compression</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;ascii&#39;</span><span class="p">,</span> <span class="s1">&#39;binary&#39;</span><span class="p">,</span> <span class="s1">&#39;binary_compressed&#39;</span><span class="p">))</span>
+        <span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">data_compression</span>
+
+    <span class="n">header</span> <span class="o">=</span> <span class="n">write_header</span><span class="p">(</span><span class="n">metadata</span><span class="p">)</span>
+    <span class="n">fileobj</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">header</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;ascii&#39;</span><span class="p">:</span>
+        <span class="n">fmtstr</span> <span class="o">=</span> <span class="n">build_ascii_fmtstr</span><span class="p">(</span><span class="n">pc</span><span class="p">)</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">savetxt</span><span class="p">(</span><span class="n">fileobj</span><span class="p">,</span> <span class="n">pc</span><span class="o">.</span><span class="n">pc_data</span><span class="p">,</span> <span class="n">fmt</span><span class="o">=</span><span class="n">fmtstr</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;binary&#39;</span><span class="p">:</span>
+        <span class="n">fileobj</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">pc</span><span class="o">.</span><span class="n">pc_data</span><span class="o">.</span><span class="n">tostring</span><span class="p">(</span><span class="s1">&#39;C&#39;</span><span class="p">))</span>
+    <span class="k">elif</span> <span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;binary_compressed&#39;</span><span class="p">:</span>
+        <span class="c1"># TODO</span>
+        <span class="c1"># a &#39;_&#39; field is ignored by pcl and breakes compressed point clouds.</span>
+        <span class="c1"># changing &#39;_&#39; to &#39;_padding&#39; or other name fixes this.</span>
+        <span class="c1"># admittedly padding shouldn&#39;t be compressed in the first place.</span>
+        <span class="c1"># reorder to column-by-column</span>
+        <span class="n">uncompressed_lst</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">fieldname</span> <span class="ow">in</span> <span class="n">pc</span><span class="o">.</span><span class="n">pc_data</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">names</span><span class="p">:</span>
+            <span class="n">column</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ascontiguousarray</span><span class="p">(</span><span class="n">pc</span><span class="o">.</span><span class="n">pc_data</span><span class="p">[</span><span class="n">fieldname</span><span class="p">])</span><span class="o">.</span><span class="n">tostring</span><span class="p">(</span><span class="s1">&#39;C&#39;</span><span class="p">)</span>
+            <span class="n">uncompressed_lst</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">column</span><span class="p">)</span>
+        <span class="n">uncompressed</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">uncompressed_lst</span><span class="p">)</span>
+        <span class="n">uncompressed_size</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">uncompressed</span><span class="p">)</span>
+        <span class="c1"># print(&quot;uncompressed_size = %r&quot;%(uncompressed_size))</span>
+        <span class="n">buf</span> <span class="o">=</span> <span class="n">lzf</span><span class="o">.</span><span class="n">compress</span><span class="p">(</span><span class="n">uncompressed</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">buf</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># compression didn&#39;t shrink the file</span>
+            <span class="c1"># TODO what do to do in this case when reading?</span>
+            <span class="n">buf</span> <span class="o">=</span> <span class="n">uncompressed</span>
+            <span class="n">compressed_size</span> <span class="o">=</span> <span class="n">uncompressed_size</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">compressed_size</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+        <span class="n">fmt</span> <span class="o">=</span> <span class="s1">&#39;II&#39;</span>
+        <span class="n">fileobj</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="n">fmt</span><span class="p">,</span> <span class="n">compressed_size</span><span class="p">,</span> <span class="n">uncompressed_size</span><span class="p">))</span>
+        <span class="n">fileobj</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;unknown DATA type&#39;</span><span class="p">)</span></div>
+    <span class="c1"># we can&#39;t close because if it&#39;s stringio buf then we can&#39;t get value after</span>
+
+
+<div class="viewcode-block" id="point_cloud_to_path"><a class="viewcode-back" href="../../../cosense3d.utils.html#cosense3d.utils.pcdio.point_cloud_to_path">[docs]</a><span class="k">def</span> <span class="nf">point_cloud_to_path</span><span class="p">(</span><span class="n">pc</span><span class="p">,</span> <span class="n">fname</span><span class="p">):</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">point_cloud_to_fileobj</span><span class="p">(</span><span class="n">pc</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="point_cloud_to_buffer"><a class="viewcode-back" href="../../../cosense3d.utils.html#cosense3d.utils.pcdio.point_cloud_to_buffer">[docs]</a><span class="k">def</span> <span class="nf">point_cloud_to_buffer</span><span class="p">(</span><span class="n">pc</span><span class="p">,</span> <span class="n">data_compression</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="n">fileobj</span> <span class="o">=</span> <span class="n">sio</span><span class="o">.</span><span class="n">StringIO</span><span class="p">()</span>
+    <span class="n">point_cloud_to_fileobj</span><span class="p">(</span><span class="n">pc</span><span class="p">,</span> <span class="n">fileobj</span><span class="p">,</span> <span class="n">data_compression</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">fileobj</span><span class="o">.</span><span class="n">getvalue</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="save_point_cloud"><a class="viewcode-back" href="../../../cosense3d.utils.html#cosense3d.utils.pcdio.save_point_cloud">[docs]</a><span class="k">def</span> <span class="nf">save_point_cloud</span><span class="p">(</span><span class="n">pc</span><span class="p">,</span> <span class="n">fname</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Save pointcloud to fname in ascii format.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">point_cloud_to_fileobj</span><span class="p">(</span><span class="n">pc</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="s1">&#39;ascii&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="save_point_cloud_bin"><a class="viewcode-back" href="../../../cosense3d.utils.html#cosense3d.utils.pcdio.save_point_cloud_bin">[docs]</a><span class="k">def</span> <span class="nf">save_point_cloud_bin</span><span class="p">(</span><span class="n">pc</span><span class="p">,</span> <span class="n">fname</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Save pointcloud to fname in binary format.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">point_cloud_to_fileobj</span><span class="p">(</span><span class="n">pc</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="s1">&#39;binary&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="save_point_cloud_bin_compressed"><a class="viewcode-back" href="../../../cosense3d.utils.html#cosense3d.utils.pcdio.save_point_cloud_bin_compressed">[docs]</a><span class="k">def</span> <span class="nf">save_point_cloud_bin_compressed</span><span class="p">(</span><span class="n">pc</span><span class="p">,</span> <span class="n">fname</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Save pointcloud to fname in binary compressed format.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">point_cloud_to_fileobj</span><span class="p">(</span><span class="n">pc</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="s1">&#39;binary_compressed&#39;</span><span class="p">)</span></div>
+
+
+<span class="k">def</span> <span class="nf">save_xyz_label</span><span class="p">(</span><span class="n">pc</span><span class="p">,</span> <span class="n">fname</span><span class="p">,</span> <span class="n">use_default_lbl</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Save a simple (x y z label) pointcloud, ignoring all other features.</span>
+<span class="sd">    Label is initialized to 1000, for an obscure program I use.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">md</span> <span class="o">=</span> <span class="n">pc</span><span class="o">.</span><span class="n">get_metadata</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">use_default_lbl</span> <span class="ow">and</span> <span class="p">(</span><span class="s1">&#39;label&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">md</span><span class="p">[</span><span class="s1">&#39;fields&#39;</span><span class="p">]):</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;label is not a field in this point cloud&#39;</span><span class="p">)</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">pc</span><span class="o">.</span><span class="n">points</span><span class="p">):</span>
+            <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;</span><span class="si">%.4f</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">d</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="p">(</span>
+                <span class="n">pc</span><span class="o">.</span><span class="n">pc_data</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">],</span> <span class="n">pc</span><span class="o">.</span><span class="n">pc_data</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">],</span> <span class="n">pc</span><span class="o">.</span><span class="n">pc_data</span><span class="p">[</span><span class="s1">&#39;z&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">]</span>
+                <span class="p">)]</span>
+            <span class="n">lbl</span> <span class="o">=</span> <span class="s1">&#39;1000&#39;</span> <span class="k">if</span> <span class="n">use_default_lbl</span> <span class="k">else</span> <span class="n">pc</span><span class="o">.</span><span class="n">pc_data</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">]</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">lbl</span><span class="p">))</span><span class="o">+</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">save_xyz_intensity_label</span><span class="p">(</span><span class="n">pc</span><span class="p">,</span> <span class="n">fname</span><span class="p">,</span> <span class="n">use_default_lbl</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Save XYZI point cloud.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">md</span> <span class="o">=</span> <span class="n">pc</span><span class="o">.</span><span class="n">get_metadata</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">use_default_lbl</span> <span class="ow">and</span> <span class="p">(</span><span class="s1">&#39;label&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">md</span><span class="p">[</span><span class="s1">&#39;fields&#39;</span><span class="p">]):</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;label is not a field in this point cloud&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="s1">&#39;intensity&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">md</span><span class="p">[</span><span class="s1">&#39;fields&#39;</span><span class="p">]:</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;intensity is not a field in this point cloud&#39;</span><span class="p">)</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">pc</span><span class="o">.</span><span class="n">points</span><span class="p">):</span>
+            <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;</span><span class="si">%.4f</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">d</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="p">(</span>
+                <span class="n">pc</span><span class="o">.</span><span class="n">pc_data</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">],</span> <span class="n">pc</span><span class="o">.</span><span class="n">pc_data</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">],</span> <span class="n">pc</span><span class="o">.</span><span class="n">pc_data</span><span class="p">[</span><span class="s1">&#39;z&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">]</span>
+                <span class="p">)]</span>
+            <span class="n">intensity</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">%.4f</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">pc</span><span class="o">.</span><span class="n">pc_data</span><span class="p">[</span><span class="s1">&#39;intensity&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">]</span>
+            <span class="n">lbl</span> <span class="o">=</span> <span class="s1">&#39;1000&#39;</span> <span class="k">if</span> <span class="n">use_default_lbl</span> <span class="k">else</span> <span class="n">pc</span><span class="o">.</span><span class="n">pc_data</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">]</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">intensity</span><span class="p">,</span> <span class="n">lbl</span><span class="p">))</span><span class="o">+</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="save_txt"><a class="viewcode-back" href="../../../cosense3d.utils.html#cosense3d.utils.pcdio.save_txt">[docs]</a><span class="k">def</span> <span class="nf">save_txt</span><span class="p">(</span><span class="n">pc</span><span class="p">,</span> <span class="n">fname</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Save to csv-style text file, separated by spaces.</span>
+
+<span class="sd">    TODO:</span>
+<span class="sd">    - support multi-count fields.</span>
+<span class="sd">    - other delimiters.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">header</span><span class="p">:</span>
+            <span class="n">header_lst</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">field_name</span><span class="p">,</span> <span class="n">cnt</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">pc</span><span class="o">.</span><span class="n">fields</span><span class="p">,</span> <span class="n">pc</span><span class="o">.</span><span class="n">count</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">cnt</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">header_lst</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">field_name</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">cnt</span><span class="p">):</span>
+                        <span class="n">header_lst</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">_</span><span class="si">%04d</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">field_name</span><span class="p">,</span> <span class="n">c</span><span class="p">))</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">header_lst</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">fmtstr</span> <span class="o">=</span> <span class="n">build_ascii_fmtstr</span><span class="p">(</span><span class="n">pc</span><span class="p">)</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">savetxt</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">pc</span><span class="o">.</span><span class="n">pc_data</span><span class="p">,</span> <span class="n">fmt</span><span class="o">=</span><span class="n">fmtstr</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="update_field"><a class="viewcode-back" href="../../../cosense3d.utils.html#cosense3d.utils.pcdio.update_field">[docs]</a><span class="k">def</span> <span class="nf">update_field</span><span class="p">(</span><span class="n">pc</span><span class="p">,</span> <span class="n">field</span><span class="p">,</span> <span class="n">pc_data</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Updates field in-place.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">pc</span><span class="o">.</span><span class="n">pc_data</span><span class="p">[</span><span class="n">field</span><span class="p">]</span> <span class="o">=</span> <span class="n">pc_data</span>
+    <span class="k">return</span> <span class="n">pc</span></div>
+
+
+<div class="viewcode-block" id="add_fields"><a class="viewcode-back" href="../../../cosense3d.utils.html#cosense3d.utils.pcdio.add_fields">[docs]</a><span class="k">def</span> <span class="nf">add_fields</span><span class="p">(</span><span class="n">pc</span><span class="p">,</span> <span class="n">metadata</span><span class="p">,</span> <span class="n">pc_data</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Builds copy of pointcloud with extra fields.</span>
+
+<span class="sd">    Multi-count fields are sketchy, yet again.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;fields&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">pc</span><span class="o">.</span><span class="n">fields</span><span class="p">)))</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Fields with that name exist.&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">pc</span><span class="o">.</span><span class="n">points</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">pc_data</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Mismatch in number of points.&quot;</span><span class="p">)</span>
+
+    <span class="n">new_metadata</span> <span class="o">=</span> <span class="n">pc</span><span class="o">.</span><span class="n">get_metadata</span><span class="p">()</span>
+    <span class="n">new_metadata</span><span class="p">[</span><span class="s1">&#39;fields&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;fields&#39;</span><span class="p">])</span>
+    <span class="n">new_metadata</span><span class="p">[</span><span class="s1">&#39;count&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;count&#39;</span><span class="p">])</span>
+    <span class="n">new_metadata</span><span class="p">[</span><span class="s1">&#39;size&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;size&#39;</span><span class="p">])</span>
+    <span class="n">new_metadata</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">])</span>
+
+    <span class="c1"># parse metadata to add</span>
+    <span class="c1"># TODO factor this</span>
+    <span class="n">fieldnames</span><span class="p">,</span> <span class="n">typenames</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">f</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;fields&#39;</span><span class="p">],</span>
+                          <span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;count&#39;</span><span class="p">],</span>
+                          <span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">],</span>
+                          <span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;size&#39;</span><span class="p">]):</span>
+        <span class="n">np_type</span> <span class="o">=</span> <span class="n">pcd_type_to_numpy_type</span><span class="p">[(</span><span class="n">t</span><span class="p">,</span> <span class="n">s</span><span class="p">)]</span>
+        <span class="k">if</span> <span class="n">c</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">fieldnames</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+            <span class="n">typenames</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np_type</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">fieldnames</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">_</span><span class="si">%04d</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">c</span><span class="p">)])</span>
+            <span class="n">typenames</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="n">np_type</span><span class="p">]</span><span class="o">*</span><span class="n">c</span><span class="p">)</span>
+    <span class="n">dtype</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="n">fieldnames</span><span class="p">,</span> <span class="n">typenames</span><span class="p">)</span>
+    <span class="c1"># new dtype. could be inferred?</span>
+    <span class="n">new_dtype</span> <span class="o">=</span> <span class="p">[(</span><span class="n">f</span><span class="p">,</span> <span class="n">pc</span><span class="o">.</span><span class="n">pc_data</span><span class="o">.</span><span class="n">dtype</span><span class="p">[</span><span class="n">f</span><span class="p">])</span>
+                 <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">pc</span><span class="o">.</span><span class="n">pc_data</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">names</span><span class="p">]</span> <span class="o">+</span> <span class="n">dtype</span>
+
+    <span class="n">new_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">pc</span><span class="o">.</span><span class="n">pc_data</span><span class="p">),</span> <span class="n">new_dtype</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">pc</span><span class="o">.</span><span class="n">pc_data</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">names</span><span class="p">:</span>
+        <span class="n">new_data</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">pc</span><span class="o">.</span><span class="n">pc_data</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">n_tmp</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">fieldnames</span><span class="p">,</span> <span class="n">pc_data</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">names</span><span class="p">):</span>
+        <span class="n">new_data</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">pc_data</span><span class="p">[</span><span class="n">n_tmp</span><span class="p">]</span>
+
+    <span class="c1"># TODO maybe just all the metadata in the dtype.</span>
+    <span class="c1"># TODO maybe use composite structured arrays for fields with count &gt; 1</span>
+    <span class="n">newpc</span> <span class="o">=</span> <span class="n">PointCloud</span><span class="p">(</span><span class="n">new_metadata</span><span class="p">,</span> <span class="n">new_data</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">newpc</span></div>
+
+
+<div class="viewcode-block" id="cat_point_clouds"><a class="viewcode-back" href="../../../cosense3d.utils.html#cosense3d.utils.pcdio.cat_point_clouds">[docs]</a><span class="k">def</span> <span class="nf">cat_point_clouds</span><span class="p">(</span><span class="n">pc1</span><span class="p">,</span> <span class="n">pc2</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Concatenate two point clouds into bigger point cloud.</span>
+<span class="sd">    Point clouds must have same metadata.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">pc1</span><span class="o">.</span><span class="n">fields</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">pc2</span><span class="o">.</span><span class="n">fields</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Pointclouds must have same fields&quot;</span><span class="p">)</span>
+    <span class="n">new_metadata</span> <span class="o">=</span> <span class="n">pc1</span><span class="o">.</span><span class="n">get_metadata</span><span class="p">()</span>
+    <span class="n">new_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">pc1</span><span class="o">.</span><span class="n">pc_data</span><span class="p">,</span> <span class="n">pc2</span><span class="o">.</span><span class="n">pc_data</span><span class="p">))</span>
+    <span class="c1"># TODO this only makes sense for unstructured pc?</span>
+    <span class="n">new_metadata</span><span class="p">[</span><span class="s1">&#39;width&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pc1</span><span class="o">.</span><span class="n">width</span><span class="o">+</span><span class="n">pc2</span><span class="o">.</span><span class="n">width</span>
+    <span class="n">new_metadata</span><span class="p">[</span><span class="s1">&#39;points&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pc1</span><span class="o">.</span><span class="n">points</span><span class="o">+</span><span class="n">pc2</span><span class="o">.</span><span class="n">points</span>
+    <span class="n">pc3</span> <span class="o">=</span> <span class="n">PointCloud</span><span class="p">(</span><span class="n">new_metadata</span><span class="p">,</span> <span class="n">new_data</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">pc3</span></div>
+
+
+<div class="viewcode-block" id="make_xyz_point_cloud"><a class="viewcode-back" href="../../../cosense3d.utils.html#cosense3d.utils.pcdio.make_xyz_point_cloud">[docs]</a><span class="k">def</span> <span class="nf">make_xyz_point_cloud</span><span class="p">(</span><span class="n">xyz</span><span class="p">,</span> <span class="n">metadata</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Make a pointcloud object from xyz array.</span>
+<span class="sd">    xyz array is cast to float32.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">md</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;version&#39;</span><span class="p">:</span> <span class="mf">.7</span><span class="p">,</span>
+          <span class="s1">&#39;fields&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="s1">&#39;z&#39;</span><span class="p">],</span>
+          <span class="s1">&#39;size&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span>
+          <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;F&#39;</span><span class="p">,</span> <span class="s1">&#39;F&#39;</span><span class="p">,</span> <span class="s1">&#39;F&#39;</span><span class="p">],</span>
+          <span class="s1">&#39;count&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+          <span class="s1">&#39;width&#39;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">xyz</span><span class="p">),</span>
+          <span class="s1">&#39;height&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+          <span class="s1">&#39;viewpoint&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+          <span class="s1">&#39;points&#39;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">xyz</span><span class="p">),</span>
+          <span class="s1">&#39;data&#39;</span><span class="p">:</span> <span class="s1">&#39;binary&#39;</span><span class="p">}</span>
+    <span class="k">if</span> <span class="n">metadata</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">md</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">metadata</span><span class="p">)</span>
+    <span class="n">xyz</span> <span class="o">=</span> <span class="n">xyz</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+    <span class="n">pc_data</span> <span class="o">=</span> <span class="n">xyz</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">([(</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span>
+                                 <span class="p">(</span><span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span>
+                                 <span class="p">(</span><span class="s1">&#39;z&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)]))</span>
+    <span class="c1"># pc_data = np.rec.fromarrays([xyz[:,0], xyz[:,1], xyz[:,2]], dtype=dt)</span>
+    <span class="c1"># data = np.rec.fromarrays([xyz.T], dtype=dt)</span>
+    <span class="n">pc</span> <span class="o">=</span> <span class="n">PointCloud</span><span class="p">(</span><span class="n">md</span><span class="p">,</span> <span class="n">pc_data</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">pc</span></div>
+
+
+<div class="viewcode-block" id="make_xyz_rgb_point_cloud"><a class="viewcode-back" href="../../../cosense3d.utils.html#cosense3d.utils.pcdio.make_xyz_rgb_point_cloud">[docs]</a><span class="k">def</span> <span class="nf">make_xyz_rgb_point_cloud</span><span class="p">(</span><span class="n">xyz_rgb</span><span class="p">,</span> <span class="n">metadata</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Make a pointcloud object from xyz array.</span>
+<span class="sd">    xyz array is assumed to be float32.</span>
+<span class="sd">    rgb is assumed to be encoded as float32 according to pcl conventions.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">md</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;version&#39;</span><span class="p">:</span> <span class="mf">.7</span><span class="p">,</span>
+          <span class="s1">&#39;fields&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="s1">&#39;z&#39;</span><span class="p">,</span> <span class="s1">&#39;rgb&#39;</span><span class="p">],</span>
+          <span class="s1">&#39;count&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+          <span class="s1">&#39;width&#39;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">xyz_rgb</span><span class="p">),</span>
+          <span class="s1">&#39;height&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+          <span class="s1">&#39;viewpoint&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+          <span class="s1">&#39;points&#39;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">xyz_rgb</span><span class="p">),</span>
+          <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;F&#39;</span><span class="p">,</span> <span class="s1">&#39;F&#39;</span><span class="p">,</span> <span class="s1">&#39;F&#39;</span><span class="p">,</span> <span class="s1">&#39;F&#39;</span><span class="p">],</span>
+          <span class="s1">&#39;size&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span>
+          <span class="s1">&#39;data&#39;</span><span class="p">:</span> <span class="s1">&#39;binary&#39;</span><span class="p">}</span>
+    <span class="k">if</span> <span class="n">xyz_rgb</span><span class="o">.</span><span class="n">dtype</span> <span class="o">!=</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;array must be float32&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">metadata</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">md</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">metadata</span><span class="p">)</span>
+    <span class="n">pc_data</span> <span class="o">=</span> <span class="n">xyz_rgb</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">([(</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span>
+                                     <span class="p">(</span><span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span>
+                                     <span class="p">(</span><span class="s1">&#39;z&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span>
+                                     <span class="p">(</span><span class="s1">&#39;rgb&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)]))</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span>
+    <span class="c1"># pc_data = np.rec.fromarrays([xyz[:,0], xyz[:,1], xyz[:,2]], dtype=dt)</span>
+    <span class="c1"># data = np.rec.fromarrays([xyz.T], dtype=dt)</span>
+    <span class="n">pc</span> <span class="o">=</span> <span class="n">PointCloud</span><span class="p">(</span><span class="n">md</span><span class="p">,</span> <span class="n">pc_data</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">pc</span></div>
+
+
+<div class="viewcode-block" id="encode_rgb_for_pcl"><a class="viewcode-back" href="../../../cosense3d.utils.html#cosense3d.utils.pcdio.encode_rgb_for_pcl">[docs]</a><span class="k">def</span> <span class="nf">encode_rgb_for_pcl</span><span class="p">(</span><span class="n">rgb</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Encode bit-packed RGB for use with PCL.</span>
+
+<span class="sd">    :param rgb: Nx3 uint8 array with RGB values.</span>
+<span class="sd">    :rtype: Nx1 float32 array with bit-packed RGB, for PCL.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">assert</span><span class="p">(</span><span class="n">rgb</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+    <span class="k">assert</span><span class="p">(</span><span class="n">rgb</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="k">assert</span><span class="p">(</span><span class="n">rgb</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">3</span><span class="p">)</span>
+    <span class="n">rgb</span> <span class="o">=</span> <span class="n">rgb</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint32</span><span class="p">)</span>
+    <span class="n">rgb</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="n">rgb</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">16</span><span class="p">)</span> <span class="o">|</span> <span class="p">(</span><span class="n">rgb</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">8</span><span class="p">)</span> <span class="o">|</span> <span class="p">(</span><span class="n">rgb</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">0</span><span class="p">),</span>
+                   <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint32</span><span class="p">)</span>
+    <span class="n">rgb</span><span class="o">.</span><span class="n">dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span>
+    <span class="k">return</span> <span class="n">rgb</span></div>
+
+
+<div class="viewcode-block" id="decode_rgb_from_pcl"><a class="viewcode-back" href="../../../cosense3d.utils.html#cosense3d.utils.pcdio.decode_rgb_from_pcl">[docs]</a><span class="k">def</span> <span class="nf">decode_rgb_from_pcl</span><span class="p">(</span><span class="n">rgb</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Decode the bit-packed RGBs used by PCL.</span>
+
+<span class="sd">    :param rgb: An Nx1 array.</span>
+<span class="sd">    :rtype: Nx3 uint8 array with one column per color.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">rgb</span> <span class="o">=</span> <span class="n">rgb</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">rgb</span><span class="o">.</span><span class="n">dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">uint32</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">((</span><span class="n">rgb</span> <span class="o">&gt;&gt;</span> <span class="mi">16</span><span class="p">)</span> <span class="o">&amp;</span> <span class="mi">255</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+    <span class="n">g</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">((</span><span class="n">rgb</span> <span class="o">&gt;&gt;</span> <span class="mi">8</span><span class="p">)</span> <span class="o">&amp;</span> <span class="mi">255</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+    <span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">rgb</span> <span class="o">&amp;</span> <span class="mi">255</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+    <span class="n">rgb_arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">rgb</span><span class="p">),</span> <span class="mi">3</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+    <span class="n">rgb_arr</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">r</span>
+    <span class="n">rgb_arr</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">g</span>
+    <span class="n">rgb_arr</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">b</span>
+    <span class="k">return</span> <span class="n">rgb_arr</span></div>
+
+
+<div class="viewcode-block" id="make_xyz_label_point_cloud"><a class="viewcode-back" href="../../../cosense3d.utils.html#cosense3d.utils.pcdio.make_xyz_label_point_cloud">[docs]</a><span class="k">def</span> <span class="nf">make_xyz_label_point_cloud</span><span class="p">(</span><span class="n">xyzl</span><span class="p">,</span> <span class="n">label_type</span><span class="o">=</span><span class="s1">&#39;f&#39;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Make XYZL point cloud from numpy array.</span>
+
+<span class="sd">    TODO i labels?</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">md</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;version&#39;</span><span class="p">:</span> <span class="mf">.7</span><span class="p">,</span>
+          <span class="s1">&#39;fields&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="s1">&#39;z&#39;</span><span class="p">,</span> <span class="s1">&#39;label&#39;</span><span class="p">],</span>
+          <span class="s1">&#39;count&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+          <span class="s1">&#39;width&#39;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">xyzl</span><span class="p">),</span>
+          <span class="s1">&#39;height&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+          <span class="s1">&#39;viewpoint&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+          <span class="s1">&#39;points&#39;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">xyzl</span><span class="p">),</span>
+          <span class="s1">&#39;data&#39;</span><span class="p">:</span> <span class="s1">&#39;ASCII&#39;</span><span class="p">}</span>
+    <span class="k">if</span> <span class="n">label_type</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;f&#39;</span><span class="p">:</span>
+        <span class="n">md</span><span class="p">[</span><span class="s1">&#39;size&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">]</span>
+        <span class="n">md</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;F&#39;</span><span class="p">,</span> <span class="s1">&#39;F&#39;</span><span class="p">,</span> <span class="s1">&#39;F&#39;</span><span class="p">,</span> <span class="s1">&#39;F&#39;</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="n">label_type</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;u&#39;</span><span class="p">:</span>
+        <span class="n">md</span><span class="p">[</span><span class="s1">&#39;size&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="n">md</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;F&#39;</span><span class="p">,</span> <span class="s1">&#39;F&#39;</span><span class="p">,</span> <span class="s1">&#39;F&#39;</span><span class="p">,</span> <span class="s1">&#39;U&#39;</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;label type must be F or U&#39;</span><span class="p">)</span>
+    <span class="c1"># TODO use .view()</span>
+    <span class="n">xyzl</span> <span class="o">=</span> <span class="n">xyzl</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+    <span class="n">dt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">([(</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;z&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span>
+                   <span class="p">(</span><span class="s1">&#39;label&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)])</span>
+    <span class="n">pc_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">rec</span><span class="o">.</span><span class="n">fromarrays</span><span class="p">([</span><span class="n">xyzl</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">xyzl</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">xyzl</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">],</span>
+                                 <span class="n">xyzl</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">]],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dt</span><span class="p">)</span>
+    <span class="n">pc</span> <span class="o">=</span> <span class="n">PointCloud</span><span class="p">(</span><span class="n">md</span><span class="p">,</span> <span class="n">pc_data</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">pc</span></div>
+
+
+<div class="viewcode-block" id="PointCloud"><a class="viewcode-back" href="../../../cosense3d.utils.html#cosense3d.utils.pcdio.PointCloud">[docs]</a><span class="k">class</span> <span class="nc">PointCloud</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Wrapper for point cloud data.</span>
+
+<span class="sd">    The variable members of this class parallel the ones used by</span>
+<span class="sd">    the PCD metadata (and similar to PCL and ROS PointCloud2 messages),</span>
+
+<span class="sd">    ``pc_data`` holds the actual data as a structured numpy array.</span>
+
+<span class="sd">    The other relevant metadata variables are:</span>
+
+<span class="sd">    - ``version``: Version, usually .7</span>
+<span class="sd">    - ``fields``: Field names, e.g. ``[&#39;x&#39;, &#39;y&#39; &#39;z&#39;]``.</span>
+<span class="sd">    - ``size.`: Field sizes in bytes, e.g. ``[4, 4, 4]``.</span>
+<span class="sd">    - ``count``: Counts per field e.g. ``[1, 1, 1]``. NB: Multi-count field</span>
+<span class="sd">      support is sketchy.</span>
+<span class="sd">    - ``width``: Number of points, for unstructured point clouds (assumed by</span>
+<span class="sd">      most operations).</span>
+<span class="sd">    - ``height``: 1 for unstructured point clouds (again, what we assume most</span>
+<span class="sd">      of the time.</span>
+<span class="sd">    - ``viewpoint``: A pose for the viewpoint of the cloud, as</span>
+<span class="sd">      x y z qw qx qy qz, e.g. ``[0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0]``.</span>
+<span class="sd">    - ``points``: Number of points.</span>
+<span class="sd">    - ``type``: Data type of each field, e.g. ``[F, F, F]``.</span>
+<span class="sd">    - ``data``: Data storage format. One of ``ascii``, ``binary`` or ``binary_compressed``.</span>
+
+<span class="sd">    See `PCL docs &lt;http://pointclouds.org/documentation/tutorials/pcd_file_format.php&gt;`__</span>
+<span class="sd">    for more information.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">metadata</span><span class="p">,</span> <span class="n">pc_data</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">metadata_keys</span> <span class="o">=</span> <span class="n">metadata</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">metadata</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pc_data</span> <span class="o">=</span> <span class="n">pc_data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">check_sanity</span><span class="p">()</span>
+
+<div class="viewcode-block" id="PointCloud.get_metadata"><a class="viewcode-back" href="../../../cosense3d.utils.html#cosense3d.utils.pcdio.PointCloud.get_metadata">[docs]</a>    <span class="k">def</span> <span class="nf">get_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; returns copy of metadata &quot;&quot;&quot;</span>
+        <span class="n">metadata</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata_keys</span><span class="p">:</span>
+            <span class="n">metadata</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">metadata</span></div>
+
+<div class="viewcode-block" id="PointCloud.check_sanity"><a class="viewcode-back" href="../../../cosense3d.utils.html#cosense3d.utils.pcdio.PointCloud.check_sanity">[docs]</a>    <span class="k">def</span> <span class="nf">check_sanity</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># pdb.set_trace()</span>
+        <span class="n">md</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_metadata</span><span class="p">()</span>
+        <span class="k">assert</span><span class="p">(</span><span class="n">_metadata_is_consistent</span><span class="p">(</span><span class="n">md</span><span class="p">))</span>
+        <span class="k">assert</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pc_data</span><span class="p">)</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">)</span>
+        <span class="k">assert</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">width</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">height</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">)</span>
+        <span class="k">assert</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fields</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">count</span><span class="p">))</span>
+        <span class="k">assert</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fields</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">type</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="PointCloud.save"><a class="viewcode-back" href="../../../cosense3d.utils.html#cosense3d.utils.pcdio.PointCloud.save">[docs]</a>    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fname</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">save_pcd</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="s1">&#39;ascii&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PointCloud.save_pcd"><a class="viewcode-back" href="../../../cosense3d.utils.html#cosense3d.utils.pcdio.PointCloud.save_pcd">[docs]</a>    <span class="k">def</span> <span class="nf">save_pcd</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fname</span><span class="p">,</span> <span class="n">compression</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="s1">&#39;data_compression&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;data_compression keyword is deprecated for&#39;</span>
+                          <span class="s1">&#39; compression&#39;</span><span class="p">)</span>
+            <span class="n">compression</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;data_compression&#39;</span><span class="p">]</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">point_cloud_to_fileobj</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">compression</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PointCloud.save_pcd_to_fileobj"><a class="viewcode-back" href="../../../cosense3d.utils.html#cosense3d.utils.pcdio.PointCloud.save_pcd_to_fileobj">[docs]</a>    <span class="k">def</span> <span class="nf">save_pcd_to_fileobj</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fileobj</span><span class="p">,</span> <span class="n">compression</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="s1">&#39;data_compression&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;data_compression keyword is deprecated for&#39;</span>
+                          <span class="s1">&#39; compression&#39;</span><span class="p">)</span>
+            <span class="n">compression</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;data_compression&#39;</span><span class="p">]</span>
+        <span class="n">point_cloud_to_fileobj</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fileobj</span><span class="p">,</span> <span class="n">compression</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PointCloud.save_pcd_to_buffer"><a class="viewcode-back" href="../../../cosense3d.utils.html#cosense3d.utils.pcdio.PointCloud.save_pcd_to_buffer">[docs]</a>    <span class="k">def</span> <span class="nf">save_pcd_to_buffer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">compression</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="s1">&#39;data_compression&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;data_compression keyword is deprecated for&#39;</span>
+                          <span class="s1">&#39; compression&#39;</span><span class="p">)</span>
+            <span class="n">compression</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;data_compression&#39;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">point_cloud_to_buffer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">compression</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PointCloud.save_txt"><a class="viewcode-back" href="../../../cosense3d.utils.html#cosense3d.utils.pcdio.PointCloud.save_txt">[docs]</a>    <span class="k">def</span> <span class="nf">save_txt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fname</span><span class="p">):</span>
+        <span class="n">save_txt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fname</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PointCloud.save_xyz_label"><a class="viewcode-back" href="../../../cosense3d.utils.html#cosense3d.utils.pcdio.PointCloud.save_xyz_label">[docs]</a>    <span class="k">def</span> <span class="nf">save_xyz_label</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fname</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">save_xyz_label</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fname</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PointCloud.save_xyz_intensity_label"><a class="viewcode-back" href="../../../cosense3d.utils.html#cosense3d.utils.pcdio.PointCloud.save_xyz_intensity_label">[docs]</a>    <span class="k">def</span> <span class="nf">save_xyz_intensity_label</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fname</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">save_xyz_intensity_label</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fname</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PointCloud.copy"><a class="viewcode-back" href="../../../cosense3d.utils.html#cosense3d.utils.pcdio.PointCloud.copy">[docs]</a>    <span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">new_pc_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pc_data</span><span class="p">)</span>
+        <span class="n">new_metadata</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_metadata</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">PointCloud</span><span class="p">(</span><span class="n">new_metadata</span><span class="p">,</span> <span class="n">new_pc_data</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PointCloud.to_msg"><a class="viewcode-back" href="../../../cosense3d.utils.html#cosense3d.utils.pcdio.PointCloud.to_msg">[docs]</a>    <span class="k">def</span> <span class="nf">to_msg</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">HAS_SENSOR_MSGS</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;ROS sensor_msgs not found&#39;</span><span class="p">)</span>
+        <span class="c1"># TODO is there some metadata we want to attach?</span>
+        <span class="k">return</span> <span class="n">numpy_pc2</span><span class="o">.</span><span class="n">array_to_pointcloud2</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pc_data</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PointCloud.from_path"><a class="viewcode-back" href="../../../cosense3d.utils.html#cosense3d.utils.pcdio.PointCloud.from_path">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">from_path</span><span class="p">(</span><span class="n">fname</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">point_cloud_from_path</span><span class="p">(</span><span class="n">fname</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PointCloud.from_fileobj"><a class="viewcode-back" href="../../../cosense3d.utils.html#cosense3d.utils.pcdio.PointCloud.from_fileobj">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">from_fileobj</span><span class="p">(</span><span class="n">fileobj</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">point_cloud_from_fileobj</span><span class="p">(</span><span class="n">fileobj</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PointCloud.from_buffer"><a class="viewcode-back" href="../../../cosense3d.utils.html#cosense3d.utils.pcdio.PointCloud.from_buffer">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">from_buffer</span><span class="p">(</span><span class="n">buf</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">point_cloud_from_buffer</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PointCloud.from_array"><a class="viewcode-back" href="../../../cosense3d.utils.html#cosense3d.utils.pcdio.PointCloud.from_array">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">from_array</span><span class="p">(</span><span class="n">arr</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; create a PointCloud object from an array.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">pc_data</span> <span class="o">=</span> <span class="n">arr</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">md</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;version&#39;</span><span class="p">:</span> <span class="mf">.7</span><span class="p">,</span>
+              <span class="s1">&#39;fields&#39;</span><span class="p">:</span> <span class="p">[],</span>
+              <span class="s1">&#39;size&#39;</span><span class="p">:</span> <span class="p">[],</span>
+              <span class="s1">&#39;count&#39;</span><span class="p">:</span> <span class="p">[],</span>
+              <span class="s1">&#39;width&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+              <span class="s1">&#39;height&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+              <span class="s1">&#39;viewpoint&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+              <span class="s1">&#39;points&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+              <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="p">[],</span>
+              <span class="s1">&#39;data&#39;</span><span class="p">:</span> <span class="s1">&#39;binary_compressed&#39;</span><span class="p">}</span>
+        <span class="n">md</span><span class="p">[</span><span class="s1">&#39;fields&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pc_data</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">names</span>
+        <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">md</span><span class="p">[</span><span class="s1">&#39;fields&#39;</span><span class="p">]:</span>
+            <span class="n">type_</span><span class="p">,</span> <span class="n">size_</span> <span class="o">=</span>\
+                <span class="n">numpy_type_to_pcd_type</span><span class="p">[</span><span class="n">pc_data</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">fields</span><span class="p">[</span><span class="n">field</span><span class="p">][</span><span class="mi">0</span><span class="p">]]</span>
+            <span class="n">md</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">type_</span><span class="p">)</span>
+            <span class="n">md</span><span class="p">[</span><span class="s1">&#39;size&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">size_</span><span class="p">)</span>
+            <span class="c1"># TODO handle multicount</span>
+            <span class="n">md</span><span class="p">[</span><span class="s1">&#39;count&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">md</span><span class="p">[</span><span class="s1">&#39;width&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">pc_data</span><span class="p">)</span>
+        <span class="n">md</span><span class="p">[</span><span class="s1">&#39;points&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">pc_data</span><span class="p">)</span>
+        <span class="n">pc</span> <span class="o">=</span> <span class="n">PointCloud</span><span class="p">(</span><span class="n">md</span><span class="p">,</span> <span class="n">pc_data</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">pc</span></div>
+
+<div class="viewcode-block" id="PointCloud.from_msg"><a class="viewcode-back" href="../../../cosense3d.utils.html#cosense3d.utils.pcdio.PointCloud.from_msg">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">from_msg</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">squeeze</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; from pointcloud2 msg</span>
+<span class="sd">        squeeze: fix when clouds get 1 as first dim</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">HAS_SENSOR_MSGS</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;ROS sensor_msgs not found&#39;</span><span class="p">)</span>
+        <span class="n">md</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;version&#39;</span><span class="p">:</span> <span class="mf">.7</span><span class="p">,</span>
+              <span class="s1">&#39;fields&#39;</span><span class="p">:</span> <span class="p">[],</span>
+              <span class="s1">&#39;size&#39;</span><span class="p">:</span> <span class="p">[],</span>
+              <span class="s1">&#39;count&#39;</span><span class="p">:</span> <span class="p">[],</span>
+              <span class="s1">&#39;width&#39;</span><span class="p">:</span> <span class="n">msg</span><span class="o">.</span><span class="n">width</span><span class="p">,</span>
+              <span class="s1">&#39;height&#39;</span><span class="p">:</span> <span class="n">msg</span><span class="o">.</span><span class="n">height</span><span class="p">,</span>
+              <span class="s1">&#39;viewpoint&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+              <span class="s1">&#39;points&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+              <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="p">[],</span>
+              <span class="s1">&#39;data&#39;</span><span class="p">:</span> <span class="s1">&#39;binary_compressed&#39;</span><span class="p">}</span>
+        <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">msg</span><span class="o">.</span><span class="n">fields</span><span class="p">:</span>
+            <span class="n">md</span><span class="p">[</span><span class="s1">&#39;fields&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">field</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+            <span class="n">t</span><span class="p">,</span> <span class="n">s</span> <span class="o">=</span> <span class="n">pc2_type_to_pcd_type</span><span class="p">[</span><span class="n">field</span><span class="o">.</span><span class="n">datatype</span><span class="p">]</span>
+            <span class="n">md</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+            <span class="n">md</span><span class="p">[</span><span class="s1">&#39;size&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+            <span class="c1"># TODO handle multicount correctly</span>
+            <span class="k">if</span> <span class="n">field</span><span class="o">.</span><span class="n">count</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;fields with count &gt; 1 are not well tested&#39;</span><span class="p">)</span>
+            <span class="n">md</span><span class="p">[</span><span class="s1">&#39;count&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">field</span><span class="o">.</span><span class="n">count</span><span class="p">)</span>
+        <span class="n">pc_array</span> <span class="o">=</span> <span class="n">numpy_pc2</span><span class="o">.</span><span class="n">pointcloud2_to_array</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="n">pc_data</span> <span class="o">=</span> <span class="n">pc_array</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">md</span><span class="p">[</span><span class="s1">&#39;height&#39;</span><span class="p">],</span> <span class="n">md</span><span class="p">[</span><span class="s1">&#39;width&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pc_array</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">md</span><span class="p">[</span><span class="s1">&#39;points&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">pc_data</span><span class="p">)</span>
+        <span class="n">pc</span> <span class="o">=</span> <span class="n">PointCloud</span><span class="p">(</span><span class="n">md</span><span class="p">,</span> <span class="n">pc_data</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">pc</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Anonymous Author.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

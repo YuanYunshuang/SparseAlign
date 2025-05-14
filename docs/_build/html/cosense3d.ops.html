@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>cosense3d.ops package &mdash; OpenCosense3D 1.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=af2ce170"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="cosense3d.utils package" href="cosense3d.utils.html" />
+    <link rel="prev" title="cosense3d.modules.utils package" href="cosense3d.modules.utils.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            OpenCosense3D
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="md/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="md/prepare_data.html">Prepare Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="md/structure.html">The Structure of the framework</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">CoSense3d</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="cosense3d.html">cosense3d package</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="cosense3d.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="cosense3d.agents.html">cosense3d.agents package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="cosense3d.config.html">cosense3d.config package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="cosense3d.dataset.html">cosense3d.dataset package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="cosense3d.doc.html">cosense3d.doc package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="cosense3d.modules.html">cosense3d.modules package</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">cosense3d.ops package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="cosense3d.utils.html">cosense3d.utils package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="cosense3d.html#module-cosense3d">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">OpenCosense3D</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">CoSense3d</a></li>
+          <li class="breadcrumb-item"><a href="cosense3d.html">cosense3d package</a></li>
+      <li class="breadcrumb-item active">cosense3d.ops package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/cosense3d.ops.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="cosense3d-ops-package">
+<h1>cosense3d.ops package<a class="headerlink" href="#cosense3d-ops-package" title="Permalink to this heading"></a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this heading"></a></h2>
+</section>
+<section id="module-cosense3d.ops.iou3d_nms_utils">
+<span id="cosense3d-ops-iou3d-nms-utils-module"></span><h2>cosense3d.ops.iou3d_nms_utils module<a class="headerlink" href="#module-cosense3d.ops.iou3d_nms_utils" title="Permalink to this heading"></a></h2>
+<p>3D IoU Calculation and Rotated NMS
+Written by Shaoshuai Shi
+All Rights Reserved 2019-2020.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.ops.iou3d_nms_utils.aligned_boxes_iou3d_gpu">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.ops.iou3d_nms_utils.</span></span><span class="sig-name descname"><span class="pre">aligned_boxes_iou3d_gpu</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">boxes_a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boxes_b</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_union</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/ops/iou3d_nms_utils.html#aligned_boxes_iou3d_gpu"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.ops.iou3d_nms_utils.aligned_boxes_iou3d_gpu" title="Permalink to this definition"></a></dt>
+<dd><dl class="simple">
+<dt>Args:</dt><dd><p>boxes_a: (N, 7) [x, y, z, dx, dy, dz, heading]
+boxes_b: (N, 7) [x, y, z, dx, dy, dz, heading]</p>
+</dd>
+<dt>Returns:</dt><dd><p>ans_iou: (N, 1)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.ops.iou3d_nms_utils.boxes_bev_iou_cpu">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.ops.iou3d_nms_utils.</span></span><span class="sig-name descname"><span class="pre">boxes_bev_iou_cpu</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">boxes_a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boxes_b</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/ops/iou3d_nms_utils.html#boxes_bev_iou_cpu"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.ops.iou3d_nms_utils.boxes_bev_iou_cpu" title="Permalink to this definition"></a></dt>
+<dd><dl class="simple">
+<dt>Args:</dt><dd><p>boxes_a: (N, 7) [x, y, z, dx, dy, dz, heading]
+boxes_b: (N, 7) [x, y, z, dx, dy, dz, heading]</p>
+</dd>
+</dl>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.ops.iou3d_nms_utils.boxes_iou3d">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.ops.iou3d_nms_utils.</span></span><span class="sig-name descname"><span class="pre">boxes_iou3d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">boxes_a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boxes_b</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_union</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gpu</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/ops/iou3d_nms_utils.html#boxes_iou3d"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.ops.iou3d_nms_utils.boxes_iou3d" title="Permalink to this definition"></a></dt>
+<dd><dl class="simple">
+<dt>Args:</dt><dd><p>boxes_a: (N, 7) [x, y, z, dx, dy, dz, heading]
+boxes_b: (N, 7) [x, y, z, dx, dy, dz, heading]</p>
+</dd>
+<dt>Returns:</dt><dd><p>ans_iou: (N, M)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.ops.iou3d_nms_utils.boxes_iou3d_cpu">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.ops.iou3d_nms_utils.</span></span><span class="sig-name descname"><span class="pre">boxes_iou3d_cpu</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">boxes_a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boxes_b</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_union</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/ops/iou3d_nms_utils.html#boxes_iou3d_cpu"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.ops.iou3d_nms_utils.boxes_iou3d_cpu" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.ops.iou3d_nms_utils.boxes_iou3d_gpu">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.ops.iou3d_nms_utils.</span></span><span class="sig-name descname"><span class="pre">boxes_iou3d_gpu</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">boxes_a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boxes_b</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_union</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/ops/iou3d_nms_utils.html#boxes_iou3d_gpu"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.ops.iou3d_nms_utils.boxes_iou3d_gpu" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.ops.iou3d_nms_utils.boxes_iou_bev">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.ops.iou3d_nms_utils.</span></span><span class="sig-name descname"><span class="pre">boxes_iou_bev</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">boxes_a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boxes_b</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/ops/iou3d_nms_utils.html#boxes_iou_bev"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.ops.iou3d_nms_utils.boxes_iou_bev" title="Permalink to this definition"></a></dt>
+<dd><dl class="simple">
+<dt>Args:</dt><dd><p>boxes_a: (N, 7) [x, y, z, dx, dy, dz, heading]
+boxes_b: (M, 7) [x, y, z, dx, dy, dz, heading]</p>
+</dd>
+<dt>Returns:</dt><dd><p>ans_iou: (N, M)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.ops.iou3d_nms_utils.centroid_to_corners">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.ops.iou3d_nms_utils.</span></span><span class="sig-name descname"><span class="pre">centroid_to_corners</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">boxes</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/ops/iou3d_nms_utils.html#centroid_to_corners"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.ops.iou3d_nms_utils.centroid_to_corners" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.ops.iou3d_nms_utils.decode_boxes">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.ops.iou3d_nms_utils.</span></span><span class="sig-name descname"><span class="pre">decode_boxes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">boxes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pc_range</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">box_mean</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">box_std</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/ops/iou3d_nms_utils.html#decode_boxes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.ops.iou3d_nms_utils.decode_boxes" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.ops.iou3d_nms_utils.decode_boxes_and_giou3d">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.ops.iou3d_nms_utils.</span></span><span class="sig-name descname"><span class="pre">decode_boxes_and_giou3d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">boxes_a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boxes_b</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pc_range</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">box_mean</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">box_std</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/ops/iou3d_nms_utils.html#decode_boxes_and_giou3d"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.ops.iou3d_nms_utils.decode_boxes_and_giou3d" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.ops.iou3d_nms_utils.decode_boxes_and_iou3d">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.ops.iou3d_nms_utils.</span></span><span class="sig-name descname"><span class="pre">decode_boxes_and_iou3d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">boxes_a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boxes_b</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pc_range</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">box_mean</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">box_std</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/ops/iou3d_nms_utils.html#decode_boxes_and_iou3d"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.ops.iou3d_nms_utils.decode_boxes_and_iou3d" title="Permalink to this definition"></a></dt>
+<dd><p>Transform the boxes format back to [x, y, z, dx, dy, dz, heading] and calculate iou
+:param boxes_a: (N, 7) [x_n, y_n, z_n, dx_n, dy_n, dz_n, heading_n] normalized
+:param boxes_b: (M, 7) [x_n, y_n, z_n, dx_n, dy_n, dz_n, heading_n]
+:param pc_range: point cloud range
+:param object_ave_size: average object size
+:return: ans_iou: (N, M)</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.ops.iou3d_nms_utils.giou3d">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.ops.iou3d_nms_utils.</span></span><span class="sig-name descname"><span class="pre">giou3d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">boxes_a_dec</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boxes_b_dec</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/ops/iou3d_nms_utils.html#giou3d"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.ops.iou3d_nms_utils.giou3d" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.ops.iou3d_nms_utils.nms_gpu">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.ops.iou3d_nms_utils.</span></span><span class="sig-name descname"><span class="pre">nms_gpu</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">boxes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scores</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thresh</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pre_maxsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/ops/iou3d_nms_utils.html#nms_gpu"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.ops.iou3d_nms_utils.nms_gpu" title="Permalink to this definition"></a></dt>
+<dd><p>Operate on rotated bev boxes[x,y,dx,dy,heading]
+:param boxes: (N, 7) [x, y, z, dx, dy, dz, heading]
+:param scores: (N)
+:param thresh:
+:return:</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.ops.iou3d_nms_utils.nms_normal_gpu">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.ops.iou3d_nms_utils.</span></span><span class="sig-name descname"><span class="pre">nms_normal_gpu</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">boxes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scores</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thresh</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/ops/iou3d_nms_utils.html#nms_normal_gpu"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.ops.iou3d_nms_utils.nms_normal_gpu" title="Permalink to this definition"></a></dt>
+<dd><p>Ignore heading and operate on bev boxes[x,y,dx,dy]
+:param boxes: (N, 7) [x, y, z, dx, dy, dz, heading]
+:param scores: (N)
+:param thresh:
+:return:</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.ops.iou3d_nms_utils.rotate_weighted_nms_gpu">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.ops.iou3d_nms_utils.</span></span><span class="sig-name descname"><span class="pre">rotate_weighted_nms_gpu</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">box_preds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rbboxes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dir_labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels_preds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scores</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iou_preds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">anchors</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pre_max_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">post_max_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iou_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/ops/iou3d_nms_utils.html#rotate_weighted_nms_gpu"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.ops.iou3d_nms_utils.rotate_weighted_nms_gpu" title="Permalink to this definition"></a></dt>
+<dd><p>Original definition can be found in CIA_SSD paper</p>
+</dd></dl>
+
+</section>
+<section id="module-cosense3d.ops.pointnet2_utils">
+<span id="cosense3d-ops-pointnet2-utils-module"></span><h2>cosense3d.ops.pointnet2_utils module<a class="headerlink" href="#module-cosense3d.ops.pointnet2_utils" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="cosense3d.ops.pointnet2_utils.BallQuery">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cosense3d.ops.pointnet2_utils.</span></span><span class="sig-name descname"><span class="pre">BallQuery</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/ops/pointnet2_utils.html#BallQuery"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.ops.pointnet2_utils.BallQuery" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Function</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.ops.pointnet2_utils.BallQuery.backward">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">backward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ctx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/ops/pointnet2_utils.html#BallQuery.backward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.ops.pointnet2_utils.BallQuery.backward" title="Permalink to this definition"></a></dt>
+<dd><p>Defines a formula for differentiating the operation with backward mode
+automatic differentiation (alias to the vjp function).</p>
+<p>This function is to be overridden by all subclasses.</p>
+<p>It must accept a context <code class="xref py py-attr docutils literal notranslate"><span class="pre">ctx</span></code> as the first argument, followed by
+as many outputs as the <a class="reference internal" href="#cosense3d.ops.pointnet2_utils.BallQuery.forward" title="cosense3d.ops.pointnet2_utils.BallQuery.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a> returned (None will be passed in
+for non tensor outputs of the forward function),
+and it should return as many tensors, as there were inputs to
+<a class="reference internal" href="#cosense3d.ops.pointnet2_utils.BallQuery.forward" title="cosense3d.ops.pointnet2_utils.BallQuery.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a>. Each argument is the gradient w.r.t the given output,
+and each returned value should be the gradient w.r.t. the
+corresponding input. If an input is not a Tensor or is a Tensor not
+requiring grads, you can just pass None as a gradient for that input.</p>
+<p>The context can be used to retrieve tensors saved during the forward
+pass. It also has an attribute <code class="xref py py-attr docutils literal notranslate"><span class="pre">ctx.needs_input_grad</span></code> as a tuple
+of booleans representing whether each input needs gradient. E.g.,
+<a class="reference internal" href="#cosense3d.ops.pointnet2_utils.BallQuery.backward" title="cosense3d.ops.pointnet2_utils.BallQuery.backward"><code class="xref py py-func docutils literal notranslate"><span class="pre">backward()</span></code></a> will have <code class="docutils literal notranslate"><span class="pre">ctx.needs_input_grad[0]</span> <span class="pre">=</span> <span class="pre">True</span></code> if the
+first input to <a class="reference internal" href="#cosense3d.ops.pointnet2_utils.BallQuery.forward" title="cosense3d.ops.pointnet2_utils.BallQuery.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a> needs gradient computated w.r.t. the
+output.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.ops.pointnet2_utils.BallQuery.forward">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ctx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">radius</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nsample</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xyz</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xyz_batch_cnt</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_xyz</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_xyz_batch_cnt</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/ops/pointnet2_utils.html#BallQuery.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.ops.pointnet2_utils.BallQuery.forward" title="Permalink to this definition"></a></dt>
+<dd><dl class="simple">
+<dt>Args:</dt><dd><p>ctx:
+radius: float, radius of the balls
+nsample: int, maximum number of features in the balls
+xyz: (N1 + N2 …, 3) xyz coordinates of the features
+xyz_batch_cnt: (batch_size), [N1, N2, …]
+new_xyz: (M1 + M2 …, 3) centers of the ball query
+new_xyz_batch_cnt: (batch_size), [M1, M2, …]</p>
+</dd>
+<dt>Returns:</dt><dd><p>idx: (M1 + M2, nsample) tensor with the indicies of the features that form the query balls</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="cosense3d.ops.pointnet2_utils.FurthestPointSampling">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cosense3d.ops.pointnet2_utils.</span></span><span class="sig-name descname"><span class="pre">FurthestPointSampling</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/ops/pointnet2_utils.html#FurthestPointSampling"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.ops.pointnet2_utils.FurthestPointSampling" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Function</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.ops.pointnet2_utils.FurthestPointSampling.backward">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">backward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">xyz</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/ops/pointnet2_utils.html#FurthestPointSampling.backward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.ops.pointnet2_utils.FurthestPointSampling.backward" title="Permalink to this definition"></a></dt>
+<dd><p>Defines a formula for differentiating the operation with backward mode
+automatic differentiation (alias to the vjp function).</p>
+<p>This function is to be overridden by all subclasses.</p>
+<p>It must accept a context <code class="xref py py-attr docutils literal notranslate"><span class="pre">ctx</span></code> as the first argument, followed by
+as many outputs as the <a class="reference internal" href="#cosense3d.ops.pointnet2_utils.FurthestPointSampling.forward" title="cosense3d.ops.pointnet2_utils.FurthestPointSampling.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a> returned (None will be passed in
+for non tensor outputs of the forward function),
+and it should return as many tensors, as there were inputs to
+<a class="reference internal" href="#cosense3d.ops.pointnet2_utils.FurthestPointSampling.forward" title="cosense3d.ops.pointnet2_utils.FurthestPointSampling.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a>. Each argument is the gradient w.r.t the given output,
+and each returned value should be the gradient w.r.t. the
+corresponding input. If an input is not a Tensor or is a Tensor not
+requiring grads, you can just pass None as a gradient for that input.</p>
+<p>The context can be used to retrieve tensors saved during the forward
+pass. It also has an attribute <code class="xref py py-attr docutils literal notranslate"><span class="pre">ctx.needs_input_grad</span></code> as a tuple
+of booleans representing whether each input needs gradient. E.g.,
+<a class="reference internal" href="#cosense3d.ops.pointnet2_utils.FurthestPointSampling.backward" title="cosense3d.ops.pointnet2_utils.FurthestPointSampling.backward"><code class="xref py py-func docutils literal notranslate"><span class="pre">backward()</span></code></a> will have <code class="docutils literal notranslate"><span class="pre">ctx.needs_input_grad[0]</span> <span class="pre">=</span> <span class="pre">True</span></code> if the
+first input to <a class="reference internal" href="#cosense3d.ops.pointnet2_utils.FurthestPointSampling.forward" title="cosense3d.ops.pointnet2_utils.FurthestPointSampling.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a> needs gradient computated w.r.t. the
+output.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.ops.pointnet2_utils.FurthestPointSampling.forward">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ctx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xyz</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">npoint</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/ops/pointnet2_utils.html#FurthestPointSampling.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.ops.pointnet2_utils.FurthestPointSampling.forward" title="Permalink to this definition"></a></dt>
+<dd><dl class="simple">
+<dt>Args:</dt><dd><p>ctx:
+xyz: (B, N, 3) where N &gt; npoint
+npoint: int, number of features in the sampled set</p>
+</dd>
+<dt>Returns:</dt><dd><p>output: (B, npoint) tensor containing the set</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="cosense3d.ops.pointnet2_utils.GroupingOperation">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cosense3d.ops.pointnet2_utils.</span></span><span class="sig-name descname"><span class="pre">GroupingOperation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/ops/pointnet2_utils.html#GroupingOperation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.ops.pointnet2_utils.GroupingOperation" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Function</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.ops.pointnet2_utils.GroupingOperation.backward">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">backward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ctx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grad_out</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/ops/pointnet2_utils.html#GroupingOperation.backward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.ops.pointnet2_utils.GroupingOperation.backward" title="Permalink to this definition"></a></dt>
+<dd><dl class="simple">
+<dt>Args:</dt><dd><p>ctx:
+grad_out: (M1 + M2 …, C, nsample) tensor of the gradients of the output from forward</p>
+</dd>
+<dt>Returns:</dt><dd><p>grad_features: (N1 + N2 …, C) gradient of the features</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.ops.pointnet2_utils.GroupingOperation.forward">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ctx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">features_batch_cnt</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">idx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">idx_batch_cnt</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/ops/pointnet2_utils.html#GroupingOperation.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.ops.pointnet2_utils.GroupingOperation.forward" title="Permalink to this definition"></a></dt>
+<dd><dl class="simple">
+<dt>Args:</dt><dd><p>ctx:
+features: (N1 + N2 …, C) tensor of features to group
+features_batch_cnt: (batch_size) [N1 + N2 …] tensor containing the indicies of features to group with
+idx: (M1 + M2 …, nsample) tensor containing the indicies of features to group with
+idx_batch_cnt: (batch_size) [M1 + M2 …] tensor containing the indicies of features to group with</p>
+</dd>
+<dt>Returns:</dt><dd><p>output: (M1 + M2, C, nsample) tensor</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="cosense3d.ops.pointnet2_utils.QueryAndGroup">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cosense3d.ops.pointnet2_utils.</span></span><span class="sig-name descname"><span class="pre">QueryAndGroup</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">radius</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nsample</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_xyz</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/ops/pointnet2_utils.html#QueryAndGroup"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.ops.pointnet2_utils.QueryAndGroup" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.ops.pointnet2_utils.QueryAndGroup.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">xyz</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xyz_batch_cnt</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_xyz</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_xyz_batch_cnt</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/ops/pointnet2_utils.html#QueryAndGroup.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.ops.pointnet2_utils.QueryAndGroup.forward" title="Permalink to this definition"></a></dt>
+<dd><dl class="simple">
+<dt>Args:</dt><dd><p>xyz: (N1 + N2 …, 3) xyz coordinates of the features
+xyz_batch_cnt: (batch_size), [N1, N2, …]
+new_xyz: (M1 + M2 …, 3) centers of the ball query
+new_xyz_batch_cnt: (batch_size), [M1, M2, …]
+features: (N1 + N2 …, C) tensor of features to group</p>
+</dd>
+<dt>Returns:</dt><dd><p>new_features: (M1 + M2, C, nsample) tensor</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cosense3d.ops.pointnet2_utils.QueryAndGroup.training">
+<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#cosense3d.ops.pointnet2_utils.QueryAndGroup.training" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="cosense3d.ops.pointnet2_utils.StackPointnetFPModule">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cosense3d.ops.pointnet2_utils.</span></span><span class="sig-name descname"><span class="pre">StackPointnetFPModule</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mlp</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/ops/pointnet2_utils.html#StackPointnetFPModule"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.ops.pointnet2_utils.StackPointnetFPModule" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.ops.pointnet2_utils.StackPointnetFPModule.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">unknown</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unknown_batch_cnt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">known</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">known_batch_cnt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unknown_feats</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">known_feats</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/ops/pointnet2_utils.html#StackPointnetFPModule.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.ops.pointnet2_utils.StackPointnetFPModule.forward" title="Permalink to this definition"></a></dt>
+<dd><dl class="simple">
+<dt>Args:</dt><dd><p>unknown: (N1 + N2 …, 3)
+known: (M1 + M2 …, 3)
+unknow_feats: (N1 + N2 …, C1)
+known_feats: (M1 + M2 …, C2)</p>
+</dd>
+<dt>Returns:</dt><dd><p>new_features: (N1 + N2 …, C_out)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cosense3d.ops.pointnet2_utils.StackPointnetFPModule.training">
+<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#cosense3d.ops.pointnet2_utils.StackPointnetFPModule.training" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="cosense3d.ops.pointnet2_utils.StackSAModuleMSG">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cosense3d.ops.pointnet2_utils.</span></span><span class="sig-name descname"><span class="pre">StackSAModuleMSG</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">radii</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nsamples</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mlps</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_xyz</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pool_method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'max_pool'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/ops/pointnet2_utils.html#StackSAModuleMSG"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.ops.pointnet2_utils.StackSAModuleMSG" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.ops.pointnet2_utils.StackSAModuleMSG.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">xyz</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xyz_batch_cnt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_xyz</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_xyz_batch_cnt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">features</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">empty_voxel_set_zeros</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/ops/pointnet2_utils.html#StackSAModuleMSG.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.ops.pointnet2_utils.StackSAModuleMSG.forward" title="Permalink to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>xyz</strong> – (N1 + N2 …, 3) tensor of the xyz coordinates of the features</p></li>
+<li><p><strong>xyz_batch_cnt</strong> – (batch_size), [N1, N2, …]</p></li>
+<li><p><strong>new_xyz</strong> – (M1 + M2 …, 3)</p></li>
+<li><p><strong>new_xyz_batch_cnt</strong> – (batch_size), [M1, M2, …]</p></li>
+<li><p><strong>features</strong> – (N1 + N2 …, C) tensor of the descriptors of the the features</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>new_xyz: (M1 + M2 …, 3) tensor of the new features’ xyz
+new_features: (M1 + M2 …, sum_k(mlps[k][-1])) tensor of the new_features descriptors</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.ops.pointnet2_utils.StackSAModuleMSG.init_weights">
+<span class="sig-name descname"><span class="pre">init_weights</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/ops/pointnet2_utils.html#StackSAModuleMSG.init_weights"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.ops.pointnet2_utils.StackSAModuleMSG.init_weights" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cosense3d.ops.pointnet2_utils.StackSAModuleMSG.training">
+<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#cosense3d.ops.pointnet2_utils.StackSAModuleMSG.training" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="cosense3d.ops.pointnet2_utils.ThreeInterpolate">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cosense3d.ops.pointnet2_utils.</span></span><span class="sig-name descname"><span class="pre">ThreeInterpolate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/ops/pointnet2_utils.html#ThreeInterpolate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.ops.pointnet2_utils.ThreeInterpolate" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Function</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.ops.pointnet2_utils.ThreeInterpolate.backward">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">backward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ctx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grad_out</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/ops/pointnet2_utils.html#ThreeInterpolate.backward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.ops.pointnet2_utils.ThreeInterpolate.backward" title="Permalink to this definition"></a></dt>
+<dd><dl class="simple">
+<dt>Args:</dt><dd><p>ctx:
+grad_out: (N1 + N2 …, C)</p>
+</dd>
+<dt>Returns:</dt><dd><p>grad_features: (M1 + M2 …, C)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.ops.pointnet2_utils.ThreeInterpolate.forward">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ctx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">idx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/ops/pointnet2_utils.html#ThreeInterpolate.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.ops.pointnet2_utils.ThreeInterpolate.forward" title="Permalink to this definition"></a></dt>
+<dd><dl class="simple">
+<dt>Args:</dt><dd><p>ctx:
+features: (M1 + M2 …, C)
+idx: [N1 + N2 …, 3]
+weight: [N1 + N2 …, 3]</p>
+</dd>
+<dt>Returns:</dt><dd><p>out_tensor: (N1 + N2 …, C)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="cosense3d.ops.pointnet2_utils.ThreeNN">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cosense3d.ops.pointnet2_utils.</span></span><span class="sig-name descname"><span class="pre">ThreeNN</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/ops/pointnet2_utils.html#ThreeNN"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.ops.pointnet2_utils.ThreeNN" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Function</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.ops.pointnet2_utils.ThreeNN.backward">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">backward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ctx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/ops/pointnet2_utils.html#ThreeNN.backward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.ops.pointnet2_utils.ThreeNN.backward" title="Permalink to this definition"></a></dt>
+<dd><p>Defines a formula for differentiating the operation with backward mode
+automatic differentiation (alias to the vjp function).</p>
+<p>This function is to be overridden by all subclasses.</p>
+<p>It must accept a context <code class="xref py py-attr docutils literal notranslate"><span class="pre">ctx</span></code> as the first argument, followed by
+as many outputs as the <a class="reference internal" href="#cosense3d.ops.pointnet2_utils.ThreeNN.forward" title="cosense3d.ops.pointnet2_utils.ThreeNN.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a> returned (None will be passed in
+for non tensor outputs of the forward function),
+and it should return as many tensors, as there were inputs to
+<a class="reference internal" href="#cosense3d.ops.pointnet2_utils.ThreeNN.forward" title="cosense3d.ops.pointnet2_utils.ThreeNN.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a>. Each argument is the gradient w.r.t the given output,
+and each returned value should be the gradient w.r.t. the
+corresponding input. If an input is not a Tensor or is a Tensor not
+requiring grads, you can just pass None as a gradient for that input.</p>
+<p>The context can be used to retrieve tensors saved during the forward
+pass. It also has an attribute <code class="xref py py-attr docutils literal notranslate"><span class="pre">ctx.needs_input_grad</span></code> as a tuple
+of booleans representing whether each input needs gradient. E.g.,
+<a class="reference internal" href="#cosense3d.ops.pointnet2_utils.ThreeNN.backward" title="cosense3d.ops.pointnet2_utils.ThreeNN.backward"><code class="xref py py-func docutils literal notranslate"><span class="pre">backward()</span></code></a> will have <code class="docutils literal notranslate"><span class="pre">ctx.needs_input_grad[0]</span> <span class="pre">=</span> <span class="pre">True</span></code> if the
+first input to <a class="reference internal" href="#cosense3d.ops.pointnet2_utils.ThreeNN.forward" title="cosense3d.ops.pointnet2_utils.ThreeNN.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a> needs gradient computated w.r.t. the
+output.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.ops.pointnet2_utils.ThreeNN.forward">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ctx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unknown</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unknown_batch_cnt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">known</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">known_batch_cnt</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/ops/pointnet2_utils.html#ThreeNN.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.ops.pointnet2_utils.ThreeNN.forward" title="Permalink to this definition"></a></dt>
+<dd><dl class="simple">
+<dt>Args:</dt><dd><p>ctx:
+unknown: (N1 + N2…, 3)
+unknown_batch_cnt: (batch_size), [N1, N2, …]
+known: (M1 + M2…, 3)
+known_batch_cnt: (batch_size), [M1, M2, …]</p>
+</dd>
+<dt>Returns:</dt><dd><p>dist: (N1 + N2 …, 3)  l2 distance to the three nearest neighbors
+idx: (N1 + N2 …, 3)  index of the three nearest neighbors, range [0, M1+M2+…]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.ops.pointnet2_utils.ball_query">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.ops.pointnet2_utils.</span></span><span class="sig-name descname"><span class="pre">ball_query</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#cosense3d.ops.pointnet2_utils.ball_query" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.ops.pointnet2_utils.furthest_point_sample">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.ops.pointnet2_utils.</span></span><span class="sig-name descname"><span class="pre">furthest_point_sample</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#cosense3d.ops.pointnet2_utils.furthest_point_sample" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.ops.pointnet2_utils.grouping_operation">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.ops.pointnet2_utils.</span></span><span class="sig-name descname"><span class="pre">grouping_operation</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#cosense3d.ops.pointnet2_utils.grouping_operation" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.ops.pointnet2_utils.three_interpolate">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.ops.pointnet2_utils.</span></span><span class="sig-name descname"><span class="pre">three_interpolate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#cosense3d.ops.pointnet2_utils.three_interpolate" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.ops.pointnet2_utils.three_nn">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.ops.pointnet2_utils.</span></span><span class="sig-name descname"><span class="pre">three_nn</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#cosense3d.ops.pointnet2_utils.three_nn" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="cosense3d-ops-setup-module">
+<h2>cosense3d.ops.setup module<a class="headerlink" href="#cosense3d-ops-setup-module" title="Permalink to this heading"></a></h2>
+</section>
+<section id="module-cosense3d.ops.sparse_ops">
+<span id="cosense3d-ops-sparse-ops-module"></span><h2>cosense3d.ops.sparse_ops module<a class="headerlink" href="#module-cosense3d.ops.sparse_ops" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="cosense3d.ops.sparse_ops.DotProduct">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cosense3d.ops.sparse_ops.</span></span><span class="sig-name descname"><span class="pre">DotProduct</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/ops/sparse_ops.html#DotProduct"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.ops.sparse_ops.DotProduct" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Function</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.ops.sparse_ops.DotProduct.backward">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">backward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ctx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grad_out_F</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/ops/sparse_ops.html#DotProduct.backward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.ops.sparse_ops.DotProduct.backward" title="Permalink to this definition"></a></dt>
+<dd><p>Defines a formula for differentiating the operation with backward mode
+automatic differentiation (alias to the vjp function).</p>
+<p>This function is to be overridden by all subclasses.</p>
+<p>It must accept a context <code class="xref py py-attr docutils literal notranslate"><span class="pre">ctx</span></code> as the first argument, followed by
+as many outputs as the <a class="reference internal" href="#cosense3d.ops.sparse_ops.DotProduct.forward" title="cosense3d.ops.sparse_ops.DotProduct.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a> returned (None will be passed in
+for non tensor outputs of the forward function),
+and it should return as many tensors, as there were inputs to
+<a class="reference internal" href="#cosense3d.ops.sparse_ops.DotProduct.forward" title="cosense3d.ops.sparse_ops.DotProduct.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a>. Each argument is the gradient w.r.t the given output,
+and each returned value should be the gradient w.r.t. the
+corresponding input. If an input is not a Tensor or is a Tensor not
+requiring grads, you can just pass None as a gradient for that input.</p>
+<p>The context can be used to retrieve tensors saved during the forward
+pass. It also has an attribute <code class="xref py py-attr docutils literal notranslate"><span class="pre">ctx.needs_input_grad</span></code> as a tuple
+of booleans representing whether each input needs gradient. E.g.,
+<a class="reference internal" href="#cosense3d.ops.sparse_ops.DotProduct.backward" title="cosense3d.ops.sparse_ops.DotProduct.backward"><code class="xref py py-func docutils literal notranslate"><span class="pre">backward()</span></code></a> will have <code class="docutils literal notranslate"><span class="pre">ctx.needs_input_grad[0]</span> <span class="pre">=</span> <span class="pre">True</span></code> if the
+first input to <a class="reference internal" href="#cosense3d.ops.sparse_ops.DotProduct.forward" title="cosense3d.ops.sparse_ops.DotProduct.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a> needs gradient computated w.r.t. the
+output.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.ops.sparse_ops.DotProduct.forward">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ctx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">query</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pos_enc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_F</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kq_map</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/ops/sparse_ops.html#DotProduct.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.ops.sparse_ops.DotProduct.forward" title="Permalink to this definition"></a></dt>
+<dd><p>Performs the operation.</p>
+<p>This function is to be overridden by all subclasses.</p>
+<p>It must accept a context ctx as the first argument, followed by any
+number of arguments (tensors or other types).</p>
+<p>The context can be used to store arbitrary data that can be then
+retrieved during the backward pass. Tensors should not be stored
+directly on <cite>ctx</cite> (though this is not currently enforced for
+backward compatibility). Instead, tensors should be saved either with
+<code class="xref py py-func docutils literal notranslate"><span class="pre">ctx.save_for_backward()</span></code> if they are intended to be used in
+<code class="docutils literal notranslate"><span class="pre">backward</span></code> (equivalently, <code class="docutils literal notranslate"><span class="pre">vjp</span></code>) or <code class="xref py py-func docutils literal notranslate"><span class="pre">ctx.save_for_forward()</span></code>
+if they are intended to be used for in <code class="docutils literal notranslate"><span class="pre">jvp</span></code>.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="cosense3d.ops.sparse_ops.IndexPooling">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cosense3d.ops.sparse_ops.</span></span><span class="sig-name descname"><span class="pre">IndexPooling</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/ops/sparse_ops.html#IndexPooling"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.ops.sparse_ops.IndexPooling" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Function</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.ops.sparse_ops.IndexPooling.backward">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">backward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ctx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grad_out</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/ops/sparse_ops.html#IndexPooling.backward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.ops.sparse_ops.IndexPooling.backward" title="Permalink to this definition"></a></dt>
+<dd><p>Defines a formula for differentiating the operation with backward mode
+automatic differentiation (alias to the vjp function).</p>
+<p>This function is to be overridden by all subclasses.</p>
+<p>It must accept a context <code class="xref py py-attr docutils literal notranslate"><span class="pre">ctx</span></code> as the first argument, followed by
+as many outputs as the <a class="reference internal" href="#cosense3d.ops.sparse_ops.IndexPooling.forward" title="cosense3d.ops.sparse_ops.IndexPooling.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a> returned (None will be passed in
+for non tensor outputs of the forward function),
+and it should return as many tensors, as there were inputs to
+<a class="reference internal" href="#cosense3d.ops.sparse_ops.IndexPooling.forward" title="cosense3d.ops.sparse_ops.IndexPooling.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a>. Each argument is the gradient w.r.t the given output,
+and each returned value should be the gradient w.r.t. the
+corresponding input. If an input is not a Tensor or is a Tensor not
+requiring grads, you can just pass None as a gradient for that input.</p>
+<p>The context can be used to retrieve tensors saved during the forward
+pass. It also has an attribute <code class="xref py py-attr docutils literal notranslate"><span class="pre">ctx.needs_input_grad</span></code> as a tuple
+of booleans representing whether each input needs gradient. E.g.,
+<a class="reference internal" href="#cosense3d.ops.sparse_ops.IndexPooling.backward" title="cosense3d.ops.sparse_ops.IndexPooling.backward"><code class="xref py py-func docutils literal notranslate"><span class="pre">backward()</span></code></a> will have <code class="docutils literal notranslate"><span class="pre">ctx.needs_input_grad[0]</span> <span class="pre">=</span> <span class="pre">True</span></code> if the
+first input to <a class="reference internal" href="#cosense3d.ops.sparse_ops.IndexPooling.forward" title="cosense3d.ops.sparse_ops.IndexPooling.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a> needs gradient computated w.r.t. the
+output.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.ops.sparse_ops.IndexPooling.forward">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ctx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c_indices</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_indices</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/ops/sparse_ops.html#IndexPooling.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.ops.sparse_ops.IndexPooling.forward" title="Permalink to this definition"></a></dt>
+<dd><p>Performs the operation.</p>
+<p>This function is to be overridden by all subclasses.</p>
+<p>It must accept a context ctx as the first argument, followed by any
+number of arguments (tensors or other types).</p>
+<p>The context can be used to store arbitrary data that can be then
+retrieved during the backward pass. Tensors should not be stored
+directly on <cite>ctx</cite> (though this is not currently enforced for
+backward compatibility). Instead, tensors should be saved either with
+<code class="xref py py-func docutils literal notranslate"><span class="pre">ctx.save_for_backward()</span></code> if they are intended to be used in
+<code class="docutils literal notranslate"><span class="pre">backward</span></code> (equivalently, <code class="docutils literal notranslate"><span class="pre">vjp</span></code>) or <code class="xref py py-func docutils literal notranslate"><span class="pre">ctx.save_for_forward()</span></code>
+if they are intended to be used for in <code class="docutils literal notranslate"><span class="pre">jvp</span></code>.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="cosense3d.ops.sparse_ops.ScalarAttention">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cosense3d.ops.sparse_ops.</span></span><span class="sig-name descname"><span class="pre">ScalarAttention</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/ops/sparse_ops.html#ScalarAttention"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.ops.sparse_ops.ScalarAttention" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Function</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.ops.sparse_ops.ScalarAttention.backward">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">backward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ctx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grad_out_F</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/ops/sparse_ops.html#ScalarAttention.backward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.ops.sparse_ops.ScalarAttention.backward" title="Permalink to this definition"></a></dt>
+<dd><p>Defines a formula for differentiating the operation with backward mode
+automatic differentiation (alias to the vjp function).</p>
+<p>This function is to be overridden by all subclasses.</p>
+<p>It must accept a context <code class="xref py py-attr docutils literal notranslate"><span class="pre">ctx</span></code> as the first argument, followed by
+as many outputs as the <a class="reference internal" href="#cosense3d.ops.sparse_ops.ScalarAttention.forward" title="cosense3d.ops.sparse_ops.ScalarAttention.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a> returned (None will be passed in
+for non tensor outputs of the forward function),
+and it should return as many tensors, as there were inputs to
+<a class="reference internal" href="#cosense3d.ops.sparse_ops.ScalarAttention.forward" title="cosense3d.ops.sparse_ops.ScalarAttention.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a>. Each argument is the gradient w.r.t the given output,
+and each returned value should be the gradient w.r.t. the
+corresponding input. If an input is not a Tensor or is a Tensor not
+requiring grads, you can just pass None as a gradient for that input.</p>
+<p>The context can be used to retrieve tensors saved during the forward
+pass. It also has an attribute <code class="xref py py-attr docutils literal notranslate"><span class="pre">ctx.needs_input_grad</span></code> as a tuple
+of booleans representing whether each input needs gradient. E.g.,
+<a class="reference internal" href="#cosense3d.ops.sparse_ops.ScalarAttention.backward" title="cosense3d.ops.sparse_ops.ScalarAttention.backward"><code class="xref py py-func docutils literal notranslate"><span class="pre">backward()</span></code></a> will have <code class="docutils literal notranslate"><span class="pre">ctx.needs_input_grad[0]</span> <span class="pre">=</span> <span class="pre">True</span></code> if the
+first input to <a class="reference internal" href="#cosense3d.ops.sparse_ops.ScalarAttention.forward" title="cosense3d.ops.sparse_ops.ScalarAttention.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a> needs gradient computated w.r.t. the
+output.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosense3d.ops.sparse_ops.ScalarAttention.forward">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ctx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_F</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kq_indices</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/ops/sparse_ops.html#ScalarAttention.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.ops.sparse_ops.ScalarAttention.forward" title="Permalink to this definition"></a></dt>
+<dd><p>Performs the operation.</p>
+<p>This function is to be overridden by all subclasses.</p>
+<p>It must accept a context ctx as the first argument, followed by any
+number of arguments (tensors or other types).</p>
+<p>The context can be used to store arbitrary data that can be then
+retrieved during the backward pass. Tensors should not be stored
+directly on <cite>ctx</cite> (though this is not currently enforced for
+backward compatibility). Instead, tensors should be saved either with
+<code class="xref py py-func docutils literal notranslate"><span class="pre">ctx.save_for_backward()</span></code> if they are intended to be used in
+<code class="docutils literal notranslate"><span class="pre">backward</span></code> (equivalently, <code class="docutils literal notranslate"><span class="pre">vjp</span></code>) or <code class="xref py py-func docutils literal notranslate"><span class="pre">ctx.save_for_forward()</span></code>
+if they are intended to be used for in <code class="docutils literal notranslate"><span class="pre">jvp</span></code>.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.ops.sparse_ops.dot_product_cuda">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.ops.sparse_ops.</span></span><span class="sig-name descname"><span class="pre">dot_product_cuda</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#cosense3d.ops.sparse_ops.dot_product_cuda" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.ops.sparse_ops.index_pooling_cuda">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.ops.sparse_ops.</span></span><span class="sig-name descname"><span class="pre">index_pooling_cuda</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#cosense3d.ops.sparse_ops.index_pooling_cuda" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.ops.sparse_ops.scalar_attention_cuda">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.ops.sparse_ops.</span></span><span class="sig-name descname"><span class="pre">scalar_attention_cuda</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#cosense3d.ops.sparse_ops.scalar_attention_cuda" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="module-cosense3d.ops.utils">
+<span id="cosense3d-ops-utils-module"></span><h2>cosense3d.ops.utils module<a class="headerlink" href="#module-cosense3d.ops.utils" title="Permalink to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.ops.utils.check_numpy_to_torch">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.ops.utils.</span></span><span class="sig-name descname"><span class="pre">check_numpy_to_torch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/ops/utils.html#check_numpy_to_torch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.ops.utils.check_numpy_to_torch" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.ops.utils.decompose_batch_indices">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.ops.utils.</span></span><span class="sig-name descname"><span class="pre">decompose_batch_indices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_indices</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/ops/utils.html#decompose_batch_indices"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.ops.utils.decompose_batch_indices" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.ops.utils.points_in_boxes_cpu">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.ops.utils.</span></span><span class="sig-name descname"><span class="pre">points_in_boxes_cpu</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">points</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boxes</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/ops/utils.html#points_in_boxes_cpu"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.ops.utils.points_in_boxes_cpu" title="Permalink to this definition"></a></dt>
+<dd><dl class="simple">
+<dt>Args:</dt><dd><p>points: (num_points, 3)
+boxes: [x, y, z, dx, dy, dz, heading], (x, y, z) is the box center, each box DO NOT overlaps</p>
+</dd>
+<dt>Returns:</dt><dd><p>point_indices: (N, num_points)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.ops.utils.points_in_boxes_gpu">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.ops.utils.</span></span><span class="sig-name descname"><span class="pre">points_in_boxes_gpu</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">points</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boxes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_indices</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/ops/utils.html#points_in_boxes_gpu"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.ops.utils.points_in_boxes_gpu" title="Permalink to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>points</strong> – (B, M, 3) or (M, 4)</p></li>
+<li><p><strong>boxes</strong> – (B, T, 7) or (T, 8), num_valid_boxes &lt;= T</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return box_idxs_of_pts<span class="colon">:</span></dt>
+<dd class="field-even"><p>(B, M), default background = -1</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cosense3d.ops.utils.points_in_boxes_gpu_2d">
+<span class="sig-prename descclassname"><span class="pre">cosense3d.ops.utils.</span></span><span class="sig-name descname"><span class="pre">points_in_boxes_gpu_2d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">points</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boxes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_indices</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cosense3d/ops/utils.html#points_in_boxes_gpu_2d"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosense3d.ops.utils.points_in_boxes_gpu_2d" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="module-cosense3d.ops">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-cosense3d.ops" title="Permalink to this heading"></a></h2>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="cosense3d.modules.utils.html" class="btn btn-neutral float-left" title="cosense3d.modules.utils package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="cosense3d.utils.html" class="btn btn-neutral float-right" title="cosense3d.utils package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Anonymous Author.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

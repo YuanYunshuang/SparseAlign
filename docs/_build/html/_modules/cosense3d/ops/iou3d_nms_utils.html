@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>cosense3d.ops.iou3d_nms_utils &mdash; OpenCosense3D 1.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js?v=af2ce170"></script>
+        <script src="../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            OpenCosense3D
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../md/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../md/prepare_data.html">Prepare Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../md/structure.html">The Structure of the framework</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">CoSense3d</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">OpenCosense3D</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">cosense3d.ops.iou3d_nms_utils</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for cosense3d.ops.iou3d_nms_utils</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">3D IoU Calculation and Rotated NMS</span>
+<span class="sd">Written by Shaoshuai Shi</span>
+<span class="sd">All Rights Reserved 2019-2020.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">torch</span>
+
+<span class="kn">from</span> <span class="nn">cosense3d.ops.utils</span> <span class="kn">import</span> <span class="n">check_numpy_to_torch</span>
+<span class="kn">import</span> <span class="nn">cuda_ops</span> 
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+
+<div class="viewcode-block" id="boxes_bev_iou_cpu"><a class="viewcode-back" href="../../../cosense3d.ops.html#cosense3d.ops.iou3d_nms_utils.boxes_bev_iou_cpu">[docs]</a><span class="k">def</span> <span class="nf">boxes_bev_iou_cpu</span><span class="p">(</span><span class="n">boxes_a</span><span class="p">,</span> <span class="n">boxes_b</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Args:</span>
+<span class="sd">        boxes_a: (N, 7) [x, y, z, dx, dy, dz, heading]</span>
+<span class="sd">        boxes_b: (N, 7) [x, y, z, dx, dy, dz, heading]</span>
+
+<span class="sd">    Returns:</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">boxes_a</span><span class="p">,</span> <span class="n">is_numpy</span> <span class="o">=</span> <span class="n">check_numpy_to_torch</span><span class="p">(</span><span class="n">boxes_a</span><span class="p">)</span>
+    <span class="n">boxes_b</span><span class="p">,</span> <span class="n">is_numpy</span> <span class="o">=</span> <span class="n">check_numpy_to_torch</span><span class="p">(</span><span class="n">boxes_b</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="ow">not</span> <span class="p">(</span><span class="n">boxes_a</span><span class="o">.</span><span class="n">is_cuda</span> <span class="ow">or</span> <span class="n">boxes_b</span><span class="o">.</span><span class="n">is_cuda</span><span class="p">),</span> <span class="s1">&#39;Only support CPU tensors&#39;</span>
+    <span class="k">assert</span> <span class="n">boxes_a</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">7</span> <span class="ow">and</span> <span class="n">boxes_b</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">7</span>
+    <span class="n">ans_iou</span> <span class="o">=</span> <span class="n">boxes_a</span><span class="o">.</span><span class="n">new_zeros</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">Size</span><span class="p">((</span><span class="n">boxes_a</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">boxes_b</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])))</span>
+    <span class="n">cuda_ops</span><span class="o">.</span><span class="n">boxes_iou_bev_cpu</span><span class="p">(</span><span class="n">boxes_a</span><span class="o">.</span><span class="n">contiguous</span><span class="p">(),</span> <span class="n">boxes_b</span><span class="o">.</span><span class="n">contiguous</span><span class="p">(),</span> <span class="n">ans_iou</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">ans_iou</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span> <span class="k">if</span> <span class="n">is_numpy</span> <span class="k">else</span> <span class="n">ans_iou</span></div>
+
+
+<div class="viewcode-block" id="boxes_iou_bev"><a class="viewcode-back" href="../../../cosense3d.ops.html#cosense3d.ops.iou3d_nms_utils.boxes_iou_bev">[docs]</a><span class="k">def</span> <span class="nf">boxes_iou_bev</span><span class="p">(</span><span class="n">boxes_a</span><span class="p">,</span> <span class="n">boxes_b</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Args:</span>
+<span class="sd">        boxes_a: (N, 7) [x, y, z, dx, dy, dz, heading]</span>
+<span class="sd">        boxes_b: (M, 7) [x, y, z, dx, dy, dz, heading]</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        ans_iou: (N, M)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">assert</span> <span class="n">boxes_a</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">boxes_b</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">7</span>
+    <span class="n">ans_iou</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">FloatTensor</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">Size</span><span class="p">((</span><span class="n">boxes_a</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">boxes_b</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])))</span><span class="o">.</span><span class="n">zero_</span><span class="p">()</span>
+
+    <span class="n">cuda_ops</span><span class="o">.</span><span class="n">boxes_iou_bev_gpu</span><span class="p">(</span><span class="n">boxes_a</span><span class="o">.</span><span class="n">contiguous</span><span class="p">(),</span> <span class="n">boxes_b</span><span class="o">.</span><span class="n">contiguous</span><span class="p">(),</span> <span class="n">ans_iou</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">ans_iou</span></div>
+
+
+<div class="viewcode-block" id="decode_boxes_and_iou3d"><a class="viewcode-back" href="../../../cosense3d.ops.html#cosense3d.ops.iou3d_nms_utils.decode_boxes_and_iou3d">[docs]</a><span class="k">def</span> <span class="nf">decode_boxes_and_iou3d</span><span class="p">(</span><span class="n">boxes_a</span><span class="p">,</span> <span class="n">boxes_b</span><span class="p">,</span> <span class="n">pc_range</span><span class="p">,</span> <span class="n">box_mean</span><span class="p">,</span> <span class="n">box_std</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Transform the boxes format back to [x, y, z, dx, dy, dz, heading] and calculate iou</span>
+<span class="sd">    :param boxes_a: (N, 7) [x_n, y_n, z_n, dx_n, dy_n, dz_n, heading_n] normalized</span>
+<span class="sd">    :param boxes_b: (M, 7) [x_n, y_n, z_n, dx_n, dy_n, dz_n, heading_n]</span>
+<span class="sd">    :param pc_range: point cloud range</span>
+<span class="sd">    :param object_ave_size: average object size</span>
+<span class="sd">    :return: ans_iou: (N, M)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">boxes_a_dec</span> <span class="o">=</span> <span class="n">decode_boxes</span><span class="p">(</span><span class="n">boxes_a</span><span class="p">,</span> <span class="n">pc_range</span><span class="p">,</span> <span class="n">box_mean</span><span class="p">,</span> <span class="n">box_std</span><span class="p">)</span>
+    <span class="n">boxes_b_dec</span> <span class="o">=</span> <span class="n">decode_boxes</span><span class="p">(</span><span class="n">boxes_b</span><span class="p">,</span> <span class="n">pc_range</span><span class="p">,</span> <span class="n">box_mean</span><span class="p">,</span> <span class="n">box_std</span><span class="p">)</span>
+    <span class="n">iou</span> <span class="o">=</span> <span class="n">boxes_iou3d_gpu</span><span class="p">(</span><span class="n">boxes_a_dec</span><span class="p">,</span> <span class="n">boxes_b_dec</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">iou</span></div>
+
+
+<div class="viewcode-block" id="decode_boxes"><a class="viewcode-back" href="../../../cosense3d.ops.html#cosense3d.ops.iou3d_nms_utils.decode_boxes">[docs]</a><span class="k">def</span> <span class="nf">decode_boxes</span><span class="p">(</span><span class="n">boxes</span><span class="p">,</span> <span class="n">pc_range</span><span class="p">,</span> <span class="n">box_mean</span><span class="p">,</span> <span class="n">box_std</span><span class="p">):</span>
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">boxes</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span><span class="o">==</span><span class="mi">2</span>
+    <span class="k">assert</span> <span class="n">boxes</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">==</span><span class="mi">8</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">box_mean</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="n">box_mean</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">box_mean</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">boxes</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">box_std</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="n">box_std</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">box_std</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">boxes</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+    <span class="n">boxes</span> <span class="o">=</span> <span class="n">boxes</span> <span class="o">*</span> <span class="n">box_std</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:]</span> <span class="o">+</span> <span class="n">box_mean</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:]</span>
+    <span class="n">boxes_out</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">boxes</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">7</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">boxes</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">boxes</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">):</span>
+        <span class="n">boxes_out</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">boxes</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">pc_range</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">3</span><span class="p">]</span> <span class="o">-</span> <span class="n">pc_range</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">+</span> <span class="n">pc_range</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+    <span class="n">boxes_out</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">:</span><span class="mi">6</span><span class="p">]</span> <span class="o">=</span> <span class="n">boxes</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">:</span><span class="mi">6</span><span class="p">]</span><span class="o">.</span><span class="n">exp</span><span class="p">()</span>
+    <span class="n">boxes_out</span><span class="p">[:,</span> <span class="mi">6</span><span class="p">]</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">atan2</span><span class="p">(</span><span class="n">boxes</span><span class="p">[:,</span> <span class="mi">6</span><span class="p">],</span> <span class="n">boxes</span><span class="p">[:,</span> <span class="mi">7</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">boxes_out</span></div>
+
+
+<div class="viewcode-block" id="decode_boxes_and_giou3d"><a class="viewcode-back" href="../../../cosense3d.ops.html#cosense3d.ops.iou3d_nms_utils.decode_boxes_and_giou3d">[docs]</a><span class="k">def</span> <span class="nf">decode_boxes_and_giou3d</span><span class="p">(</span><span class="n">boxes_a</span><span class="p">,</span> <span class="n">boxes_b</span><span class="p">,</span> <span class="n">pc_range</span><span class="p">,</span> <span class="n">box_mean</span><span class="p">,</span> <span class="n">box_std</span><span class="p">):</span>
+    <span class="n">boxes_a_dec</span> <span class="o">=</span> <span class="n">decode_boxes</span><span class="p">(</span><span class="n">boxes_a</span><span class="p">,</span> <span class="n">pc_range</span><span class="p">,</span> <span class="n">box_mean</span><span class="p">,</span> <span class="n">box_std</span><span class="p">)</span>
+    <span class="n">boxes_b_dec</span> <span class="o">=</span> <span class="n">decode_boxes</span><span class="p">(</span><span class="n">boxes_b</span><span class="p">,</span> <span class="n">pc_range</span><span class="p">,</span> <span class="n">box_mean</span><span class="p">,</span> <span class="n">box_std</span><span class="p">)</span>
+    <span class="n">corners_a</span> <span class="o">=</span> <span class="n">centroid_to_corners</span><span class="p">(</span><span class="n">boxes_a_dec</span><span class="p">)</span>
+    <span class="n">corners_b</span> <span class="o">=</span> <span class="n">centroid_to_corners</span><span class="p">(</span><span class="n">boxes_b_dec</span><span class="p">)</span>
+    <span class="n">iou</span><span class="p">,</span> <span class="n">union</span> <span class="o">=</span> <span class="n">boxes_iou3d_gpu</span><span class="p">(</span><span class="n">boxes_a_dec</span><span class="p">,</span> <span class="n">boxes_b_dec</span><span class="p">,</span> <span class="n">return_union</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">lwh</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">corners_a</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">][:,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">:],</span> <span class="n">corners_b</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span> \
+          <span class="o">-</span><span class="n">torch</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">corners_a</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">][:,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">:],</span> <span class="n">corners_b</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">volume</span> <span class="o">=</span> <span class="n">lwh</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">lwh</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">lwh</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>
+
+    <span class="n">giou</span> <span class="o">=</span> <span class="n">iou</span> <span class="o">-</span> <span class="p">(</span><span class="n">volume</span> <span class="o">-</span> <span class="n">union</span><span class="p">)</span> <span class="o">/</span> <span class="n">volume</span>
+
+    <span class="k">return</span> <span class="n">giou</span></div>
+
+
+<div class="viewcode-block" id="giou3d"><a class="viewcode-back" href="../../../cosense3d.ops.html#cosense3d.ops.iou3d_nms_utils.giou3d">[docs]</a><span class="k">def</span> <span class="nf">giou3d</span><span class="p">(</span><span class="n">boxes_a_dec</span><span class="p">,</span> <span class="n">boxes_b_dec</span><span class="p">):</span>
+    <span class="n">corners_a</span> <span class="o">=</span> <span class="n">centroid_to_corners</span><span class="p">(</span><span class="n">boxes_a_dec</span><span class="p">)</span>
+    <span class="n">corners_b</span> <span class="o">=</span> <span class="n">centroid_to_corners</span><span class="p">(</span><span class="n">boxes_b_dec</span><span class="p">)</span>
+    <span class="n">iou</span><span class="p">,</span> <span class="n">union</span> <span class="o">=</span> <span class="n">boxes_iou3d_gpu</span><span class="p">(</span><span class="n">boxes_a_dec</span><span class="p">,</span> <span class="n">boxes_b_dec</span><span class="p">,</span> <span class="n">return_union</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">lwh</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">corners_a</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">][:,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">:],</span> <span class="n">corners_b</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span> \
+          <span class="o">-</span><span class="n">torch</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">corners_a</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">][:,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">:],</span> <span class="n">corners_b</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">volume</span> <span class="o">=</span> <span class="n">lwh</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">lwh</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">lwh</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>
+
+    <span class="n">giou</span> <span class="o">=</span> <span class="n">iou</span> <span class="o">-</span> <span class="p">(</span><span class="n">volume</span> <span class="o">-</span> <span class="n">union</span><span class="p">)</span> <span class="o">/</span> <span class="n">volume</span>
+
+    <span class="k">return</span> <span class="n">giou</span></div>
+
+
+<div class="viewcode-block" id="aligned_boxes_iou3d_gpu"><a class="viewcode-back" href="../../../cosense3d.ops.html#cosense3d.ops.iou3d_nms_utils.aligned_boxes_iou3d_gpu">[docs]</a><span class="k">def</span> <span class="nf">aligned_boxes_iou3d_gpu</span><span class="p">(</span><span class="n">boxes_a</span><span class="p">,</span> <span class="n">boxes_b</span><span class="p">,</span> <span class="n">return_union</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Args:</span>
+<span class="sd">        boxes_a: (N, 7) [x, y, z, dx, dy, dz, heading]</span>
+<span class="sd">        boxes_b: (N, 7) [x, y, z, dx, dy, dz, heading]</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        ans_iou: (N, 1)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">assert</span> <span class="n">boxes_a</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">boxes_b</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">7</span>
+    <span class="k">assert</span> <span class="n">boxes_a</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">boxes_b</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="c1"># height overlap</span>
+    <span class="n">boxes_a_height_max</span> <span class="o">=</span> <span class="p">(</span><span class="n">boxes_a</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="n">boxes_a</span><span class="p">[:,</span> <span class="mi">5</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">boxes_a_height_min</span> <span class="o">=</span> <span class="p">(</span><span class="n">boxes_a</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">boxes_a</span><span class="p">[:,</span> <span class="mi">5</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">boxes_b_height_max</span> <span class="o">=</span> <span class="p">(</span><span class="n">boxes_b</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="n">boxes_b</span><span class="p">[:,</span> <span class="mi">5</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">boxes_b_height_min</span> <span class="o">=</span> <span class="p">(</span><span class="n">boxes_b</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">boxes_b</span><span class="p">[:,</span> <span class="mi">5</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="c1"># bev overlap</span>
+    <span class="n">overlaps_bev</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">FloatTensor</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">Size</span><span class="p">((</span><span class="n">boxes_a</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">boxes_b</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])))</span><span class="o">.</span><span class="n">zero_</span><span class="p">()</span>  <span class="c1"># (N, M)</span>
+    <span class="n">cuda_ops</span><span class="o">.</span><span class="n">boxes_overlap_bev_gpu</span><span class="p">(</span><span class="n">boxes_a</span><span class="o">.</span><span class="n">contiguous</span><span class="p">(),</span> <span class="n">boxes_b</span><span class="o">.</span><span class="n">contiguous</span><span class="p">(),</span> <span class="n">overlaps_bev</span><span class="p">)</span>
+    <span class="n">overlaps_bev</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">diagonal</span><span class="p">(</span><span class="n">overlaps_bev</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="n">max_of_min</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">boxes_a_height_min</span><span class="p">,</span> <span class="n">boxes_b_height_min</span><span class="p">)</span>
+    <span class="n">min_of_max</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">boxes_a_height_max</span><span class="p">,</span> <span class="n">boxes_b_height_max</span><span class="p">)</span>
+    <span class="n">overlaps_h</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">clamp</span><span class="p">(</span><span class="n">min_of_max</span> <span class="o">-</span> <span class="n">max_of_min</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="c1"># 3d iou</span>
+    <span class="n">overlaps_3d</span> <span class="o">=</span> <span class="n">overlaps_bev</span> <span class="o">*</span> <span class="n">overlaps_h</span>
+
+    <span class="n">vol_a</span> <span class="o">=</span> <span class="p">(</span><span class="n">boxes_a</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">*</span> <span class="n">boxes_a</span><span class="p">[:,</span> <span class="mi">4</span><span class="p">]</span> <span class="o">*</span> <span class="n">boxes_a</span><span class="p">[:,</span> <span class="mi">5</span><span class="p">])</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">vol_b</span> <span class="o">=</span> <span class="p">(</span><span class="n">boxes_b</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">*</span> <span class="n">boxes_b</span><span class="p">[:,</span> <span class="mi">4</span><span class="p">]</span> <span class="o">*</span> <span class="n">boxes_b</span><span class="p">[:,</span> <span class="mi">5</span><span class="p">])</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">union</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">clamp</span><span class="p">(</span><span class="n">vol_a</span> <span class="o">+</span> <span class="n">vol_b</span> <span class="o">-</span> <span class="n">overlaps_3d</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">)</span>
+    <span class="n">iou3d</span> <span class="o">=</span> <span class="n">overlaps_3d</span> <span class="o">/</span> <span class="n">union</span>
+    <span class="k">if</span> <span class="n">return_union</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">iou3d</span><span class="p">,</span> <span class="n">union</span>
+    <span class="k">return</span> <span class="n">iou3d</span></div>
+
+
+<div class="viewcode-block" id="boxes_iou3d_gpu"><a class="viewcode-back" href="../../../cosense3d.ops.html#cosense3d.ops.iou3d_nms_utils.boxes_iou3d_gpu">[docs]</a><span class="k">def</span> <span class="nf">boxes_iou3d_gpu</span><span class="p">(</span><span class="n">boxes_a</span><span class="p">,</span> <span class="n">boxes_b</span><span class="p">,</span> <span class="n">return_union</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">boxes_iou3d</span><span class="p">(</span><span class="n">boxes_a</span><span class="p">,</span> <span class="n">boxes_b</span><span class="p">,</span> <span class="n">return_union</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="boxes_iou3d_cpu"><a class="viewcode-back" href="../../../cosense3d.ops.html#cosense3d.ops.iou3d_nms_utils.boxes_iou3d_cpu">[docs]</a><span class="k">def</span> <span class="nf">boxes_iou3d_cpu</span><span class="p">(</span><span class="n">boxes_a</span><span class="p">,</span> <span class="n">boxes_b</span><span class="p">,</span> <span class="n">return_union</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">boxes_iou3d</span><span class="p">(</span><span class="n">boxes_a</span><span class="p">,</span> <span class="n">boxes_b</span><span class="p">,</span> <span class="n">return_union</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="boxes_iou3d"><a class="viewcode-back" href="../../../cosense3d.ops.html#cosense3d.ops.iou3d_nms_utils.boxes_iou3d">[docs]</a><span class="k">def</span> <span class="nf">boxes_iou3d</span><span class="p">(</span><span class="n">boxes_a</span><span class="p">,</span> <span class="n">boxes_b</span><span class="p">,</span> <span class="n">return_union</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">gpu</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Args:</span>
+<span class="sd">        boxes_a: (N, 7) [x, y, z, dx, dy, dz, heading]</span>
+<span class="sd">        boxes_b: (N, 7) [x, y, z, dx, dy, dz, heading]</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        ans_iou: (N, M)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">assert</span> <span class="n">boxes_a</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">boxes_b</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">7</span>
+
+    <span class="c1"># height overlap</span>
+    <span class="n">boxes_a_height_max</span> <span class="o">=</span> <span class="p">(</span><span class="n">boxes_a</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="n">boxes_a</span><span class="p">[:,</span> <span class="mi">5</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">boxes_a_height_min</span> <span class="o">=</span> <span class="p">(</span><span class="n">boxes_a</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">boxes_a</span><span class="p">[:,</span> <span class="mi">5</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">boxes_b_height_max</span> <span class="o">=</span> <span class="p">(</span><span class="n">boxes_b</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="n">boxes_b</span><span class="p">[:,</span> <span class="mi">5</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">boxes_b_height_min</span> <span class="o">=</span> <span class="p">(</span><span class="n">boxes_b</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">boxes_b</span><span class="p">[:,</span> <span class="mi">5</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="c1"># bev overlap</span>
+    <span class="k">if</span> <span class="n">gpu</span><span class="p">:</span>
+        <span class="n">overlaps_bev</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">FloatTensor</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">Size</span><span class="p">((</span><span class="n">boxes_a</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">boxes_b</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])))</span><span class="o">.</span><span class="n">zero_</span><span class="p">()</span>  <span class="c1"># (N, M)</span>
+        <span class="n">cuda_ops</span><span class="o">.</span><span class="n">boxes_overlap_bev_gpu</span><span class="p">(</span><span class="n">boxes_a</span><span class="o">.</span><span class="n">contiguous</span><span class="p">(),</span> <span class="n">boxes_b</span><span class="o">.</span><span class="n">contiguous</span><span class="p">(),</span> <span class="n">overlaps_bev</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">overlaps_bev</span> <span class="o">=</span> <span class="n">boxes_bev_iou_cpu</span><span class="p">(</span><span class="n">boxes_a</span><span class="p">,</span> <span class="n">boxes_b</span><span class="p">)</span>
+
+    <span class="n">max_of_min</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">boxes_a_height_min</span><span class="p">,</span> <span class="n">boxes_b_height_min</span><span class="p">)</span>
+    <span class="n">min_of_max</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">boxes_a_height_max</span><span class="p">,</span> <span class="n">boxes_b_height_max</span><span class="p">)</span>
+    <span class="n">overlaps_h</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">clamp</span><span class="p">(</span><span class="n">min_of_max</span> <span class="o">-</span> <span class="n">max_of_min</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="c1"># 3d iou</span>
+    <span class="n">overlaps_3d</span> <span class="o">=</span> <span class="n">overlaps_bev</span> <span class="o">*</span> <span class="n">overlaps_h</span>
+
+    <span class="n">vol_a</span> <span class="o">=</span> <span class="p">(</span><span class="n">boxes_a</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">*</span> <span class="n">boxes_a</span><span class="p">[:,</span> <span class="mi">4</span><span class="p">]</span> <span class="o">*</span> <span class="n">boxes_a</span><span class="p">[:,</span> <span class="mi">5</span><span class="p">])</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">vol_b</span> <span class="o">=</span> <span class="p">(</span><span class="n">boxes_b</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">*</span> <span class="n">boxes_b</span><span class="p">[:,</span> <span class="mi">4</span><span class="p">]</span> <span class="o">*</span> <span class="n">boxes_b</span><span class="p">[:,</span> <span class="mi">5</span><span class="p">])</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">union</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">clamp</span><span class="p">(</span><span class="n">vol_a</span> <span class="o">+</span> <span class="n">vol_b</span> <span class="o">-</span> <span class="n">overlaps_3d</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">)</span>
+    <span class="n">iou3d</span> <span class="o">=</span> <span class="n">overlaps_3d</span> <span class="o">/</span> <span class="n">union</span>
+    <span class="k">if</span> <span class="n">return_union</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">iou3d</span><span class="p">,</span> <span class="n">union</span>
+    <span class="k">return</span> <span class="n">iou3d</span></div>
+
+
+<div class="viewcode-block" id="centroid_to_corners"><a class="viewcode-back" href="../../../cosense3d.ops.html#cosense3d.ops.iou3d_nms_utils.centroid_to_corners">[docs]</a><span class="k">def</span> <span class="nf">centroid_to_corners</span><span class="p">(</span><span class="n">boxes</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">boxes</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+        <span class="n">corners</span> <span class="o">=</span> <span class="n">_centroid_to_corners_np</span><span class="p">(</span><span class="n">boxes</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">boxes</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">):</span>
+        <span class="n">corners</span> <span class="o">=</span> <span class="n">_centroid_to_corners_torch</span><span class="p">(</span><span class="n">boxes</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Input boxes should either be numpy array or torch tensor.&#39;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">corners</span></div>
+
+
+<span class="k">def</span> <span class="nf">_centroid_to_corners_torch</span><span class="p">(</span><span class="n">boxes</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;Convert boxes from centroid format to corners</span>
+<span class="sd">    :param boxes: [N, 7]</span>
+<span class="sd">    :return: corners: [N, 8, 3]</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">corners</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">boxes</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">boxes</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">boxes</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+    <span class="n">sin_t</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">boxes</span><span class="p">[:,</span> <span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">cos_t</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">boxes</span><span class="p">[:,</span> <span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">corners</span><span class="p">[:,</span>  <span class="p">::</span><span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">boxes</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">boxes</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">cos_t</span> <span class="o">-</span> <span class="n">boxes</span><span class="p">[:,</span> <span class="mi">4</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">sin_t</span><span class="p">]</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># lfx</span>
+    <span class="n">corners</span><span class="p">[:,</span>  <span class="p">::</span><span class="mi">4</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">boxes</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">boxes</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">sin_t</span> <span class="o">+</span> <span class="n">boxes</span><span class="p">[:,</span> <span class="mi">4</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">cos_t</span><span class="p">]</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># lfy</span>
+    <span class="n">corners</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">::</span><span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">boxes</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">boxes</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">cos_t</span> <span class="o">-</span> <span class="n">boxes</span><span class="p">[:,</span> <span class="mi">4</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">sin_t</span><span class="p">]</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># lbx</span>
+    <span class="n">corners</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">::</span><span class="mi">4</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">boxes</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">boxes</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">sin_t</span> <span class="o">+</span> <span class="n">boxes</span><span class="p">[:,</span> <span class="mi">4</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">cos_t</span><span class="p">]</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># lby</span>
+    <span class="n">corners</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">::</span><span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">boxes</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">boxes</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">cos_t</span> <span class="o">+</span> <span class="n">boxes</span><span class="p">[:,</span> <span class="mi">4</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">sin_t</span><span class="p">]</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># rbx</span>
+    <span class="n">corners</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">::</span><span class="mi">4</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">boxes</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">boxes</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">sin_t</span> <span class="o">-</span> <span class="n">boxes</span><span class="p">[:,</span> <span class="mi">4</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">cos_t</span><span class="p">]</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># rby</span>
+    <span class="n">corners</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">::</span><span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">boxes</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">boxes</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">cos_t</span> <span class="o">+</span> <span class="n">boxes</span><span class="p">[:,</span> <span class="mi">4</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">sin_t</span><span class="p">]</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="c1"># rfx</span>
+    <span class="n">corners</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">::</span><span class="mi">4</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">boxes</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">boxes</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">sin_t</span> <span class="o">-</span> <span class="n">boxes</span><span class="p">[:,</span> <span class="mi">4</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">cos_t</span><span class="p">]</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># rfy</span>
+    <span class="n">corners</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">boxes</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">boxes</span><span class="p">[:,</span> <span class="mi">5</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span><span class="p">]</span> <span class="o">*</span> <span class="mi">4</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
+                                       <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">boxes</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="n">boxes</span><span class="p">[:,</span> <span class="mi">5</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span><span class="p">]</span> <span class="o">*</span> <span class="mi">4</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)],</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">corners</span>
+
+
+<span class="k">def</span> <span class="nf">_centroid_to_corners_np</span><span class="p">(</span><span class="n">boxes</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;Convert boxes from centroid format to corners</span>
+<span class="sd">    :param boxes: [N, 7]</span>
+<span class="sd">    :return: corners: [N, 8, 3]</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">corners</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">boxes</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">boxes</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+    <span class="n">sin_t</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">boxes</span><span class="p">[:,</span> <span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">cos_t</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">boxes</span><span class="p">[:,</span> <span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">corners</span><span class="p">[:,</span>  <span class="p">::</span><span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">boxes</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">boxes</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">cos_t</span> <span class="o">-</span> <span class="n">boxes</span><span class="p">[:,</span> <span class="mi">4</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">sin_t</span><span class="p">]</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># lfx</span>
+    <span class="n">corners</span><span class="p">[:,</span>  <span class="p">::</span><span class="mi">4</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">boxes</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">boxes</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">sin_t</span> <span class="o">+</span> <span class="n">boxes</span><span class="p">[:,</span> <span class="mi">4</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">cos_t</span><span class="p">]</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># lfy</span>
+    <span class="n">corners</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">::</span><span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">boxes</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">boxes</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">cos_t</span> <span class="o">-</span> <span class="n">boxes</span><span class="p">[:,</span> <span class="mi">4</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">sin_t</span><span class="p">]</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># lbx</span>
+    <span class="n">corners</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">::</span><span class="mi">4</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">boxes</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">boxes</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">sin_t</span> <span class="o">+</span> <span class="n">boxes</span><span class="p">[:,</span> <span class="mi">4</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">cos_t</span><span class="p">]</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># lby</span>
+    <span class="n">corners</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">::</span><span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">boxes</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">boxes</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">cos_t</span> <span class="o">+</span> <span class="n">boxes</span><span class="p">[:,</span> <span class="mi">4</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">sin_t</span><span class="p">]</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># rbx</span>
+    <span class="n">corners</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">::</span><span class="mi">4</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">boxes</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">boxes</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">sin_t</span> <span class="o">-</span> <span class="n">boxes</span><span class="p">[:,</span> <span class="mi">4</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">cos_t</span><span class="p">]</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># rby</span>
+    <span class="n">corners</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">::</span><span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">boxes</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">boxes</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">cos_t</span> <span class="o">+</span> <span class="n">boxes</span><span class="p">[:,</span> <span class="mi">4</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">sin_t</span><span class="p">]</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="c1"># rfx</span>
+    <span class="n">corners</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">::</span><span class="mi">4</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">boxes</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">boxes</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">sin_t</span> <span class="o">-</span> <span class="n">boxes</span><span class="p">[:,</span> <span class="mi">4</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">cos_t</span><span class="p">]</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># rfy</span>
+    <span class="n">corners</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">boxes</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">boxes</span><span class="p">[:,</span> <span class="mi">5</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span><span class="p">]</span> <span class="o">*</span> <span class="mi">4</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
+                                       <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">boxes</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="n">boxes</span><span class="p">[:,</span> <span class="mi">5</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span><span class="p">]</span> <span class="o">*</span> <span class="mi">4</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">corners</span>
+
+
+<div class="viewcode-block" id="rotate_weighted_nms_gpu"><a class="viewcode-back" href="../../../cosense3d.ops.html#cosense3d.ops.iou3d_nms_utils.rotate_weighted_nms_gpu">[docs]</a><span class="k">def</span> <span class="nf">rotate_weighted_nms_gpu</span><span class="p">(</span>
+    <span class="n">box_preds</span><span class="p">,</span>
+    <span class="n">rbboxes</span><span class="p">,</span>
+    <span class="n">dir_labels</span><span class="p">,</span>
+    <span class="n">labels_preds</span><span class="p">,</span>
+    <span class="n">scores</span><span class="p">,</span>
+    <span class="n">iou_preds</span><span class="p">,</span>
+    <span class="n">anchors</span><span class="p">,</span>
+    <span class="n">pre_max_size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">post_max_size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">iou_threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Original definition can be found in CIA_SSD paper&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">pre_max_size</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">num_keeped_scores</span> <span class="o">=</span> <span class="n">scores</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="nms_gpu"><a class="viewcode-back" href="../../../cosense3d.ops.html#cosense3d.ops.iou3d_nms_utils.nms_gpu">[docs]</a><span class="k">def</span> <span class="nf">nms_gpu</span><span class="p">(</span><span class="n">boxes</span><span class="p">,</span> <span class="n">scores</span><span class="p">,</span> <span class="n">thresh</span><span class="p">,</span> <span class="n">pre_maxsize</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Operate on rotated bev boxes[x,y,dx,dy,heading]</span>
+<span class="sd">    :param boxes: (N, 7) [x, y, z, dx, dy, dz, heading]</span>
+<span class="sd">    :param scores: (N)</span>
+<span class="sd">    :param thresh:</span>
+<span class="sd">    :return:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">assert</span> <span class="n">boxes</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">7</span>
+    <span class="n">order</span> <span class="o">=</span> <span class="n">scores</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">descending</span><span class="o">=</span><span class="kc">True</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">pre_maxsize</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">order</span> <span class="o">=</span> <span class="n">order</span><span class="p">[:</span><span class="n">pre_maxsize</span><span class="p">]</span>
+
+    <span class="n">boxes</span> <span class="o">=</span> <span class="n">boxes</span><span class="p">[</span><span class="n">order</span><span class="p">]</span><span class="o">.</span><span class="n">contiguous</span><span class="p">()</span>
+    <span class="n">keep</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">LongTensor</span><span class="p">(</span><span class="n">boxes</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+    <span class="n">num_out</span> <span class="o">=</span> <span class="n">cuda_ops</span><span class="o">.</span><span class="n">nms_gpu</span><span class="p">(</span><span class="n">boxes</span><span class="p">,</span> <span class="n">keep</span><span class="p">,</span> <span class="n">thresh</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">order</span><span class="p">[</span><span class="n">keep</span><span class="p">[:</span><span class="n">num_out</span><span class="p">]</span><span class="o">.</span><span class="n">cuda</span><span class="p">()]</span><span class="o">.</span><span class="n">contiguous</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="nms_normal_gpu"><a class="viewcode-back" href="../../../cosense3d.ops.html#cosense3d.ops.iou3d_nms_utils.nms_normal_gpu">[docs]</a><span class="k">def</span> <span class="nf">nms_normal_gpu</span><span class="p">(</span><span class="n">boxes</span><span class="p">,</span> <span class="n">scores</span><span class="p">,</span> <span class="n">thresh</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Ignore heading and operate on bev boxes[x,y,dx,dy]</span>
+<span class="sd">    :param boxes: (N, 7) [x, y, z, dx, dy, dz, heading]</span>
+<span class="sd">    :param scores: (N)</span>
+<span class="sd">    :param thresh:</span>
+<span class="sd">    :return:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">assert</span> <span class="n">boxes</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">7</span>
+    <span class="n">order</span> <span class="o">=</span> <span class="n">scores</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">descending</span><span class="o">=</span><span class="kc">True</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="n">boxes</span> <span class="o">=</span> <span class="n">boxes</span><span class="p">[</span><span class="n">order</span><span class="p">]</span><span class="o">.</span><span class="n">contiguous</span><span class="p">()</span>
+
+    <span class="n">keep</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">LongTensor</span><span class="p">(</span><span class="n">boxes</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+    <span class="n">num_out</span> <span class="o">=</span> <span class="n">cuda_ops</span><span class="o">.</span><span class="n">nms_normal_gpu</span><span class="p">(</span><span class="n">boxes</span><span class="p">,</span> <span class="n">keep</span><span class="p">,</span> <span class="n">thresh</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">order</span><span class="p">[</span><span class="n">keep</span><span class="p">[:</span><span class="n">num_out</span><span class="p">]</span><span class="o">.</span><span class="n">cuda</span><span class="p">()]</span><span class="o">.</span><span class="n">contiguous</span><span class="p">(),</span> <span class="kc">None</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Anonymous Author.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

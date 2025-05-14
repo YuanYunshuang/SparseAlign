@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>cosense3d.config.pycfg.template.query_guided_petr_head &mdash; OpenCosense3D 1.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script data-url_root="../../../../../" id="documentation_options" src="../../../../../_static/documentation_options.js?v=af2ce170"></script>
+        <script src="../../../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../../../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../../index.html" class="icon icon-home">
+            OpenCosense3D
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../md/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../md/prepare_data.html">Prepare Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../md/structure.html">The Structure of the framework</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../modules.html">CoSense3d</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../index.html">OpenCosense3D</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../../index.html">Module code</a></li>
+          <li class="breadcrumb-item"><a href="../../../config.html">cosense3d.config</a></li>
+      <li class="breadcrumb-item active">cosense3d.config.pycfg.template.query_guided_petr_head</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for cosense3d.config.pycfg.template.query_guided_petr_head</h1><div class="highlight"><pre>
+<span></span>
+
+<div class="viewcode-block" id="get_query_guided_petr_head_cfg"><a class="viewcode-back" href="../../../../../cosense3d.config.pycfg.template.html#cosense3d.config.pycfg.template.query_guided_petr_head.get_query_guided_petr_head_cfg">[docs]</a><span class="k">def</span> <span class="nf">get_query_guided_petr_head_cfg</span><span class="p">(</span><span class="n">gather_keys</span><span class="p">,</span> <span class="n">scatter_keys</span><span class="p">,</span> <span class="n">gt_keys</span><span class="p">,</span>
+        <span class="n">voxel_size</span><span class="p">,</span> <span class="n">point_cloud_range</span><span class="p">,</span> <span class="n">out_stride</span><span class="p">,</span> <span class="n">embed_dims</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span> <span class="n">sparse</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span>
+            <span class="nb">type</span><span class="o">=</span><span class="s1">&#39;heads.query_guided_petr_head.QueryGuidedPETRHead&#39;</span><span class="p">,</span>
+            <span class="n">gather_keys</span><span class="o">=</span><span class="n">gather_keys</span><span class="p">,</span>
+            <span class="n">scatter_keys</span><span class="o">=</span><span class="n">scatter_keys</span><span class="p">,</span>
+            <span class="n">gt_keys</span><span class="o">=</span><span class="n">gt_keys</span><span class="p">,</span>
+            <span class="n">sparse</span><span class="o">=</span><span class="n">sparse</span><span class="p">,</span>
+            <span class="n">embed_dims</span><span class="o">=</span><span class="n">embed_dims</span><span class="p">,</span>
+            <span class="n">num_reg_fcs</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">num_pred</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">pc_range</span><span class="o">=</span><span class="n">point_cloud_range</span><span class="p">,</span>
+            <span class="n">code_weights</span><span class="o">=</span><span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">],</span>
+            <span class="n">num_classes</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">reg_channels</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;box:6&#39;</span><span class="p">,</span> <span class="s1">&#39;dir:8&#39;</span><span class="p">,</span> <span class="s1">&#39;scr:4&#39;</span><span class="p">,</span> <span class="s1">&#39;vel:2&#39;</span><span class="p">],</span>
+            <span class="n">cls_assigner</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span>
+                <span class="nb">type</span><span class="o">=</span><span class="s1">&#39;target_assigners.BEVCenternessAssigner&#39;</span><span class="p">,</span>
+                <span class="n">n_cls</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                <span class="n">min_radius</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+                <span class="n">pos_neg_ratio</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                <span class="n">mining_thr</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="n">box_assigner</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span>
+                <span class="nb">type</span><span class="o">=</span><span class="s1">&#39;target_assigners.BoxCenterAssigner&#39;</span><span class="p">,</span>
+                <span class="n">voxel_size</span><span class="o">=</span><span class="n">voxel_size</span><span class="p">,</span>
+                <span class="n">lidar_range</span><span class="o">=</span><span class="n">point_cloud_range</span><span class="p">,</span>
+                <span class="n">stride</span><span class="o">=</span><span class="n">out_stride</span><span class="p">,</span>
+                <span class="n">detection_benchmark</span><span class="o">=</span><span class="s1">&#39;Car&#39;</span><span class="p">,</span>
+                <span class="n">class_names_each_head</span><span class="o">=</span><span class="p">[[</span><span class="s1">&#39;vehicle.car&#39;</span><span class="p">]],</span>
+                <span class="n">center_threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+                <span class="n">box_coder</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="s1">&#39;CenterBoxCoder&#39;</span><span class="p">,</span> <span class="n">with_velo</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+            <span class="p">),</span>
+            <span class="n">loss_cls</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="s1">&#39;FocalLoss&#39;</span><span class="p">,</span> <span class="n">use_sigmoid</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">bg_idx</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                          <span class="n">gamma</span><span class="o">=</span><span class="mf">2.0</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.25</span><span class="p">,</span> <span class="n">loss_weight</span><span class="o">=</span><span class="mf">2.0</span><span class="p">),</span>
+            <span class="n">loss_box</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="s1">&#39;SmoothL1Loss&#39;</span><span class="p">,</span> <span class="n">loss_weight</span><span class="o">=</span><span class="mf">1.0</span><span class="p">),</span>
+        <span class="p">)</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Anonymous Author.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

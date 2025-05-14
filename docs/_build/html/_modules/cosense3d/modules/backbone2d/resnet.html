@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>cosense3d.modules.backbone2d.resnet &mdash; OpenCosense3D 1.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js?v=af2ce170"></script>
+        <script src="../../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            OpenCosense3D
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../md/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../md/prepare_data.html">Prepare Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../md/structure.html">The Structure of the framework</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules.html">CoSense3d</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">OpenCosense3D</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+          <li class="breadcrumb-item"><a href="../../modules.html">cosense3d.modules</a></li>
+      <li class="breadcrumb-item active">cosense3d.modules.backbone2d.resnet</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for cosense3d.modules.backbone2d.resnet</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Modified from OpenMMLab.</span>
+<span class="c1"># Copyright (c) OpenMMLab. All rights reserved.</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span>
+
+<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">nn</span>
+<span class="kn">import</span> <span class="nn">torch.utils.checkpoint</span> <span class="k">as</span> <span class="nn">cp</span>
+
+<span class="kn">from</span> <span class="nn">cosense3d.modules</span> <span class="kn">import</span> <span class="n">BaseModule</span>
+<span class="kn">from</span> <span class="nn">cosense3d.modules.utils.norm</span> <span class="kn">import</span> <span class="n">build_norm_layer</span>
+<span class="kn">from</span> <span class="nn">cosense3d.modules.utils.conv</span> <span class="kn">import</span> <span class="n">build_conv_layer</span>
+<span class="kn">from</span> <span class="nn">cosense3d.modules.plugin</span> <span class="kn">import</span> <span class="n">build_plugin_layer</span>
+
+
+<div class="viewcode-block" id="ResLayer"><a class="viewcode-back" href="../../../../cosense3d.modules.backbone2d.html#cosense3d.modules.backbone2d.resnet.ResLayer">[docs]</a><span class="k">class</span> <span class="nc">ResLayer</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    ResLayer to build ResNet style backbone.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">block</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span>
+                 <span class="n">inplanes</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+                 <span class="n">planes</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+                 <span class="n">num_blocks</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+                 <span class="n">stride</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+                 <span class="n">avg_down</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+                 <span class="n">conv_cfg</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">norm_cfg</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="s1">&#39;BN&#39;</span><span class="p">),</span>
+                 <span class="n">downsample_first</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+                 <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        :param block: block used to build ResLayer.</span>
+<span class="sd">        :param inplanes: inplanes of block.</span>
+<span class="sd">        :param planes: planes of block.</span>
+<span class="sd">        :param num_blocks: number of blocks.</span>
+<span class="sd">        :param stride: stride of the first block. Default: 1</span>
+<span class="sd">        :param avg_down: Use AvgPool instead of stride conv when</span>
+<span class="sd">            downsampling in the bottleneck. Default: False</span>
+<span class="sd">        :param conv_cfg: dictionary to construct and config conv layer.</span>
+<span class="sd">            Default: None</span>
+<span class="sd">        :param norm_cfg: dictionary to construct and config norm layer.</span>
+<span class="sd">            Default: dict(type=&#39;BN&#39;)</span>
+<span class="sd">        :param downsample_first: Downsample at the first block or last block.</span>
+<span class="sd">            False for Hourglass, True for ResNet. Default: True</span>
+<span class="sd">        :param kwargs:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">block</span> <span class="o">=</span> <span class="n">block</span>
+
+        <span class="n">downsample</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">stride</span> <span class="o">!=</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">inplanes</span> <span class="o">!=</span> <span class="n">planes</span> <span class="o">*</span> <span class="n">block</span><span class="o">.</span><span class="n">expansion</span><span class="p">:</span>
+            <span class="n">downsample</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">conv_stride</span> <span class="o">=</span> <span class="n">stride</span>
+            <span class="k">if</span> <span class="n">avg_down</span><span class="p">:</span>
+                <span class="n">conv_stride</span> <span class="o">=</span> <span class="mi">1</span>
+                <span class="n">downsample</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="n">nn</span><span class="o">.</span><span class="n">AvgPool2d</span><span class="p">(</span>
+                        <span class="n">kernel_size</span><span class="o">=</span><span class="n">stride</span><span class="p">,</span>
+                        <span class="n">stride</span><span class="o">=</span><span class="n">stride</span><span class="p">,</span>
+                        <span class="n">ceil_mode</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                        <span class="n">count_include_pad</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
+            <span class="n">downsample</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span>
+                <span class="n">build_conv_layer</span><span class="p">(</span>
+                    <span class="n">conv_cfg</span><span class="p">,</span>
+                    <span class="n">inplanes</span><span class="p">,</span>
+                    <span class="n">planes</span> <span class="o">*</span> <span class="n">block</span><span class="o">.</span><span class="n">expansion</span><span class="p">,</span>
+                    <span class="n">kernel_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                    <span class="n">stride</span><span class="o">=</span><span class="n">conv_stride</span><span class="p">,</span>
+                    <span class="n">bias</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
+                <span class="n">build_norm_layer</span><span class="p">(</span><span class="n">norm_cfg</span><span class="p">,</span> <span class="n">planes</span> <span class="o">*</span> <span class="n">block</span><span class="o">.</span><span class="n">expansion</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="p">])</span>
+            <span class="n">downsample</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span><span class="o">*</span><span class="n">downsample</span><span class="p">)</span>
+
+        <span class="n">layers</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="n">downsample_first</span><span class="p">:</span>
+            <span class="n">layers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">block</span><span class="p">(</span>
+                    <span class="n">inplanes</span><span class="o">=</span><span class="n">inplanes</span><span class="p">,</span>
+                    <span class="n">planes</span><span class="o">=</span><span class="n">planes</span><span class="p">,</span>
+                    <span class="n">stride</span><span class="o">=</span><span class="n">stride</span><span class="p">,</span>
+                    <span class="n">downsample</span><span class="o">=</span><span class="n">downsample</span><span class="p">,</span>
+                    <span class="n">conv_cfg</span><span class="o">=</span><span class="n">conv_cfg</span><span class="p">,</span>
+                    <span class="n">norm_cfg</span><span class="o">=</span><span class="n">norm_cfg</span><span class="p">,</span>
+                    <span class="o">**</span><span class="n">kwargs</span><span class="p">))</span>
+            <span class="n">inplanes</span> <span class="o">=</span> <span class="n">planes</span> <span class="o">*</span> <span class="n">block</span><span class="o">.</span><span class="n">expansion</span>
+            <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">num_blocks</span><span class="p">):</span>
+                <span class="n">layers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="n">block</span><span class="p">(</span>
+                        <span class="n">inplanes</span><span class="o">=</span><span class="n">inplanes</span><span class="p">,</span>
+                        <span class="n">planes</span><span class="o">=</span><span class="n">planes</span><span class="p">,</span>
+                        <span class="n">stride</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                        <span class="n">conv_cfg</span><span class="o">=</span><span class="n">conv_cfg</span><span class="p">,</span>
+                        <span class="n">norm_cfg</span><span class="o">=</span><span class="n">norm_cfg</span><span class="p">,</span>
+                        <span class="o">**</span><span class="n">kwargs</span><span class="p">))</span>
+
+        <span class="k">else</span><span class="p">:</span>  <span class="c1"># downsample_first=False is for HourglassModule</span>
+            <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_blocks</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
+                <span class="n">layers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="n">block</span><span class="p">(</span>
+                        <span class="n">inplanes</span><span class="o">=</span><span class="n">inplanes</span><span class="p">,</span>
+                        <span class="n">planes</span><span class="o">=</span><span class="n">inplanes</span><span class="p">,</span>
+                        <span class="n">stride</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                        <span class="n">conv_cfg</span><span class="o">=</span><span class="n">conv_cfg</span><span class="p">,</span>
+                        <span class="n">norm_cfg</span><span class="o">=</span><span class="n">norm_cfg</span><span class="p">,</span>
+                        <span class="o">**</span><span class="n">kwargs</span><span class="p">))</span>
+            <span class="n">layers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">block</span><span class="p">(</span>
+                    <span class="n">inplanes</span><span class="o">=</span><span class="n">inplanes</span><span class="p">,</span>
+                    <span class="n">planes</span><span class="o">=</span><span class="n">planes</span><span class="p">,</span>
+                    <span class="n">stride</span><span class="o">=</span><span class="n">stride</span><span class="p">,</span>
+                    <span class="n">downsample</span><span class="o">=</span><span class="n">downsample</span><span class="p">,</span>
+                    <span class="n">conv_cfg</span><span class="o">=</span><span class="n">conv_cfg</span><span class="p">,</span>
+                    <span class="n">norm_cfg</span><span class="o">=</span><span class="n">norm_cfg</span><span class="p">,</span>
+                    <span class="o">**</span><span class="n">kwargs</span><span class="p">))</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">ResLayer</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">layers</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="BasicBlock"><a class="viewcode-back" href="../../../../cosense3d.modules.backbone2d.html#cosense3d.modules.backbone2d.resnet.BasicBlock">[docs]</a><span class="k">class</span> <span class="nc">BasicBlock</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="n">expansion</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">inplanes</span><span class="p">,</span>
+                 <span class="n">planes</span><span class="p">,</span>
+                 <span class="n">stride</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                 <span class="n">dilation</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                 <span class="n">downsample</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">style</span><span class="o">=</span><span class="s1">&#39;pytorch&#39;</span><span class="p">,</span>
+                 <span class="n">with_cp</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                 <span class="n">conv_cfg</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">norm_cfg</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="s1">&#39;BN&#39;</span><span class="p">),</span>
+                 <span class="n">dcn</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">plugins</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">init_cfg</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">BasicBlock</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">init_cfg</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">dcn</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;Not implemented yet.&#39;</span>
+        <span class="k">assert</span> <span class="n">plugins</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;Not implemented yet.&#39;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">norm1_name</span><span class="p">,</span> <span class="n">norm1</span> <span class="o">=</span> <span class="n">build_norm_layer</span><span class="p">(</span><span class="n">norm_cfg</span><span class="p">,</span> <span class="n">planes</span><span class="p">,</span> <span class="n">postfix</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">norm2_name</span><span class="p">,</span> <span class="n">norm2</span> <span class="o">=</span> <span class="n">build_norm_layer</span><span class="p">(</span><span class="n">norm_cfg</span><span class="p">,</span> <span class="n">planes</span><span class="p">,</span> <span class="n">postfix</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">conv1</span> <span class="o">=</span> <span class="n">build_conv_layer</span><span class="p">(</span>
+            <span class="n">conv_cfg</span><span class="p">,</span>
+            <span class="n">inplanes</span><span class="p">,</span>
+            <span class="n">planes</span><span class="p">,</span>
+            <span class="mi">3</span><span class="p">,</span>
+            <span class="n">stride</span><span class="o">=</span><span class="n">stride</span><span class="p">,</span>
+            <span class="n">padding</span><span class="o">=</span><span class="n">dilation</span><span class="p">,</span>
+            <span class="n">dilation</span><span class="o">=</span><span class="n">dilation</span><span class="p">,</span>
+            <span class="n">bias</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_module</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">norm1_name</span><span class="p">,</span> <span class="n">norm1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">conv2</span> <span class="o">=</span> <span class="n">build_conv_layer</span><span class="p">(</span>
+            <span class="n">conv_cfg</span><span class="p">,</span> <span class="n">planes</span><span class="p">,</span> <span class="n">planes</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_module</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">norm2_name</span><span class="p">,</span> <span class="n">norm2</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">relu</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">ReLU</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">downsample</span> <span class="o">=</span> <span class="n">downsample</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stride</span> <span class="o">=</span> <span class="n">stride</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dilation</span> <span class="o">=</span> <span class="n">dilation</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">with_cp</span> <span class="o">=</span> <span class="n">with_cp</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">norm1</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;nn.Module: normalization layer after the first convolution layer&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">norm1_name</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">norm2</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;nn.Module: normalization layer after the second convolution layer&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">norm2_name</span><span class="p">)</span>
+
+<div class="viewcode-block" id="BasicBlock.forward"><a class="viewcode-back" href="../../../../cosense3d.modules.backbone2d.html#cosense3d.modules.backbone2d.resnet.BasicBlock.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Forward function.&quot;&quot;&quot;</span>
+
+        <span class="k">def</span> <span class="nf">_inner_forward</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+            <span class="n">identity</span> <span class="o">=</span> <span class="n">x</span>
+
+            <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conv1</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">norm1</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
+
+            <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conv2</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">norm2</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">downsample</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">identity</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">downsample</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+            <span class="n">out</span> <span class="o">+=</span> <span class="n">identity</span>
+
+            <span class="k">return</span> <span class="n">out</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">with_cp</span> <span class="ow">and</span> <span class="n">x</span><span class="o">.</span><span class="n">requires_grad</span><span class="p">:</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="n">cp</span><span class="o">.</span><span class="n">checkpoint</span><span class="p">(</span><span class="n">_inner_forward</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="n">_inner_forward</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+        <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">out</span></div></div>
+
+
+<div class="viewcode-block" id="Bottleneck"><a class="viewcode-back" href="../../../../cosense3d.modules.backbone2d.html#cosense3d.modules.backbone2d.resnet.Bottleneck">[docs]</a><span class="k">class</span> <span class="nc">Bottleneck</span><span class="p">(</span><span class="n">BaseModule</span><span class="p">):</span>
+    <span class="n">expansion</span> <span class="o">=</span> <span class="mi">4</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">inplanes</span><span class="p">,</span>
+                 <span class="n">planes</span><span class="p">,</span>
+                 <span class="n">stride</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                 <span class="n">dilation</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                 <span class="n">downsample</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">style</span><span class="o">=</span><span class="s1">&#39;pytorch&#39;</span><span class="p">,</span>
+                 <span class="n">with_cp</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                 <span class="n">conv_cfg</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">norm_cfg</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="s1">&#39;BN&#39;</span><span class="p">),</span>
+                 <span class="n">dcn</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">plugins</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">init_cfg</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Bottleneck block for ResNet.</span>
+
+<span class="sd">        If style is &quot;pytorch&quot;, the stride-two layer is the 3x3 conv layer, if</span>
+<span class="sd">        it is &quot;caffe&quot;, the stride-two layer is the first 1x1 conv layer.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Bottleneck</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">init_cfg</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">style</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;pytorch&#39;</span><span class="p">,</span> <span class="s1">&#39;caffe&#39;</span><span class="p">]</span>
+        <span class="k">assert</span> <span class="n">dcn</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dcn</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">plugins</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">plugins</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">plugins</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">allowed_position</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;after_conv1&#39;</span><span class="p">,</span> <span class="s1">&#39;after_conv2&#39;</span><span class="p">,</span> <span class="s1">&#39;after_conv3&#39;</span><span class="p">]</span>
+            <span class="k">assert</span> <span class="nb">all</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="s1">&#39;position&#39;</span><span class="p">]</span> <span class="ow">in</span> <span class="n">allowed_position</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">plugins</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">inplanes</span> <span class="o">=</span> <span class="n">inplanes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">planes</span> <span class="o">=</span> <span class="n">planes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stride</span> <span class="o">=</span> <span class="n">stride</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dilation</span> <span class="o">=</span> <span class="n">dilation</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">style</span> <span class="o">=</span> <span class="n">style</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">with_cp</span> <span class="o">=</span> <span class="n">with_cp</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">conv_cfg</span> <span class="o">=</span> <span class="n">conv_cfg</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">norm_cfg</span> <span class="o">=</span> <span class="n">norm_cfg</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dcn</span> <span class="o">=</span> <span class="n">dcn</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">with_dcn</span> <span class="o">=</span> <span class="n">dcn</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">plugins</span> <span class="o">=</span> <span class="n">plugins</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">with_plugins</span> <span class="o">=</span> <span class="n">plugins</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">with_plugins</span><span class="p">:</span>
+            <span class="c1"># collect plugins for conv1/conv2/conv3</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">after_conv1_plugins</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">plugin</span><span class="p">[</span><span class="s1">&#39;cfg&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">plugin</span> <span class="ow">in</span> <span class="n">plugins</span>
+                <span class="k">if</span> <span class="n">plugin</span><span class="p">[</span><span class="s1">&#39;position&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;after_conv1&#39;</span>
+            <span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">after_conv2_plugins</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">plugin</span><span class="p">[</span><span class="s1">&#39;cfg&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">plugin</span> <span class="ow">in</span> <span class="n">plugins</span>
+                <span class="k">if</span> <span class="n">plugin</span><span class="p">[</span><span class="s1">&#39;position&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;after_conv2&#39;</span>
+            <span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">after_conv3_plugins</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">plugin</span><span class="p">[</span><span class="s1">&#39;cfg&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">plugin</span> <span class="ow">in</span> <span class="n">plugins</span>
+                <span class="k">if</span> <span class="n">plugin</span><span class="p">[</span><span class="s1">&#39;position&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;after_conv3&#39;</span>
+            <span class="p">]</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">style</span> <span class="o">==</span> <span class="s1">&#39;pytorch&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">conv1_stride</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">conv2_stride</span> <span class="o">=</span> <span class="n">stride</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">conv1_stride</span> <span class="o">=</span> <span class="n">stride</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">conv2_stride</span> <span class="o">=</span> <span class="mi">1</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">norm1_name</span><span class="p">,</span> <span class="n">norm1</span> <span class="o">=</span> <span class="n">build_norm_layer</span><span class="p">(</span><span class="n">norm_cfg</span><span class="p">,</span> <span class="n">planes</span><span class="p">,</span> <span class="n">postfix</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">norm2_name</span><span class="p">,</span> <span class="n">norm2</span> <span class="o">=</span> <span class="n">build_norm_layer</span><span class="p">(</span><span class="n">norm_cfg</span><span class="p">,</span> <span class="n">planes</span><span class="p">,</span> <span class="n">postfix</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">norm3_name</span><span class="p">,</span> <span class="n">norm3</span> <span class="o">=</span> <span class="n">build_norm_layer</span><span class="p">(</span>
+            <span class="n">norm_cfg</span><span class="p">,</span> <span class="n">planes</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">expansion</span><span class="p">,</span> <span class="n">postfix</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">conv1</span> <span class="o">=</span> <span class="n">build_conv_layer</span><span class="p">(</span>
+            <span class="n">conv_cfg</span><span class="p">,</span>
+            <span class="n">inplanes</span><span class="p">,</span>
+            <span class="n">planes</span><span class="p">,</span>
+            <span class="n">kernel_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">stride</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">conv1_stride</span><span class="p">,</span>
+            <span class="n">bias</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_module</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">norm1_name</span><span class="p">,</span> <span class="n">norm1</span><span class="p">)</span>
+        <span class="n">fallback_on_stride</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">with_dcn</span><span class="p">:</span>
+            <span class="n">fallback_on_stride</span> <span class="o">=</span> <span class="n">dcn</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;fallback_on_stride&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">with_dcn</span> <span class="ow">or</span> <span class="n">fallback_on_stride</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">conv2</span> <span class="o">=</span> <span class="n">build_conv_layer</span><span class="p">(</span>
+                <span class="n">conv_cfg</span><span class="p">,</span>
+                <span class="n">planes</span><span class="p">,</span>
+                <span class="n">planes</span><span class="p">,</span>
+                <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+                <span class="n">stride</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">conv2_stride</span><span class="p">,</span>
+                <span class="n">padding</span><span class="o">=</span><span class="n">dilation</span><span class="p">,</span>
+                <span class="n">dilation</span><span class="o">=</span><span class="n">dilation</span><span class="p">,</span>
+                <span class="n">bias</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">conv_cfg</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;conv_cfg must be None for DCN&#39;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">conv2</span> <span class="o">=</span> <span class="n">build_conv_layer</span><span class="p">(</span>
+                <span class="n">dcn</span><span class="p">,</span>
+                <span class="n">planes</span><span class="p">,</span>
+                <span class="n">planes</span><span class="p">,</span>
+                <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+                <span class="n">stride</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">conv2_stride</span><span class="p">,</span>
+                <span class="n">padding</span><span class="o">=</span><span class="n">dilation</span><span class="p">,</span>
+                <span class="n">dilation</span><span class="o">=</span><span class="n">dilation</span><span class="p">,</span>
+                <span class="n">bias</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_module</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">norm2_name</span><span class="p">,</span> <span class="n">norm2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">conv3</span> <span class="o">=</span> <span class="n">build_conv_layer</span><span class="p">(</span>
+            <span class="n">conv_cfg</span><span class="p">,</span>
+            <span class="n">planes</span><span class="p">,</span>
+            <span class="n">planes</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">expansion</span><span class="p">,</span>
+            <span class="n">kernel_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">bias</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_module</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">norm3_name</span><span class="p">,</span> <span class="n">norm3</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">relu</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">ReLU</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">downsample</span> <span class="o">=</span> <span class="n">downsample</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">with_plugins</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">after_conv1_plugin_names</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_block_plugins</span><span class="p">(</span>
+                <span class="n">planes</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">after_conv1_plugins</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">after_conv2_plugin_names</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_block_plugins</span><span class="p">(</span>
+                <span class="n">planes</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">after_conv2_plugins</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">after_conv3_plugin_names</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_block_plugins</span><span class="p">(</span>
+                <span class="n">planes</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">expansion</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">after_conv3_plugins</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Bottleneck.make_block_plugins"><a class="viewcode-back" href="../../../../cosense3d.modules.backbone2d.html#cosense3d.modules.backbone2d.resnet.Bottleneck.make_block_plugins">[docs]</a>    <span class="k">def</span> <span class="nf">make_block_plugins</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">in_channels</span><span class="p">,</span> <span class="n">plugins</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;make plugins for block.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            in_channels (int): Input channels of plugin.</span>
+<span class="sd">            plugins (list[dict]): List of plugins cfg to build.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            list[str]: List of the names of plugin.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">plugins</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span>
+        <span class="n">plugin_names</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">plugin</span> <span class="ow">in</span> <span class="n">plugins</span><span class="p">:</span>
+            <span class="n">plugin</span> <span class="o">=</span> <span class="n">plugin</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="n">name</span><span class="p">,</span> <span class="n">layer</span> <span class="o">=</span> <span class="n">build_plugin_layer</span><span class="p">(</span>
+                <span class="n">plugin</span><span class="p">,</span>
+                <span class="n">in_channels</span><span class="o">=</span><span class="n">in_channels</span><span class="p">,</span>
+                <span class="n">postfix</span><span class="o">=</span><span class="n">plugin</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;postfix&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">))</span>
+            <span class="k">assert</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">),</span> <span class="sa">f</span><span class="s1">&#39;duplicate plugin </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s1">&#39;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_module</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">layer</span><span class="p">)</span>
+            <span class="n">plugin_names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">plugin_names</span></div>
+
+<div class="viewcode-block" id="Bottleneck.forward_plugin"><a class="viewcode-back" href="../../../../cosense3d.modules.backbone2d.html#cosense3d.modules.backbone2d.resnet.Bottleneck.forward_plugin">[docs]</a>    <span class="k">def</span> <span class="nf">forward_plugin</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">plugin_names</span><span class="p">):</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">x</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">plugin_names</span><span class="p">:</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">)(</span><span class="n">out</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">out</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">norm1</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;nn.Module: normalization layer after the first convolution layer&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">norm1_name</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">norm2</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;nn.Module: normalization layer after the second convolution layer&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">norm2_name</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">norm3</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;nn.Module: normalization layer after the third convolution layer&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">norm3_name</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Bottleneck.forward"><a class="viewcode-back" href="../../../../cosense3d.modules.backbone2d.html#cosense3d.modules.backbone2d.resnet.Bottleneck.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Forward function.&quot;&quot;&quot;</span>
+
+        <span class="k">def</span> <span class="nf">_inner_forward</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+            <span class="n">identity</span> <span class="o">=</span> <span class="n">x</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conv1</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">norm1</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">with_plugins</span><span class="p">:</span>
+                <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">forward_plugin</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">after_conv1_plugin_names</span><span class="p">)</span>
+
+            <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conv2</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">norm2</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">with_plugins</span><span class="p">:</span>
+                <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">forward_plugin</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">after_conv2_plugin_names</span><span class="p">)</span>
+
+            <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conv3</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">norm3</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">with_plugins</span><span class="p">:</span>
+                <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">forward_plugin</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">after_conv3_plugin_names</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">downsample</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">identity</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">downsample</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+            <span class="n">out</span> <span class="o">+=</span> <span class="n">identity</span>
+
+            <span class="k">return</span> <span class="n">out</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">with_cp</span> <span class="ow">and</span> <span class="n">x</span><span class="o">.</span><span class="n">requires_grad</span><span class="p">:</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="n">cp</span><span class="o">.</span><span class="n">checkpoint</span><span class="p">(</span><span class="n">_inner_forward</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="n">_inner_forward</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+        <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">out</span></div></div>
+
+
+<div class="viewcode-block" id="ResNet"><a class="viewcode-back" href="../../../../cosense3d.modules.backbone2d.html#cosense3d.modules.backbone2d.resnet.ResNet">[docs]</a><span class="k">class</span> <span class="nc">ResNet</span><span class="p">(</span><span class="n">BaseModule</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;ResNet backbone. Modified from mmdet.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        depth (int): Depth of resnet, from {18, 34, 50, 101, 152}.</span>
+<span class="sd">        stem_channels (int | None): Number of stem channels. If not specified,</span>
+<span class="sd">            it will be the same as `base_channels`. Default: None.</span>
+<span class="sd">        base_channels (int): Number of base channels of res layer. Default: 64.</span>
+<span class="sd">        in_channels (int): Number of input image channels. Default: 3.</span>
+<span class="sd">        num_stages (int): Resnet stages. Default: 4.</span>
+<span class="sd">        strides (Sequence[int]): Strides of the first block of each stage.</span>
+<span class="sd">        dilations (Sequence[int]): Dilation of each stage.</span>
+<span class="sd">        out_indices (Sequence[int]): Output from which stages.</span>
+<span class="sd">        style (str): `pytorch` or `caffe`. If set to &quot;pytorch&quot;, the stride-two</span>
+<span class="sd">            layer is the 3x3 conv layer, otherwise the stride-two layer is</span>
+<span class="sd">            the first 1x1 conv layer.</span>
+<span class="sd">        deep_stem (bool): Replace 7x7 conv in input stem with 3 3x3 conv</span>
+<span class="sd">        avg_down (bool): Use AvgPool instead of stride conv when</span>
+<span class="sd">            downsampling in the bottleneck.</span>
+<span class="sd">        frozen_stages (int): Stages to be frozen (stop grad and set eval mode).</span>
+<span class="sd">            -1 means not freezing any parameters.</span>
+<span class="sd">        norm_cfg (dict): Dictionary to construct and config norm layer.</span>
+<span class="sd">        norm_eval (bool): Whether to set norm layers to eval mode, namely,</span>
+<span class="sd">            freeze running stats (mean and var). Note: Effect on Batch Norm</span>
+<span class="sd">            and its variants only.</span>
+<span class="sd">        plugins (list[dict]): List of plugins for stages, each dict contains:</span>
+
+<span class="sd">            - cfg (dict, required): Cfg dict to build plugin.</span>
+<span class="sd">            - position (str, required): Position inside block to insert</span>
+<span class="sd">              plugin, options are &#39;after_conv1&#39;, &#39;after_conv2&#39;, &#39;after_conv3&#39;.</span>
+<span class="sd">            - stages (tuple[bool], optional): Stages to apply plugin, length</span>
+<span class="sd">              should be same as &#39;num_stages&#39;.</span>
+<span class="sd">        with_cp (bool): Use checkpoint or not. Using checkpoint will save some</span>
+<span class="sd">            memory while slowing down the training speed.</span>
+<span class="sd">        zero_init_residual (bool): Whether to use zero init for last norm layer</span>
+<span class="sd">            in resblocks to let them behave as identity.</span>
+<span class="sd">        pretrained (str, optional): model pretrained path. Default: None</span>
+<span class="sd">        init_cfg (dict or list[dict], optional): Initialization config dict.</span>
+<span class="sd">            Default: None</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        &gt;&gt;&gt; self = ResNet(depth=18)</span>
+<span class="sd">        &gt;&gt;&gt; self.eval()</span>
+<span class="sd">        &gt;&gt;&gt; inputs = torch.rand(1, 3, 32, 32)</span>
+<span class="sd">        &gt;&gt;&gt; level_outputs = self.forward(inputs)</span>
+<span class="sd">        &gt;&gt;&gt; for level_out in level_outputs:</span>
+<span class="sd">        ...     print(tuple(level_out.shape))</span>
+<span class="sd">        (1, 64, 8, 8)</span>
+<span class="sd">        (1, 128, 4, 4)</span>
+<span class="sd">        (1, 256, 2, 2)</span>
+<span class="sd">        (1, 512, 1, 1)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">arch_settings</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="mi">18</span><span class="p">:</span> <span class="p">(</span><span class="n">BasicBlock</span><span class="p">,</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">)),</span>
+        <span class="mi">34</span><span class="p">:</span> <span class="p">(</span><span class="n">BasicBlock</span><span class="p">,</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">3</span><span class="p">)),</span>
+        <span class="mi">50</span><span class="p">:</span> <span class="p">(</span><span class="n">Bottleneck</span><span class="p">,</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">3</span><span class="p">)),</span>
+        <span class="mi">101</span><span class="p">:</span> <span class="p">(</span><span class="n">Bottleneck</span><span class="p">,</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">23</span><span class="p">,</span> <span class="mi">3</span><span class="p">)),</span>
+        <span class="mi">152</span><span class="p">:</span> <span class="p">(</span><span class="n">Bottleneck</span><span class="p">,</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">36</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+    <span class="p">}</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">depth</span><span class="p">,</span>
+                 <span class="n">in_channels</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+                 <span class="n">stem_channels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">base_channels</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span>
+                 <span class="n">num_stages</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+                 <span class="n">strides</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>
+                 <span class="n">dilations</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+                 <span class="n">out_indices</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
+                 <span class="n">style</span><span class="o">=</span><span class="s1">&#39;pytorch&#39;</span><span class="p">,</span>
+                 <span class="n">deep_stem</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                 <span class="n">avg_down</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                 <span class="n">frozen_stages</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span>
+                 <span class="n">conv_cfg</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">norm_cfg</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="s1">&#39;BN&#39;</span><span class="p">,</span> <span class="n">requires_grad</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+                 <span class="n">norm_eval</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                 <span class="n">dcn</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">stage_with_dcn</span><span class="o">=</span><span class="p">(</span><span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
+                 <span class="n">plugins</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">with_cp</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                 <span class="n">zero_init_residual</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                 <span class="n">pretrained</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">init_cfg</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">ResNet</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">init_cfg</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">zero_init_residual</span> <span class="o">=</span> <span class="n">zero_init_residual</span>
+        <span class="k">if</span> <span class="n">depth</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">arch_settings</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;invalid depth </span><span class="si">{</span><span class="n">depth</span><span class="si">}</span><span class="s1"> for resnet&#39;</span><span class="p">)</span>
+
+        <span class="n">block_init_cfg</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">assert</span> <span class="ow">not</span> <span class="p">(</span><span class="n">init_cfg</span> <span class="ow">and</span> <span class="n">pretrained</span><span class="p">),</span> \
+            <span class="s1">&#39;init_cfg and pretrained cannot be specified at the same time&#39;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pretrained</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;DeprecationWarning: pretrained is deprecated, &#39;</span>
+                          <span class="s1">&#39;please use &quot;init_cfg&quot; instead&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">init_cfg</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="s1">&#39;Pretrained&#39;</span><span class="p">,</span> <span class="n">checkpoint</span><span class="o">=</span><span class="n">pretrained</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">pretrained</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">init_cfg</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">init_cfg</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="nb">dict</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="s1">&#39;Kaiming&#39;</span><span class="p">,</span> <span class="n">layer</span><span class="o">=</span><span class="s1">&#39;Conv2d&#39;</span><span class="p">),</span>
+                    <span class="nb">dict</span><span class="p">(</span>
+                        <span class="nb">type</span><span class="o">=</span><span class="s1">&#39;Constant&#39;</span><span class="p">,</span>
+                        <span class="n">val</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                        <span class="n">layer</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;_BatchNorm&#39;</span><span class="p">,</span> <span class="s1">&#39;GroupNorm&#39;</span><span class="p">])</span>
+                <span class="p">]</span>
+                <span class="n">block</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">arch_settings</span><span class="p">[</span><span class="n">depth</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">zero_init_residual</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">block</span> <span class="ow">is</span> <span class="n">BasicBlock</span><span class="p">:</span>
+                        <span class="n">block_init_cfg</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+                            <span class="nb">type</span><span class="o">=</span><span class="s1">&#39;Constant&#39;</span><span class="p">,</span>
+                            <span class="n">val</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                            <span class="n">override</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;norm2&#39;</span><span class="p">))</span>
+                    <span class="k">elif</span> <span class="n">block</span> <span class="ow">is</span> <span class="n">Bottleneck</span><span class="p">:</span>
+                        <span class="n">block_init_cfg</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+                            <span class="nb">type</span><span class="o">=</span><span class="s1">&#39;Constant&#39;</span><span class="p">,</span>
+                            <span class="n">val</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                            <span class="n">override</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;norm3&#39;</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;pretrained must be a str or None&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">depth</span> <span class="o">=</span> <span class="n">depth</span>
+        <span class="k">if</span> <span class="n">stem_channels</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">stem_channels</span> <span class="o">=</span> <span class="n">base_channels</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stem_channels</span> <span class="o">=</span> <span class="n">stem_channels</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">base_channels</span> <span class="o">=</span> <span class="n">base_channels</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_stages</span> <span class="o">=</span> <span class="n">num_stages</span>
+        <span class="k">assert</span> <span class="n">num_stages</span> <span class="o">&gt;=</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">num_stages</span> <span class="o">&lt;=</span> <span class="mi">4</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">strides</span> <span class="o">=</span> <span class="n">strides</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dilations</span> <span class="o">=</span> <span class="n">dilations</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">strides</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">dilations</span><span class="p">)</span> <span class="o">==</span> <span class="n">num_stages</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">out_indices</span> <span class="o">=</span> <span class="n">out_indices</span>
+        <span class="k">assert</span> <span class="nb">max</span><span class="p">(</span><span class="n">out_indices</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">num_stages</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">style</span> <span class="o">=</span> <span class="n">style</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">deep_stem</span> <span class="o">=</span> <span class="n">deep_stem</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">avg_down</span> <span class="o">=</span> <span class="n">avg_down</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">frozen_stages</span> <span class="o">=</span> <span class="n">frozen_stages</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">conv_cfg</span> <span class="o">=</span> <span class="n">conv_cfg</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">norm_cfg</span> <span class="o">=</span> <span class="n">norm_cfg</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">with_cp</span> <span class="o">=</span> <span class="n">with_cp</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">norm_eval</span> <span class="o">=</span> <span class="n">norm_eval</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dcn</span> <span class="o">=</span> <span class="n">dcn</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stage_with_dcn</span> <span class="o">=</span> <span class="n">stage_with_dcn</span>
+        <span class="k">if</span> <span class="n">dcn</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">stage_with_dcn</span><span class="p">)</span> <span class="o">==</span> <span class="n">num_stages</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">plugins</span> <span class="o">=</span> <span class="n">plugins</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">block</span><span class="p">,</span> <span class="n">stage_blocks</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">arch_settings</span><span class="p">[</span><span class="n">depth</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stage_blocks</span> <span class="o">=</span> <span class="n">stage_blocks</span><span class="p">[:</span><span class="n">num_stages</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inplanes</span> <span class="o">=</span> <span class="n">stem_channels</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_make_stem_layer</span><span class="p">(</span><span class="n">in_channels</span><span class="p">,</span> <span class="n">stem_channels</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">res_layers</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">num_blocks</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stage_blocks</span><span class="p">):</span>
+            <span class="n">stride</span> <span class="o">=</span> <span class="n">strides</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="n">dilation</span> <span class="o">=</span> <span class="n">dilations</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="n">dcn</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dcn</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stage_with_dcn</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">else</span> <span class="kc">None</span>
+            <span class="k">if</span> <span class="n">plugins</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">stage_plugins</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_stage_plugins</span><span class="p">(</span><span class="n">plugins</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">stage_plugins</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">planes</span> <span class="o">=</span> <span class="n">base_channels</span> <span class="o">*</span> <span class="mi">2</span><span class="o">**</span><span class="n">i</span>
+            <span class="n">res_layer</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_res_layer</span><span class="p">(</span>
+                <span class="n">block</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">block</span><span class="p">,</span>
+                <span class="n">inplanes</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">inplanes</span><span class="p">,</span>
+                <span class="n">planes</span><span class="o">=</span><span class="n">planes</span><span class="p">,</span>
+                <span class="n">num_blocks</span><span class="o">=</span><span class="n">num_blocks</span><span class="p">,</span>
+                <span class="n">stride</span><span class="o">=</span><span class="n">stride</span><span class="p">,</span>
+                <span class="n">dilation</span><span class="o">=</span><span class="n">dilation</span><span class="p">,</span>
+                <span class="n">style</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">style</span><span class="p">,</span>
+                <span class="n">avg_down</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">avg_down</span><span class="p">,</span>
+                <span class="n">with_cp</span><span class="o">=</span><span class="n">with_cp</span><span class="p">,</span>
+                <span class="n">conv_cfg</span><span class="o">=</span><span class="n">conv_cfg</span><span class="p">,</span>
+                <span class="n">norm_cfg</span><span class="o">=</span><span class="n">norm_cfg</span><span class="p">,</span>
+                <span class="n">dcn</span><span class="o">=</span><span class="n">dcn</span><span class="p">,</span>
+                <span class="n">plugins</span><span class="o">=</span><span class="n">stage_plugins</span><span class="p">,</span>
+                <span class="n">init_cfg</span><span class="o">=</span><span class="n">block_init_cfg</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">inplanes</span> <span class="o">=</span> <span class="n">planes</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">block</span><span class="o">.</span><span class="n">expansion</span>
+            <span class="n">layer_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;layer</span><span class="si">{</span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s1">&#39;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_module</span><span class="p">(</span><span class="n">layer_name</span><span class="p">,</span> <span class="n">res_layer</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">res_layers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">layer_name</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_freeze_stages</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">feat_dim</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">block</span><span class="o">.</span><span class="n">expansion</span> <span class="o">*</span> <span class="n">base_channels</span> <span class="o">*</span> <span class="mi">2</span><span class="o">**</span><span class="p">(</span>
+            <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stage_blocks</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ResNet.make_stage_plugins"><a class="viewcode-back" href="../../../../cosense3d.modules.backbone2d.html#cosense3d.modules.backbone2d.resnet.ResNet.make_stage_plugins">[docs]</a>    <span class="k">def</span> <span class="nf">make_stage_plugins</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">plugins</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">dict</span><span class="p">],</span> <span class="n">stage_idx</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Make plugins for ResNet ``stage_idx`` th stage.</span>
+
+<span class="sd">        Currently we support to insert ``context_block``,</span>
+<span class="sd">        ``empirical_attention_block``, ``nonlocal_block`` into the backbone</span>
+<span class="sd">        like ResNet/ResNeXt. They could be inserted after conv1/conv2/conv3 of</span>
+<span class="sd">        Bottleneck.</span>
+
+<span class="sd">        An example of plugins format could be:</span>
+
+<span class="sd">        Examples:</span>
+<span class="sd">            &gt;&gt;&gt; plugins=[</span>
+<span class="sd">            ...     dict(cfg=dict(type=&#39;xxx&#39;, arg1=&#39;xxx&#39;),</span>
+<span class="sd">            ...          stages=(False, True, True, True),</span>
+<span class="sd">            ...          position=&#39;after_conv2&#39;),</span>
+<span class="sd">            ...     dict(cfg=dict(type=&#39;yyy&#39;),</span>
+<span class="sd">            ...          stages=(True, True, True, True),</span>
+<span class="sd">            ...          position=&#39;after_conv3&#39;),</span>
+<span class="sd">            ...     dict(cfg=dict(type=&#39;zzz&#39;, postfix=&#39;1&#39;),</span>
+<span class="sd">            ...          stages=(True, True, True, True),</span>
+<span class="sd">            ...          position=&#39;after_conv3&#39;),</span>
+<span class="sd">            ...     dict(cfg=dict(type=&#39;zzz&#39;, postfix=&#39;2&#39;),</span>
+<span class="sd">            ...          stages=(True, True, True, True),</span>
+<span class="sd">            ...          position=&#39;after_conv3&#39;)</span>
+<span class="sd">            ... ]</span>
+<span class="sd">            &gt;&gt;&gt; self = ResNet(depth=18)</span>
+<span class="sd">            &gt;&gt;&gt; stage_plugins = self.make_stage_plugins(plugins, 0)</span>
+<span class="sd">            &gt;&gt;&gt; assert len(stage_plugins) == 3</span>
+
+<span class="sd">        Suppose ``stage_idx=0``, the structure of blocks in the stage would be:</span>
+
+<span class="sd">        .. code-block:: none</span>
+
+<span class="sd">            conv1-&gt; conv2-&gt;conv3-&gt;yyy-&gt;zzz1-&gt;zzz2</span>
+
+<span class="sd">        Suppose &#39;stage_idx=1&#39;, the structure of blocks in the stage would be:</span>
+
+<span class="sd">        .. code-block:: none</span>
+
+<span class="sd">            conv1-&gt; conv2-&gt;xxx-&gt;conv3-&gt;yyy-&gt;zzz1-&gt;zzz2</span>
+
+<span class="sd">        If stages is missing, the plugin would be applied to all stages.</span>
+
+<span class="sd">        :param plugins: List of plugins cfg to build. The postfix is</span>
+<span class="sd">                required if multiple same type plugins are inserted.</span>
+<span class="sd">        :param stage_idx: Index of stage to build.</span>
+<span class="sd">        :return: Plugins for current stage.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">stage_plugins</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">plugin</span> <span class="ow">in</span> <span class="n">plugins</span><span class="p">:</span>
+            <span class="n">plugin</span> <span class="o">=</span> <span class="n">plugin</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="n">stages</span> <span class="o">=</span> <span class="n">plugin</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;stages&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">assert</span> <span class="n">stages</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">stages</span><span class="p">)</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_stages</span>
+            <span class="c1"># whether to insert plugin into current stage</span>
+            <span class="k">if</span> <span class="n">stages</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">stages</span><span class="p">[</span><span class="n">stage_idx</span><span class="p">]:</span>
+                <span class="n">stage_plugins</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">plugin</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">stage_plugins</span></div>
+
+<div class="viewcode-block" id="ResNet.make_res_layer"><a class="viewcode-back" href="../../../../cosense3d.modules.backbone2d.html#cosense3d.modules.backbone2d.resnet.ResNet.make_res_layer">[docs]</a>    <span class="k">def</span> <span class="nf">make_res_layer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Pack all blocks in a stage into a ``ResLayer``.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">ResLayer</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">norm1</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;nn.Module: the normalization layer named &quot;norm1&quot; &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">norm1_name</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_make_stem_layer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">in_channels</span><span class="p">,</span> <span class="n">stem_channels</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">deep_stem</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stem</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span>
+                <span class="n">build_conv_layer</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">conv_cfg</span><span class="p">,</span>
+                    <span class="n">in_channels</span><span class="p">,</span>
+                    <span class="n">stem_channels</span> <span class="o">//</span> <span class="mi">2</span><span class="p">,</span>
+                    <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+                    <span class="n">stride</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                    <span class="n">padding</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                    <span class="n">bias</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
+                <span class="n">build_norm_layer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">norm_cfg</span><span class="p">,</span> <span class="n">stem_channels</span> <span class="o">//</span> <span class="mi">2</span><span class="p">)[</span><span class="mi">1</span><span class="p">],</span>
+                <span class="n">nn</span><span class="o">.</span><span class="n">ReLU</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+                <span class="n">build_conv_layer</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">conv_cfg</span><span class="p">,</span>
+                    <span class="n">stem_channels</span> <span class="o">//</span> <span class="mi">2</span><span class="p">,</span>
+                    <span class="n">stem_channels</span> <span class="o">//</span> <span class="mi">2</span><span class="p">,</span>
+                    <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+                    <span class="n">stride</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                    <span class="n">padding</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                    <span class="n">bias</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
+                <span class="n">build_norm_layer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">norm_cfg</span><span class="p">,</span> <span class="n">stem_channels</span> <span class="o">//</span> <span class="mi">2</span><span class="p">)[</span><span class="mi">1</span><span class="p">],</span>
+                <span class="n">nn</span><span class="o">.</span><span class="n">ReLU</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+                <span class="n">build_conv_layer</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">conv_cfg</span><span class="p">,</span>
+                    <span class="n">stem_channels</span> <span class="o">//</span> <span class="mi">2</span><span class="p">,</span>
+                    <span class="n">stem_channels</span><span class="p">,</span>
+                    <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+                    <span class="n">stride</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                    <span class="n">padding</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                    <span class="n">bias</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
+                <span class="n">build_norm_layer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">norm_cfg</span><span class="p">,</span> <span class="n">stem_channels</span><span class="p">)[</span><span class="mi">1</span><span class="p">],</span>
+                <span class="n">nn</span><span class="o">.</span><span class="n">ReLU</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">conv1</span> <span class="o">=</span> <span class="n">build_conv_layer</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">conv_cfg</span><span class="p">,</span>
+                <span class="n">in_channels</span><span class="p">,</span>
+                <span class="n">stem_channels</span><span class="p">,</span>
+                <span class="n">kernel_size</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span>
+                <span class="n">stride</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                <span class="n">padding</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+                <span class="n">bias</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">norm1_name</span><span class="p">,</span> <span class="n">norm1</span> <span class="o">=</span> <span class="n">build_norm_layer</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">norm_cfg</span><span class="p">,</span> <span class="n">stem_channels</span><span class="p">,</span> <span class="n">postfix</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_module</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">norm1_name</span><span class="p">,</span> <span class="n">norm1</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">relu</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">ReLU</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">maxpool</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">MaxPool2d</span><span class="p">(</span><span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_freeze_stages</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">frozen_stages</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">deep_stem</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">stem</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+                <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">stem</span><span class="o">.</span><span class="n">parameters</span><span class="p">():</span>
+                    <span class="n">param</span><span class="o">.</span><span class="n">requires_grad</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">norm1</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+                <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">conv1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">norm1</span><span class="p">]:</span>
+                    <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">m</span><span class="o">.</span><span class="n">parameters</span><span class="p">():</span>
+                        <span class="n">param</span><span class="o">.</span><span class="n">requires_grad</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">frozen_stages</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="n">m</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;layer</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="n">m</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">m</span><span class="o">.</span><span class="n">parameters</span><span class="p">():</span>
+                <span class="n">param</span><span class="o">.</span><span class="n">requires_grad</span> <span class="o">=</span> <span class="kc">False</span>
+
+<div class="viewcode-block" id="ResNet.forward"><a class="viewcode-back" href="../../../../cosense3d.modules.backbone2d.html#cosense3d.modules.backbone2d.resnet.ResNet.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Forward function.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">deep_stem</span><span class="p">:</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stem</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conv1</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">norm1</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">maxpool</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">outs</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">layer_name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">res_layers</span><span class="p">):</span>
+            <span class="n">res_layer</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layer_name</span><span class="p">)</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">res_layer</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">out_indices</span><span class="p">:</span>
+                <span class="n">outs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">outs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ResNet.train"><a class="viewcode-back" href="../../../../cosense3d.modules.backbone2d.html#cosense3d.modules.backbone2d.resnet.ResNet.train">[docs]</a>    <span class="k">def</span> <span class="nf">train</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert the model into training mode while keep normalization layer</span>
+<span class="sd">        freezed.&quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">ResNet</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">train</span><span class="p">(</span><span class="n">mode</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_freeze_stages</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">mode</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">norm_eval</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">modules</span><span class="p">():</span>
+                <span class="c1"># trick: eval have effect on BatchNorm only</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">_BatchNorm</span><span class="p">):</span>
+                    <span class="n">m</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Anonymous Author.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
