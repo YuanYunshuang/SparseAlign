@@ -7,7 +7,7 @@ Welcome to CoSense3D! This is an agent-oriented framework specially designed for
 The agent-based structure of this framework aims to accelerate the development process of cooperative perception models by 
 more efficient and flexible data loading and distributing process, as well as the forward and gradient calculation scheduling.
 
-> This repo is updated for the implementation of the paper __SparseAlign: A Fully Sparse Framework for Cooperative Object Detection__
+> This repo is updated for the implementation of the paper [__SparseAlign: A Fully Sparse Framework for Cooperative Object Detection__](https://arxiv.org/abs/2503.12982)
 
 ## Installation
 Quick installation scripts are provided to install the environment with the following commands. 
