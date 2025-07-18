@@ -37,7 +37,7 @@ CONTROLLER:
     ref_pts_dim: 3
     all_grad: false
     share_score_thr: 0.0
-    num_grad_cav: 2 # important while coop cav has latency
+    num_grad_cav: 1 # important while coop cav has latency
 
 VISUALIZATION:
   output_viewer:
