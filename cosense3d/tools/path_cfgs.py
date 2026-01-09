@@ -1,10 +1,12 @@
 
+ISI_DATA_ROOT = "/home/yuan/data/COOD_datasets"
+
 def parse_opv2v_paths(cfgs):
     import socket
     path_map = {
         "ISI": {
-            "data": "/home/yuan/data/OPV2Va",
-            "meta": "/home/yuan/data/OPV2Va/meta"
+            "data": f"{ISI_DATA_ROOT}/OPV2Va",
+            "meta": f"{ISI_DATA_ROOT}/OPV2Va/meta"
         },
     }
     name = socket.gethostname()

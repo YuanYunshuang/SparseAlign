@@ -41,6 +41,7 @@ class TrainRunner(BaseRunner):
                                                len(self.dataloader))
         self.total_epochs = max_epoch
         self.start_epoch = 1
+        self.accumulation_steps = 2
 
         self.resume(resume_from, load_from)
         self.setup_logger(resume_from, run_name, log_dir, use_wandb)
@@ -120,17 +121,20 @@ class TrainRunner(BaseRunner):
     @save_ckpt_on_error
     def run_itr(self, data):
         load_tensors_to_gpu(data, self.gpu_id)
-        self.optimizer.zero_grad()
+        
         total_loss, loss_dict = self.controller.train_forward(
             data, epoch=self.epoch, itr=self.iter, gpu_id=self.gpu_id)
+        total_loss = total_loss / self.accumulation_steps
         total_loss.backward()
 
         grad_norm = clip_grads(self.controller.parameters)
         loss_dict['grad_norm'] = grad_norm
         # Updating parameters
-        self.optimizer.step()
+        if self.iter % self.accumulation_steps == 0:
+            self.optimizer.step()
 
-        self.lr_scheduler.step_itr(self.iter + self.epoch * self.total_iter)
+            self.lr_scheduler.step_itr(self.iter + self.epoch * self.total_iter)
+            self.optimizer.zero_grad()
 
         if self.logger is not None and self.gpu_id == 0:
             # rec_lr = self.lr_scheduler.optimizer.param_groups[0]['lr']

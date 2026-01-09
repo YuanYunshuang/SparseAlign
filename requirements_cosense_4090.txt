@@ -1,6 +1,7 @@
+packaging==25.0
 opencv-python==4.2.0.34
 numpy
-torch-scatter -f https://data.pyg.org/whl/torch-2.1.0%2Bcu118/torch_scatter-2.1.2%2Bpt21cu118-cp38-cp38-linux_x86_64.whl
+torch-scatter -f https://data.pyg.org/whl/torch-2.1.2+cu118.html
 PyYAML
 Shapely
 scipy

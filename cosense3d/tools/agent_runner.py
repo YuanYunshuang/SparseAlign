@@ -201,5 +201,7 @@ if __name__ == "__main__":
         agent_runner.run()
 
     import json
-    with open(f"logs/{cfgs['CONTROLLER']['cav_manager']['dataset']}.json", 'w') as fh:
-        json.dump(agent_runner.runner.forward_runner.shared_modules.spatial_alignment.gvr.data, fh)
+    dataset_name = cfgs['CONTROLLER']['cav_manager']['dataset']
+    if dataset_name in ['opv2vt', 'dairv2xt']:
+        with open(f"logs/{dataset_name}.json", 'w') as fh:
+            json.dump(agent_runner.runner.forward_runner.shared_modules.spatial_alignment.gvr.data, fh)
