@@ -76,6 +76,10 @@ def parse_dairv2x_paths(cfgs):
             "data": "/home/yuan/data/DairV2Xt",
             "meta": "/home/yuan/data/DairV2Xt/meta-coalign"
         },
+        "mars": {
+            "data": "/koko/datasets/DairV2Xt",
+            "meta": "/koko/datasets/DairV2Xt/meta-coalign"
+        },
     }
     name = socket.gethostname()
     if name not in path_map:

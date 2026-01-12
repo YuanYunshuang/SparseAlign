@@ -24,6 +24,7 @@ class TrainRunner(BaseRunner):
                  log_dir='work_dir',
                  use_wandb=False,
                  debug=False,
+                 accumulation_steps=1,
                  **kwargs
                  ):
         super().__init__(**kwargs)
@@ -41,7 +42,7 @@ class TrainRunner(BaseRunner):
                                                len(self.dataloader))
         self.total_epochs = max_epoch
         self.start_epoch = 1
-        self.accumulation_steps = 2
+        self.accumulation_steps = accumulation_steps
 
         self.resume(resume_from, load_from)
         self.setup_logger(resume_from, run_name, log_dir, use_wandb)
@@ -127,10 +128,10 @@ class TrainRunner(BaseRunner):
         total_loss = total_loss / self.accumulation_steps
         total_loss.backward()
 
-        grad_norm = clip_grads(self.controller.parameters)
-        loss_dict['grad_norm'] = grad_norm
         # Updating parameters
         if self.iter % self.accumulation_steps == 0:
+            grad_norm = clip_grads(self.controller.parameters)
+            loss_dict['grad_norm'] = grad_norm
             self.optimizer.step()
 
             self.lr_scheduler.step_itr(self.iter + self.epoch * self.total_iter)

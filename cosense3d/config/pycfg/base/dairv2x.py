@@ -47,7 +47,7 @@ def get_dairv2x_cfg(seq_len, voxel_size, latency=0, load_bevmap=False):
         data_info=data_info,
         lidar_range=point_cloud_range,
         voxel_size=voxel_size,
-        batch_size_train=4,
+        batch_size_train=2,
         batch_size_test=1,
         n_workers=4,
         max_num_cavs=2,
