@@ -9,3 +9,4 @@ data
 *.so
 */build/
 cosense3d/ops/build
+.vscode/

@@ -8,6 +8,7 @@ TRAIN:
   max_epoch: 50
   gpus: 0
   hooks: 'pycfg.base.hooks.train_hooks'
+  accumulative_steps: 4
   optimizer:
     lr: 0.0002
     weight_decay: 1e-2
@@ -38,6 +39,7 @@ CONTROLLER:
     all_grad: false
     share_score_thr: 0.0
     num_grad_cav: 2 # important while coop cav has latency
+    FSA: false
 
 VISUALIZATION:
   output_viewer:

@@ -39,6 +39,7 @@ CONTROLLER:
     all_grad: false
     share_score_thr: 0.0
     num_grad_cav: 2 # important while coop cav has latency
+    FSA: true
 
 VISUALIZATION:
   output_viewer:

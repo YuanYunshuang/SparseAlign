@@ -240,6 +240,10 @@ class StreamLidarAlignCAV(BaseCAV):
             raise NotImplementedError
         return reference_points
 
+    def update_memory_timestamps(self, ref_pts):
+        timestamp = torch.zeros_like(ref_pts[..., :1]) - self.timestamp
+        return timestamp
+    
     @property
     def timestamp(self):
         if self.dataset == 'opv2vt':

@@ -270,8 +270,9 @@ class DataOnlineProcessor:
         :return:
             updated data.
         """
-
+        
         lidar = data['points']
+
         # get point lower than z_min=1.5m
         m = lidar[:, 2] < min_h
         points = lidar[m]
@@ -307,6 +308,7 @@ class DataOnlineProcessor:
         if pad_dim > 0:
             xyz_new = torch.cat([xyz_new, torch.zeros_like(xyz_new[:, :1]).repeat(1, pad_dim)], dim=-1)
         data['points'] = torch.cat([lidar, xyz_new], dim=0)
+
 
     @staticmethod
     @torch.no_grad()
